@@ -9,29 +9,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
     private final DocumentRepository documentRepository;
     private final UserService userService;
-    
-    private final Path rootLocation = Paths.get("uploads");
+    private final FileStorageService fileStorageService;
 
     public void init() {
-        try {
-            if (!Files.exists(rootLocation)) {
-                Files.createDirectory(rootLocation);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Could not initialize storage", e);
-        }
+        fileStorageService.init();
     }
 
     public Document createDocument(Document document, Long userId, MultipartFile file) {
@@ -39,16 +27,8 @@ public class DocumentService {
         document.setCreatedBy(user);
         
         if (file != null && !file.isEmpty()) {
-            String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            try {
-                if (!Files.exists(rootLocation)) {
-                    init();
-                }
-                Files.copy(file.getInputStream(), rootLocation.resolve(filename));
-                document.setFilePath(filename);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to store file", e);
-            }
+            String filename = fileStorageService.store(file);
+            document.setFilePath(filename);
         }
         
         return documentRepository.save(document);
@@ -87,22 +67,12 @@ public class DocumentService {
         if (file != null && !file.isEmpty()) {
             // Delete old file if exists
             if (document.getFilePath() != null) {
-                try {
-                    Files.deleteIfExists(rootLocation.resolve(document.getFilePath()));
-                } catch (IOException e) {
-                    // Log error but continue
-                    e.printStackTrace();
-                }
+                fileStorageService.deleteFile(document.getFilePath());
             }
             
             // Store new file
-            String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            try {
-                Files.copy(file.getInputStream(), rootLocation.resolve(filename));
-                document.setFilePath(filename);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to store file", e);
-            }
+            String filename = fileStorageService.store(file);
+            document.setFilePath(filename);
         }
         
         return documentRepository.save(document);
@@ -113,12 +83,7 @@ public class DocumentService {
         
         // Delete file if exists
         if (document.getFilePath() != null) {
-            try {
-                Files.deleteIfExists(rootLocation.resolve(document.getFilePath()));
-            } catch (IOException e) {
-                // Log error but continue with document deletion
-                e.printStackTrace();
-            }
+            fileStorageService.deleteFile(document.getFilePath());
         }
         
         documentRepository.delete(document);
