@@ -5,6 +5,8 @@ import com.uchk.university.entity.Role;
 import com.uchk.university.service.DocumentService;
 import com.uchk.university.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,63 +14,81 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class DataInitializer {
     
     private final UserService userService;
     private final DocumentService documentService;
     
+    @Value("${ADMIN_PASSWORD:admin123}")
+    private String adminPassword;
+    
+    @Value("${TEACHER_PASSWORD:teacher123}")
+    private String teacherPassword;
+    
+    @Value("${STUDENT_PASSWORD:student123}")
+    private String studentPassword;
+    
+    @Value("${MANAGER_PASSWORD:manager123}")
+    private String managerPassword;
+    
     @Bean
     @Profile("dev")
     public CommandLineRunner initData() {
         return args -> {
+            log.info("Initializing development data...");
+            
             // Initialize document storage
             documentService.init();
+            log.info("Document storage initialized");
             
             // Create admin user if it doesn't exist
             if (!userExists("admin")) {
                 UserDto adminDto = new UserDto(
                         "admin",
-                        "admin123",
+                        adminPassword,
                         "admin@uchk.edu",
                         Role.ADMIN
                 );
                 userService.createUser(adminDto);
-                System.out.println("Admin user created successfully");
+                log.info("Admin user created successfully");
             }
             
             // Create test users for different roles if they don't exist
             if (!userExists("teacher")) {
                 UserDto teacherDto = new UserDto(
                         "teacher",
-                        "teacher123",
+                        teacherPassword,
                         "teacher@uchk.edu",
                         Role.TEACHER
                 );
                 userService.createUser(teacherDto);
-                System.out.println("Teacher user created successfully");
+                log.info("Teacher user created successfully");
             }
             
             if (!userExists("student")) {
                 UserDto studentDto = new UserDto(
                         "student",
-                        "student123",
+                        studentPassword,
                         "student@uchk.edu",
                         Role.STUDENT
                 );
                 userService.createUser(studentDto);
-                System.out.println("Student user created successfully");
+                log.info("Student user created successfully");
             }
             
             if (!userExists("manager")) {
                 UserDto managerDto = new UserDto(
                         "manager",
-                        "manager123",
+                        managerPassword,
                         "manager@uchk.edu",
                         Role.FORMATION_MANAGER
                 );
                 userService.createUser(managerDto);
-                System.out.println("Formation Manager user created successfully");
+                log.info("Formation Manager user created successfully");
             }
+            
+            log.info("Development data initialization completed");
         };
     }
     
