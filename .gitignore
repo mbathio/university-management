@@ -1,0 +1,29 @@
+# ====== BACKEND (Spring Boot) ======
+/backend/target/
+/backend/.mvn/
+/backend/.classpath
+/backend/.project
+/backend/.settings
+/backend/mvnw
+/backend/mvnw.cmd
+
+# Logs
+*.log
+
+# IDEs
+/.idea/
+/*.iml
+*.ipr
+*.iws
+/.vscode/
+
+# ====== FRONTEND (Angular) ======
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.angular/cache
+/frontend/.angular/*
+
+# Environment files (ne jamais push ces fichiers s’ils contiennent des clés)
+**/.env
+**/.env.local
+**/src/environments/environment*.ts
