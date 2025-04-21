@@ -13,18 +13,32 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>university-management</name>
 	<description>University Cheikh Hamidou Kane Management System</description>
-	<url/>
+	<url>https://www.uchk.edu/management</url>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<id>admin</id>
+			<name>UCHK Management Team</name>
+			<email>admin@uchk.edu</email>
+			<organization>University Cheikh Hamidou Kane</organization>
+			<organizationUrl>https://www.uchk.edu</organizationUrl>
+			<roles>
+				<role>Project Lead</role>
+				<role>Developer</role>
+			</roles>
+		</developer>
 	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:git://github.com/uchk/university-management.git</connection>
+		<developerConnection>scm:git:ssh://github.com/uchk/university-management.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/uchk/university-management</url>
 	</scm>
 	<properties>
 		<java.version>17</java.version>
