@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -93,5 +94,19 @@ public class StaffService {
         Staff staff = getStaffById(id);
         staffRepository.delete(staff);
         userService.deleteUser(staff.getUser().getId());
+    }
+    
+    // Method to safely check if a user is the owner of a staff profile
+    public boolean isOwnStaffProfile(Long staffId, String username) {
+        try {
+            Optional<Staff> staffOpt = staffRepository.findById(staffId);
+            if (staffOpt.isPresent()) {
+                Staff staff = staffOpt.get();
+                return staff.getUser() != null && staff.getUser().getUsername().equals(username);
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

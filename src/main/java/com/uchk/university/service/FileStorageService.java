@@ -1,5 +1,7 @@
 package com.uchk.university.service;
 
+import com.uchk.university.exception.DocumentStorageException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -11,25 +13,30 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class FileStorageService {
-    private final Path rootLocation = Paths.get("uploads");
+    private final Path rootLocation;
     private final List<String> allowedFileExtensions = Arrays.asList(
             "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", 
             "txt", "zip", "jpg", "jpeg", "png", "gif"
     );
+    
+    public FileStorageService(@Value("${upload.root-location:uploads}") String uploadRootLocation) {
+        this.rootLocation = Paths.get(uploadRootLocation);
+    }
 
     public void init() {
         try {
             if (!Files.exists(rootLocation)) {
-                Files.createDirectory(rootLocation);
+                Files.createDirectories(rootLocation);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Could not initialize storage", e);
+            throw new DocumentStorageException("Could not initialize storage", e);
         }
     }
 
@@ -45,54 +52,83 @@ public class FileStorageService {
                 init();
             }
             
-            Files.copy(file.getInputStream(), rootLocation.resolve(filename));
+            // Use StandardCopyOption.REPLACE_EXISTING to handle potential file conflicts
+            Files.copy(file.getInputStream(), rootLocation.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
             return filename;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
+            throw new DocumentStorageException("Failed to store file " + filename, e);
         }
     }
 
     public Resource loadAsResource(String filename) {
         try {
-            Path file = rootLocation.resolve(filename);
+            // Additional validation to prevent path traversal
+            if (filename.contains("..")) {
+                throw new DocumentStorageException("Filename contains invalid path sequence: " + filename);
+            }
+            
+            Path file = rootLocation.resolve(filename).normalize();
+            
+            // Check that the resolved path is still within our root location
+            if (!file.toFile().getCanonicalPath().startsWith(rootLocation.toFile().getCanonicalPath())) {
+                throw new DocumentStorageException("File access attempt outside of storage directory: " + filename);
+            }
+            
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
-                throw new RuntimeException("Could not read file: " + filename);
+                throw new DocumentStorageException("Could not read file: " + filename);
             }
         } catch (MalformedURLException e) {
-            throw new RuntimeException("Could not read file: " + filename, e);
+            throw new DocumentStorageException("Could not read file: " + filename, e);
+        } catch (IOException e) {
+            throw new DocumentStorageException("I/O error accessing file: " + filename, e);
         }
     }
 
     public void deleteFile(String filename) {
         try {
-            Path file = rootLocation.resolve(filename);
+            // Additional validation to prevent path traversal
+            if (filename.contains("..")) {
+                throw new DocumentStorageException("Filename contains invalid path sequence: " + filename);
+            }
+            
+            Path file = rootLocation.resolve(filename).normalize();
+            
+            // Check that the resolved path is still within our root location
+            if (!file.toFile().getCanonicalPath().startsWith(rootLocation.toFile().getCanonicalPath())) {
+                throw new DocumentStorageException("File deletion attempt outside of storage directory: " + filename);
+            }
+            
             Files.deleteIfExists(file);
         } catch (IOException e) {
-            throw new RuntimeException("Could not delete file: " + filename, e);
+            throw new DocumentStorageException("Could not delete file: " + filename, e);
         }
     }
 
     private void validateFile(MultipartFile file) {
+        if (file == null) {
+            throw new DocumentStorageException("Cannot store null file");
+        }
+        
         if (file.isEmpty()) {
-            throw new RuntimeException("Failed to store empty file");
+            throw new DocumentStorageException("Failed to store empty file");
         }
         
         String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
         if (originalFilename.contains("..")) {
-            throw new RuntimeException("Cannot store file with relative path outside current directory: " + originalFilename);
+            throw new DocumentStorageException("Cannot store file with relative path outside current directory: " + originalFilename);
         }
         
         String extension = getFileExtension(originalFilename);
         if (!allowedFileExtensions.contains(extension.toLowerCase())) {
-            throw new RuntimeException("File type not allowed. Allowed types: " + String.join(", ", allowedFileExtensions));
+            throw new DocumentStorageException("File type not allowed. Allowed types: " + String.join(", ", allowedFileExtensions));
         }
         
         // Check file size (additional check beyond Spring's multipart configuration)
         if (file.getSize() > 10 * 1024 * 1024) { // 10MB
-            throw new RuntimeException("File size exceeds maximum limit (10MB)");
+            throw new DocumentStorageException("File size exceeds maximum limit (10MB)");
         }
     }
 

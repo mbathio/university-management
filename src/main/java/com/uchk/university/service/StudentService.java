@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -44,7 +45,16 @@ public class StudentService {
         student.setStudentId(studentDto.getStudentId());
         student.setFirstName(studentDto.getFirstName());
         student.setLastName(studentDto.getLastName());
-        student.setBirthDate(studentDto.getBirthDate());
+
+        // Convert java.util.Date to LocalDate if not null
+        if (studentDto.getBirthDate() != null) {
+            student.setBirthDate(studentDto.getBirthDate().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate());
+        } else {
+            student.setBirthDate(null);
+        }
+
         student.setCurrentFormation(formation);
         student.setPromo(studentDto.getPromo());
         student.setStartYear(studentDto.getStartYear());
@@ -80,21 +90,23 @@ public class StudentService {
     @Transactional
     public Student updateStudent(Long id, StudentDto studentDto) {
         Student student = getStudentById(id);
-        
-        // Update formation if provided
-        if (studentDto.getFormationId() != null) {
-            Formation formation = formationRepository.findById(studentDto.getFormationId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Formation not found with id: " + studentDto.getFormationId()));
-            student.setCurrentFormation(formation);
-        }
-        
+
         student.setFirstName(studentDto.getFirstName());
         student.setLastName(studentDto.getLastName());
-        student.setBirthDate(studentDto.getBirthDate());
+
+        // Convert java.util.Date to LocalDate if not null
+        if (studentDto.getBirthDate() != null) {
+            student.setBirthDate(studentDto.getBirthDate().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate());
+        } else {
+            student.setBirthDate(null);
+        }
+
         student.setPromo(studentDto.getPromo());
         student.setStartYear(studentDto.getStartYear());
         student.setEndYear(studentDto.getEndYear());
-        
+
         return studentRepository.save(student);
     }
 

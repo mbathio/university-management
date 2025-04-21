@@ -88,4 +88,10 @@ public class DocumentService {
         
         documentRepository.delete(document);
     }
+    
+    // Added missing method for security check
+    public boolean isDocumentCreator(Long documentId, String username) {
+        Document document = getDocumentById(documentId);
+        return document.getCreatedBy().getUsername().equals(username);
+    }
 }

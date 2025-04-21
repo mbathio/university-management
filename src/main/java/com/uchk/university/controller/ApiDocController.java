@@ -23,7 +23,7 @@ public class ApiDocController {
         // Auth endpoints
         paths.add(new ApiPath("POST", "/api/auth/login", "Login with username and password", "Public"));
         paths.add(new ApiPath("POST", "/api/auth/register", "Register a new user", "Public"));
-        paths.add(new ApiPath("GET", "/api/auth/validate", "Validate JWT token", "Public"));
+        paths.add(new ApiPath("GET", "/api/auth/validate", "Validate JWT token", "Authenticated"));
         
         // User endpoints
         paths.add(new ApiPath("GET", "/api/users/{id}", "Get user by ID", "ADMIN or Self"));
@@ -35,34 +35,34 @@ public class ApiDocController {
         paths.add(new ApiPath("DELETE", "/api/users/{id}", "Delete user", "ADMIN"));
         
         // Student endpoints
-        paths.add(new ApiPath("GET", "/api/students/{id}", "Get student by ID", "Any"));
-        paths.add(new ApiPath("GET", "/api/students/studentId/{studentId}", "Get student by student ID", "Any"));
+        paths.add(new ApiPath("GET", "/api/students/{id}", "Get student by ID", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/students/studentId/{studentId}", "Get student by student ID", "Authenticated"));
         paths.add(new ApiPath("GET", "/api/students", "Get all students", "ADMIN, TEACHER, FORMATION_MANAGER"));
-        paths.add(new ApiPath("GET", "/api/students/formation/{formationId}", "Get students by formation", "Any"));
-        paths.add(new ApiPath("GET", "/api/students/promo/{promo}", "Get students by promotion", "Any"));
+        paths.add(new ApiPath("GET", "/api/students/formation/{formationId}", "Get students by formation", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/students/promo/{promo}", "Get students by promotion", "Authenticated"));
         paths.add(new ApiPath("POST", "/api/students", "Create a new student", "ADMIN"));
         paths.add(new ApiPath("PUT", "/api/students/{id}", "Update student", "ADMIN"));
         paths.add(new ApiPath("DELETE", "/api/students/{id}", "Delete student", "ADMIN"));
         
         // Formation endpoints
-        paths.add(new ApiPath("GET", "/api/formations/{id}", "Get formation by ID", "Any"));
-        paths.add(new ApiPath("GET", "/api/formations", "Get all formations", "Any"));
-        paths.add(new ApiPath("GET", "/api/formations/type/{type}", "Get formations by type", "Any"));
-        paths.add(new ApiPath("GET", "/api/formations/level/{level}", "Get formations by level", "Any"));
+        paths.add(new ApiPath("GET", "/api/formations/{id}", "Get formation by ID", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/formations", "Get all formations", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/formations/type/{type}", "Get formations by type", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/formations/level/{level}", "Get formations by level", "Authenticated"));
         paths.add(new ApiPath("POST", "/api/formations", "Create a new formation", "ADMIN, FORMATION_MANAGER"));
         paths.add(new ApiPath("PUT", "/api/formations/{id}", "Update formation", "ADMIN, FORMATION_MANAGER"));
         paths.add(new ApiPath("DELETE", "/api/formations/{id}", "Delete formation", "ADMIN"));
         
         // Document endpoints
-        paths.add(new ApiPath("GET", "/api/documents/{id}", "Get document by ID", "Any"));
-        paths.add(new ApiPath("GET", "/api/documents", "Get all documents", "Any"));
-        paths.add(new ApiPath("GET", "/api/documents/type/{type}", "Get documents by type", "Any"));
-        paths.add(new ApiPath("GET", "/api/documents/creator/{userId}", "Get documents by creator", "Any"));
-        paths.add(new ApiPath("GET", "/api/documents/visibility/{level}", "Get documents by visibility level", "Any"));
+        paths.add(new ApiPath("GET", "/api/documents/{id}", "Get document by ID", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/documents", "Get all documents", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/documents/type/{type}", "Get documents by type", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/documents/creator/{userId}", "Get documents by creator", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/documents/visibility/{level}", "Get documents by visibility level", "Authenticated"));
         paths.add(new ApiPath("POST", "/api/documents", "Create a new document", "Authenticated"));
         paths.add(new ApiPath("PUT", "/api/documents/{id}", "Update document", "ADMIN or Creator"));
         paths.add(new ApiPath("DELETE", "/api/documents/{id}", "Delete document", "ADMIN or Creator"));
-        paths.add(new ApiPath("GET", "/api/documents/files/{filename}", "Get document file", "Any"));
+        paths.add(new ApiPath("GET", "/api/documents/files/{filename}", "Get document file", "Authenticated"));
         
         // Staff endpoints
         paths.add(new ApiPath("GET", "/api/staff/{id}", "Get staff by ID", "ADMIN or Self"));

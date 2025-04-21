@@ -19,7 +19,7 @@ public class StaffController {
     private final StaffService staffService;
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @staffService.getStaffById(#id).user.username == authentication.principal.username")
+    @PreAuthorize("hasRole('ADMIN') or @staffService.isOwnStaffProfile(#id, authentication.principal.username)")
     public ResponseEntity<Staff> getStaffById(@PathVariable Long id) {
         return ResponseEntity.ok(staffService.getStaffById(id));
     }
@@ -55,7 +55,7 @@ public class StaffController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @staffService.getStaffById(#id).user.username == authentication.principal.username")
+    @PreAuthorize("hasRole('ADMIN') or @staffService.isOwnStaffProfile(#id, authentication.principal.username)")
     public ResponseEntity<Staff> updateStaff(@PathVariable Long id, @Valid @RequestBody StaffDto staffDto) {
         return ResponseEntity.ok(staffService.updateStaff(id, staffDto));
     }
