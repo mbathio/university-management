@@ -4,6 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -20,11 +21,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SharedModule } from './shared/shared.module';
 
 // Components
-import { LoginComponent } from './modules/auth/login/login.component';
-import { DashboardComponent } from './modules/dashboard/dashboard.component';
-import { LayoutComponent } from './shared/components/layout/layout.component';
 import { HeaderComponent } from './shared/components/header/header.component';
 import { SidenavComponent } from './shared/components/sidenav/sidenav.component';
 
@@ -33,20 +32,14 @@ import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error.interceptor';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    DashboardComponent,
-    LayoutComponent,
-    HeaderComponent,
-    SidenavComponent
-  ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
     ReactiveFormsModule,
+    CommonModule,
     AppRoutingModule,
+    SharedModule,
     
     // Material Modules
     MatToolbarModule,
@@ -59,7 +52,10 @@ import { ErrorInterceptor } from './core/interceptors/error.interceptor';
     MatInputModule,
     MatSnackBarModule,
     MatMenuModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    
+    // Standalone components
+    AppComponent
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },

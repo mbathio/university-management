@@ -69,4 +69,27 @@ export class AuthService {
   getToken(): string | null {
     return localStorage.getItem('token');
   }
+
+  autoLogin(): void {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('currentUser');
+    
+    if (token && storedUser) {
+      try {
+        // Parse the stored user data
+        const user: User = JSON.parse(storedUser);
+        
+        // Update the current user subject
+        this.currentUserSubject.next(user);
+        
+        // Optional: Validate token with backend
+        // this.validateToken(token).subscribe();
+        
+        console.log('Auto login successful');
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        this.logout(); // Clear invalid data
+      }
+    }
+  }
 }

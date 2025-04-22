@@ -5,11 +5,14 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from './core/auth/auth.service';
 import { Observable } from 'rxjs';
 import { User } from './core/models/user.model';
+import { SharedModule } from './shared/shared.module'; // Ajout du SharedModule
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  imports: [SharedModule], // Ajout du SharedModule aux imports du composant
+  standalone: true // Ajouter standalone: true pour les composants autonomes
 })
 export class AppComponent implements OnInit {
   title = 'Université Cheikh Hamidou Kane';

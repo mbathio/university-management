@@ -1,8 +1,13 @@
 // src/app/shared/components/sidenav/sidenav.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role, User } from '../../../core/models/user.model';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 interface NavItem {
   label: string;
@@ -14,9 +19,20 @@ interface NavItem {
 @Component({
   selector: 'app-sidenav',
   templateUrl: './sidenav.component.html',
-  styleUrls: ['./sidenav.component.scss']
+  styleUrls: ['./sidenav.component.scss'],
+  // Si vous utilisez des composants standalone
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatListModule,
+    MatIconModule,
+    MatDividerModule
+  ]
 })
 export class SidenavComponent implements OnInit {
+  @Output() navItemClicked = new EventEmitter<void>();
+  
   navItems: NavItem[] = [
     { label: 'Tableau de bord', icon: 'dashboard', route: '/dashboard' },
     { 
@@ -54,5 +70,9 @@ export class SidenavComponent implements OnInit {
       return true;
     }
     return this.authService.hasRole(item.roles);
+  }
+  
+  handleNavItemClick(): void {
+    this.navItemClicked.emit();
   }
 }

@@ -41,6 +41,19 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
     MatDividerModule
   ],
   exports: [
+    // Assurez-vous que tous les modules sont exportés
+    CommonModule,
+    RouterModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
+    MatSidenavModule,
+    MatListModule,
+    MatMenuModule,
+    MatDialogModule,
+    MatDividerModule,
+    
+    // Composants
     HeaderComponent,
     SidenavComponent,
     LayoutComponent,

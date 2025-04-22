@@ -2,6 +2,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/user.model';
+import { Router } from '@angular/router'; // Added the missing import
 
 interface AdminSection {
   title: string;

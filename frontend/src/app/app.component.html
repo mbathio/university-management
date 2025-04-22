@@ -2,7 +2,7 @@
 <div class="app-container">
   <app-header *ngIf="!isLoginPage"></app-header>
   <div class="content-container" [ngClass]="{'login-container': isLoginPage}">
-    <app-sidebar *ngIf="!isLoginPage"></app-sidebar>
+    <app-sidenav *ngIf="!isLoginPage"></app-sidenav>
     <main class="main-content">
       <router-outlet></router-outlet>
     </main>
