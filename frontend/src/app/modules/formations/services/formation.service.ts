@@ -1,4 +1,4 @@
-// src/app/modules/formations/services/formation.service.ts
+// frontend/src/app/modules/formations/services/formation.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -43,5 +43,13 @@ export class FormationService {
   
   getMyFormation(): Observable<Formation> {
     return this.http.get<Formation>(`${this.apiUrl}/my-formation`);
+  }
+  
+  getFormationsByType(type: string): Observable<Formation[]> {
+    return this.http.get<Formation[]>(`${this.apiUrl}/by-type/${type}`);
+  }
+  
+  getFormationsByLevel(level: string): Observable<Formation[]> {
+    return this.http.get<Formation[]>(`${this.apiUrl}/by-level/${level}`);
   }
 }

@@ -1,11 +1,11 @@
-// src/app/core/auth/auth.service.ts
+// frontend/src/app/auth/auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Router } from '@angular/router';
-import { User, LoginRequest, LoginResponse, Role } from '../models/user.model';
+import { User, LoginRequest, LoginResponse, Role } from '../core/models/user.model';
 import { environment } from '../../../environments/environment';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -30,12 +30,13 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  login(loginRequest: LoginRequest): Observable<LoginResponse> {
+  login(username: string, password: string): Observable<LoginResponse> {
+    const loginRequest: LoginRequest = { username, password };
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, loginRequest)
       .pipe(map(response => {
-        // Store user details and jwt token in local storage
+        // Store user details and jwt token in local storage to keep user logged in
         const user: User = {
-          id: 0, // We don't have id from backend in login response
+          id: 0, // We don't have the ID in the response
           username: response.username,
           email: response.email,
           role: response.role
@@ -55,41 +56,17 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  hasRole(roles: Role[]): boolean {
+    const currentUser = this.currentUserValue;
+    if (!currentUser) return false;
+    return roles.includes(currentUser.role);
+  }
+
   isLoggedIn(): boolean {
-    return !!this.currentUserValue;
+    return this.currentUserValue !== null;
   }
 
   getToken(): string | null {
     return localStorage.getItem('token');
-  }
-
-  hasRole(roles: Role[]): boolean {
-    const user = this.currentUserValue;
-    if (!user) return false;
-    return roles.includes(user.role);
-  }
-
-  isAdmin(): boolean {
-    return this.hasRole([Role.ADMIN]);
-  }
-
-  isTeacher(): boolean {
-    return this.hasRole([Role.TEACHER]);
-  }
-
-  isStudent(): boolean {
-    return this.hasRole([Role.STUDENT]);
-  }
-
-  isFormationManager(): boolean {
-    return this.hasRole([Role.FORMATION_MANAGER]);
-  }
-
-  isAdministration(): boolean {
-    return this.hasRole([Role.ADMINISTRATION]);
-  }
-
-  isTutor(): boolean {
-    return this.hasRole([Role.TUTOR]);
   }
 }
