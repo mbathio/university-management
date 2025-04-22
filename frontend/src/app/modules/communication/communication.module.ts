@@ -36,11 +36,11 @@ const routes: Routes = [
   { path: '', component: DocumentListComponent },
   { path: 'add', component: DocumentFormComponent },
   { path: 'edit/:id', component: DocumentFormComponent },
-  { path: ':id', component: DocumentDetailComponent },
   { path: 'notifications', component: NotificationsComponent },
   { path: 'reports', component: ReportListComponent },
   { path: 'reports/add', component: ReportFormComponent },
-  { path: 'reports/edit/:id', component: ReportFormComponent }
+  { path: 'reports/edit/:id', component: ReportFormComponent },
+  { path: ':id', component: DocumentDetailComponent }
 ];
 
 @NgModule({

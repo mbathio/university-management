@@ -1,24 +1,26 @@
-<!-- src/app/modules/administration/administration-dashboard/administration-dashboard.component.html -->
 <div class="admin-dashboard-container">
-    <div class="admin-header">
-      <h1>Administration</h1>
-      <p>Gestion administrative de l'Université Cheikh Hamidou Kane</p>
-    </div>
+  <h1 class="admin-dashboard-title">Tableau de bord d'administration</h1>
   
-    <div class="admin-sections">
-      <mat-card *ngFor="let section of adminSections" 
-                class="admin-card" 
-                [routerLink]="section.route"
-                [ngClass]="{'hidden': !isAllowed(section)}">
-        <mat-card-content>
-          <div class="card-icon" [style.background-color]="section.color">
-            <mat-icon>{{ section.icon }}</mat-icon>
-          </div>
-          <div class="card-content">
-            <h2>{{ section.title }}</h2>
-            <p>{{ section.description }}</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+  <div class="admin-sections-grid">
+    <mat-card class="admin-section-card" *ngFor="let section of adminSections" 
+              [style.border-left]="'4px solid ' + section.color"
+              (click)="isAllowed(section) ? router.navigate([section.route]) : null"
+              [class.disabled]="!isAllowed(section)">
+      <mat-card-content>
+        <div class="admin-section-icon-container" [style.background-color]="section.color + '22'">
+          <mat-icon class="admin-section-icon" [style.color]="section.color">{{section.icon}}</mat-icon>
+        </div>
+        <div class="admin-section-content">
+          <h2 class="admin-section-title">{{section.title}}</h2>
+          <p class="admin-section-description">{{section.description}}</p>
+        </div>
+        <mat-icon class="admin-section-arrow">arrow_forward</mat-icon>
+      </mat-card-content>
+    </mat-card>
   </div>
+  
+  <div class="admin-restricted-message" *ngIf="adminSections.some(section => !isAllowed(section))">
+    <mat-icon>info</mat-icon>
+    <span>Certaines sections nécessitent des autorisations supplémentaires.</span>
+  </div>
+</div>

@@ -1,0 +1,77 @@
+<div class="insertion-detail-container">
+    <div class="loading-spinner" *ngIf="loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+    
+    <div class="error-message" *ngIf="error && !loading">
+      <mat-icon>error</mat-icon>
+      <span>{{error}}</span>
+    </div>
+    
+    <div class="detail-content" *ngIf="insertion && student && !loading">
+      <div class="detail-header">
+        <button mat-icon-button color="primary" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h1 class="detail-title">Détail d'insertion professionnelle</h1>
+        
+        <div class="detail-actions">
+          <button mat-raised-button color="primary" *ngIf="canEdit()" (click)="editInsertion()">
+            <mat-icon>edit</mat-icon> Modifier
+          </button>
+          <button mat-raised-button color="warn" *ngIf="canDelete()" (click)="deleteInsertion()">
+            <mat-icon>delete</mat-icon> Supprimer
+          </button>
+        </div>
+      </div>
+      
+      <div class="detail-cards">
+        <mat-card class="student-card">
+          <mat-card-header>
+            <div mat-card-avatar>
+              <mat-icon class="student-icon">person</mat-icon>
+            </div>
+            <mat-card-title>{{student.firstName}} {{student.lastName}}</mat-card-title>
+            <mat-card-subtitle>{{student.studentId}} - {{student.promo || 'Promo non spécifiée'}}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content *ngIf="student.currentFormation">
+            <p><strong>Formation:</strong> {{student.currentFormation.name}}</p>
+            <p><strong>Période:</strong> {{student.startYear}} - {{student.endYear}}</p>
+          </mat-card-content>
+        </mat-card>
+        
+        <mat-card class="insertion-card">
+          <mat-card-header>
+            <div mat-card-avatar>
+              <mat-icon class="company-icon">business</mat-icon>
+            </div>
+            <mat-card-title>{{insertion.companyName}}</mat-card-title>
+            <mat-card-subtitle>
+              <span class="status-badge" [style.background-color]="getStatusColor(insertion.status)">
+                {{getStatusLabel(insertion.status)}}
+              </span>
+            </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="insertion-info">
+              <div class="info-group">
+                <p><mat-icon>work</mat-icon> <strong>Poste:</strong> {{insertion.position}}</p>
+                <p><mat-icon>category</mat-icon> <strong>Secteur:</strong> {{insertion.industry}}</p>
+                <p><mat-icon>calendar_today</mat-icon> <strong>Date de début:</strong> {{formatDate(insertion.startDate)}}</p>
+              </div>
+              <div class="info-group">
+                <p><mat-icon>location_on</mat-icon> <strong>Lieu:</strong> {{insertion.location}}</p>
+                <p><mat-icon>description</mat-icon> <strong>Type de contrat:</strong> {{insertion.contractType}}</p>
+                <p *ngIf="insertion.salaryRange"><mat-icon>euro</mat-icon> <strong>Fourchette salariale:</strong> {{insertion.salaryRange}}</p>
+              </div>
+            </div>
+            
+            <div class="feedback-section" *ngIf="insertion.feedback">
+              <h3>Retour d'expérience</h3>
+              <p class="feedback-text">{{insertion.feedback}}</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
