@@ -128,8 +128,8 @@ export class DocumentListComponent implements OnInit {
     this.documentService.downloadDocument(id).subscribe({
       next: (blob) => {
         // Trouver le document dans la liste pour obtenir son titre
-        const document = this.dataSource.data.find(doc => doc.id === id);
-        const fileName = document ? `${document.title}.pdf` : `document-${id}.pdf`;
+        const doc = this.dataSource.data.find(d => d.id === id);
+        const fileName = doc ? `${doc.title}.pdf` : `document-${id}.pdf`;
         
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
