@@ -1,0 +1,35 @@
+// src/app/shared/components/layout/layout.component.scss
+.app-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .sidenav-container {
+    flex: 1;
+    min-height: 0;
+  }
+  
+  .sidenav {
+    width: 250px;
+    box-shadow: 1px 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidenav-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  
+  .page-content {
+    padding: 20px;
+    overflow: auto;
+    flex: 1;
+  }
+  
+  @media screen and (max-width: 768px) {
+    .page-content {
+      padding: 12px;
+    }
+  }

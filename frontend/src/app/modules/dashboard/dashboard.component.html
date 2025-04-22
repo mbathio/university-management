@@ -1,0 +1,22 @@
+<!-- src/app/modules/dashboard/dashboard.component.html -->
+<div class="dashboard-container">
+    <div class="dashboard-header">
+      <h1>Tableau de bord</h1>
+      <p *ngIf="currentUser">Bienvenue, {{ currentUser.username }}!</p>
+      <p class="role-tag" *ngIf="currentUser">{{ currentUser.role }}</p>
+    </div>
+  
+    <div class="dashboard-cards">
+      <mat-card *ngFor="let card of dashboardCards" class="dashboard-card" [routerLink]="card.route">
+        <mat-card-content>
+          <div class="card-icon" [style.background-color]="card.color">
+            <mat-icon>{{ card.icon }}</mat-icon>
+          </div>
+          <div class="card-content">
+            <h2>{{ card.title }}</h2>
+            <p>{{ card.description }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
