@@ -14,15 +14,13 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 
 // Components
-import { HeaderComponent } from './components/header/header.component';
-import { SidenavComponent } from './components/sidenav/sidenav.component';
 import { LayoutComponent } from './components/layout/layout.component';
 import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
+import { HeaderComponent } from './components/header/header.component';
+import { SidenavComponent } from './components/sidenav/sidenav.component';
 
 @NgModule({
   declarations: [
-    HeaderComponent,
-    SidenavComponent,
     LayoutComponent,
     ConfirmDialogComponent
   ],
@@ -38,10 +36,14 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
     MatListModule,
     MatMenuModule,
     MatDialogModule,
-    MatDividerModule
+    MatDividerModule,
+    
+    // Import standalone components
+    HeaderComponent,
+    SidenavComponent
   ],
   exports: [
-    // Assurez-vous que tous les modules sont exportés
+    // Modules
     CommonModule,
     RouterModule,
     MatToolbarModule,
@@ -53,7 +55,7 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
     MatDialogModule,
     MatDividerModule,
     
-    // Composants
+    // Components
     HeaderComponent,
     SidenavComponent,
     LayoutComponent,

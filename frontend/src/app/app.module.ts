@@ -1,66 +1,37 @@
-// src/app/app.module.ts
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+// src/app/app.component.ts
+import { Component, OnInit } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { AuthService } from './core/auth/auth.service';
+import { Observable } from 'rxjs';
+import { User } from './core/models/user.model';
 
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-
-// Material Modules
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { SharedModule } from './shared/shared.module';
-
-// Components
-import { HeaderComponent } from './shared/components/header/header.component';
-import { SidenavComponent } from './shared/components/sidenav/sidenav.component';
-
-// Interceptors
-import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
-import { ErrorInterceptor } from './core/interceptors/error.interceptor';
-
-@NgModule({
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    HttpClientModule,
-    ReactiveFormsModule,
-    CommonModule,
-    AppRoutingModule,
-    SharedModule,
-    
-    // Material Modules
-    MatToolbarModule,
-    MatSidenavModule,
-    MatButtonModule,
-    MatIconModule,
-    MatListModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSnackBarModule,
-    MatMenuModule,
-    MatProgressSpinnerModule,
-    
-    // Standalone components
-    AppComponent
-  ],
-  providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
-    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }
-  ],
-  bootstrap: [AppComponent]
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
-export class AppModule { }
+export class AppComponent implements OnInit {
+  title = 'Université Cheikh Hamidou Kane';
+  isLoginPage = false;
+  currentUser$: Observable<User | null>;
+
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {
+    this.currentUser$ = this.authService.currentUser;
+  }
+
+  ngOnInit(): void {
+    // Auto login from localStorage if token exists
+    this.authService.autoLogin();
+    
+    // Check if current route is login page
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.isLoginPage = event.url.includes('/auth');
+      });
+  }
+}
