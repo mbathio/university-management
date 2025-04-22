@@ -32,9 +32,10 @@ export class DocumentFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.documentId = +this.route.snapshot.params['id'];
-    
-    if (this.documentId) {
+
+    const idParam = this.route.snapshot.params['id'];
+    if (idParam && !isNaN(+idParam)) {
+      this.documentId = +idParam;
       this.isEditMode = true;
       this.loadDocument(this.documentId);
     }
@@ -63,11 +64,9 @@ export class DocumentFormComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading document', error);
+        console.error('Erreur lors du chargement du document', error);
+        this.snackBar.open('Erreur lors du chargement du document', 'Fermer', { duration: 3000 });
         this.loading = false;
-        this.snackBar.open('Erreur lors du chargement du document', 'Fermer', {
-          duration: 3000
-        });
         this.router.navigate(['/administration/documents']);
       }
     });
@@ -82,11 +81,15 @@ export class DocumentFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.documentForm.invalid) {
+      Object.keys(this.documentForm.controls).forEach(key => {
+        this.documentForm.get(key)?.markAsTouched();
+      });
       return;
     }
 
     this.loading = true;
     const formData = new FormData();
+
     const document: Partial<Document> = {
       title: this.documentForm.value.title,
       content: this.documentForm.value.content,
@@ -94,12 +97,8 @@ export class DocumentFormComponent implements OnInit {
       visibilityLevel: this.documentForm.value.visibilityLevel
     };
 
-    // Add document JSON as a blob
-    formData.append('document', new Blob([JSON.stringify(document)], {
-      type: 'application/json'
-    }));
+    formData.append('document', new Blob([JSON.stringify(document)], { type: 'application/json' }));
 
-    // Add file if selected
     if (this.selectedFile) {
       formData.append('file', this.selectedFile);
     }
@@ -107,41 +106,37 @@ export class DocumentFormComponent implements OnInit {
     if (this.isEditMode && this.documentId) {
       this.documentService.updateDocument(this.documentId, formData).subscribe({
         next: () => {
-          this.loading = false;
-          this.snackBar.open('Document mis à jour avec succès', 'Fermer', {
-            duration: 3000
-          });
+          this.snackBar.open('Document mis à jour avec succès', 'Fermer', { duration: 3000 });
           this.router.navigate(['/administration/documents']);
+          this.loading = false;
         },
         error: (error) => {
-          console.error('Error updating document', error);
+          console.error('Erreur lors de la mise à jour', error);
+          this.snackBar.open('Erreur lors de la mise à jour du document', 'Fermer', { duration: 3000 });
           this.loading = false;
-          this.snackBar.open('Erreur lors de la mise à jour du document', 'Fermer', {
-            duration: 3000
-          });
         }
       });
     } else {
-      // Add user ID
-      const userId = this.authService.currentUserValue?.id;
-      if (userId) {
-        this.documentService.createDocument(formData, userId).subscribe({
-          next: () => {
-            this.loading = false;
-            this.snackBar.open('Document créé avec succès', 'Fermer', {
-              duration: 3000
-            });
-            this.router.navigate(['/administration/documents']);
-          },
-          error: (error) => {
-            console.error('Error creating document', error);
-            this.loading = false;
-            this.snackBar.open('Erreur lors de la création du document', 'Fermer', {
-              duration: 3000
-            });
-          }
-        });
+      const currentUser = this.authService.currentUserValue;
+
+      if (!currentUser || !currentUser.id) {
+        this.snackBar.open('Vous devez être connecté pour effectuer cette action', 'Fermer', { duration: 3000 });
+        this.loading = false;
+        return;
       }
+
+      this.documentService.createDocument(formData, currentUser.id).subscribe({
+        next: () => {
+          this.snackBar.open('Document créé avec succès', 'Fermer', { duration: 3000 });
+          this.router.navigate(['/administration/documents']);
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Erreur lors de la création', error);
+          this.snackBar.open('Erreur lors de la création du document', 'Fermer', { duration: 3000 });
+          this.loading = false;
+        }
+      });
     }
   }
 

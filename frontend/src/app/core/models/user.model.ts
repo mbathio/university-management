@@ -5,7 +5,7 @@ export enum Role {
   STUDENT = 'STUDENT',
   FORMATION_MANAGER = 'FORMATION_MANAGER',
   ADMINISTRATION = 'ADMINISTRATION',
-  TUTOR = 'TUTOR'
+  STAFF = 'STAFF'
 }
 
 export enum DocumentType {

@@ -1,4 +1,3 @@
-// src/app/modules/insertion/insertion-detail/insertion-detail.component.ts
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -9,10 +8,23 @@ import { StudentService } from '../../students/services/student.service';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 
+// Import Angular Material Components
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 @Component({
   selector: 'app-insertion-detail',
   templateUrl: './insertion-detail.component.html',
-  styleUrls: ['./insertion-detail.component.scss']
+  styleUrls: ['./insertion-detail.component.scss'],
+  // Add imports for standalone components (in Angular 14+ with standalone components)
+  imports: [
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule
+  ]
 })
 export class InsertionDetailComponent implements OnInit {
   insertion: Insertion | null = null;
@@ -29,6 +41,7 @@ export class InsertionDetailComponent implements OnInit {
     private snackBar: MatSnackBar
   ) { }
   
+  // Le reste du code reste inchangé
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -104,8 +117,9 @@ export class InsertionDetailComponent implements OnInit {
     }
   }
   
-  getStatusLabel(status: InsertionStatus): string {
-    switch (status) {
+  getStatusLabel(status: InsertionStatus | undefined): string {
+    if (!status) return 'Statut inconnu';
+      switch (status) {
       case InsertionStatus.HIRED:
         return 'Embauché';
       case InsertionStatus.OFFER_RECEIVED:
@@ -121,8 +135,9 @@ export class InsertionDetailComponent implements OnInit {
     }
   }
   
-  getStatusColor(status: InsertionStatus): string {
-    switch (status) {
+  getStatusColor(status: InsertionStatus | undefined): string {
+    if (!status) return 'gray';
+        switch (status) {
       case InsertionStatus.HIRED:
         return 'green';
       case InsertionStatus.OFFER_RECEIVED:

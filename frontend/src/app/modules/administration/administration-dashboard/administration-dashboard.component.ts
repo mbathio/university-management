@@ -44,8 +44,10 @@ export class AdministrationDashboardComponent {
     }
   ];
   
-  constructor(private authService: AuthService) {}
-  
+  constructor(
+    private authService: AuthService,
+    private router: Router // Ajouter cette injection
+  ) {}  
   isAllowed(section: AdminSection): boolean {
     if (!section.roles) {
       return true;
