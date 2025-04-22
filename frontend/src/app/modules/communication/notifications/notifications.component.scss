@@ -1,0 +1,74 @@
+// src/app/modules/communication/notifications/notifications.component.scss
+.notifications-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    h1 {
+      margin: 0;
+    }
+  }
+  
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+  
+  .error-message {
+    color: red;
+    padding: 20px;
+    text-align: center;
+    font-weight: 500;
+  }
+  
+  .announcements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .announcement-card {
+    border-left: 4px solid #ffc107;
+    transition: box-shadow 0.3s ease;
+    
+    &:hover {
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  .no-announcements {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+    color: #666;
+    
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 20px;
+      color: #ccc;
+    }
+  }
+  
+  .announcement-date {
+    font-style: italic;
+  }
+  
+  mat-card-content {
+    margin-top: 10px;
+    color: rgba(0, 0, 0, 0.7);
+    line-height: 1.5;
+  }

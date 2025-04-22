@@ -1,0 +1,122 @@
+// src/app/modules/communication/document-list/document-list.component.scss
+.document-list-container {
+    padding: 20px;
+  }
+  
+  .document-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    h1 {
+      margin: 0;
+    }
+  }
+  
+  .document-filter {
+    margin-bottom: 20px;
+    
+    mat-form-field {
+      width: 100%;
+    }
+  }
+  
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+  
+  .error-message {
+    color: red;
+    padding: 20px;
+    text-align: center;
+    font-weight: 500;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  table {
+    width: 100%;
+  }
+  
+  th.mat-header-cell {
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.7);
+  }
+  
+  .document-link {
+    color: #3f51b5;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  
+  .document-type-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-transform: uppercase;
+    
+    &.announcement {
+      background-color: #ffd740;
+      color: #000;
+    }
+    
+    &.report {
+      background-color: #69f0ae;
+      color: #000;
+    }
+    
+    &.contract {
+      background-color: #ff4081;
+      color: #fff;
+    }
+    
+    &.memo {
+      background-color: #448aff;
+      color: #fff;
+    }
+    
+    &.general {
+      background-color: #b0bec5;
+      color: #000;
+    }
+  }
+  
+  .visibility-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-transform: uppercase;
+    
+    &.public {
+      background-color: #c5e1a5;
+      color: #33691e;
+    }
+    
+    &.restricted {
+      background-color: #ffcc80;
+      color: #e65100;
+    }
+    
+    &.private {
+      background-color: #ef9a9a;
+      color: #b71c1c;
+    }
+  }
+  
+  .mat-column-actions {
+    width: 150px;
+    text-align: right;
+  }

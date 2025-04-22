@@ -136,4 +136,31 @@ export class ReportFormComponent implements OnInit {
           this.snackBar.open('Rapport mis à jour avec succès', 'Fermer', {
             duration: 3000
           });
-          this.router.
+          this.router.navigate(['/communication/reports']);
+        },
+        error: () => {
+          this.snackBar.open('Erreur lors de la mise à jour du rapport', 'Fermer', {
+            duration: 3000
+          });
+          this.loading = false;
+        }
+      });
+    } else {
+      // Mode création
+      this.documentService.createDocument(formData, this.selectedFile).subscribe({
+        next: () => {
+          this.snackBar.open('Rapport créé avec succès', 'Fermer', {
+            duration: 3000
+          });
+          this.router.navigate(['/communication/reports']);
+        },
+        error: () => {
+          this.snackBar.open('Erreur lors de la création du rapport', 'Fermer', {
+            duration: 3000
+          });
+          this.loading = false;
+        }
+      });
+    }
+  }
+}

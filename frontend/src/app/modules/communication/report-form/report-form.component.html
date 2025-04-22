@@ -1,37 +1,23 @@
-<!-- src/app/modules/communication/document-form/document-form.component.html -->
-<div class="document-form-container">
+<!-- src/app/modules/communication/report-form/report-form.component.html -->
+<div class="report-form-container">
     <mat-card>
       <mat-card-header>
         <mat-card-title>
-          <h1>{{ isEditMode ? 'Modifier le document' : 'Créer un nouveau document' }}</h1>
+          <h1>{{ isEditMode ? 'Modifier le rapport' : 'Créer un nouveau rapport' }}</h1>
         </mat-card-title>
       </mat-card-header>
   
       <mat-card-content>
-        <form [formGroup]="documentForm" (ngSubmit)="onSubmit()">
+        <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
           <div class="form-field-container">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Titre</mat-label>
-              <input matInput formControlName="title" placeholder="Titre du document" required>
-              <mat-error *ngIf="documentForm.get('title')?.hasError('required')">
+              <input matInput formControlName="title" placeholder="Titre du rapport" required>
+              <mat-error *ngIf="reportForm.get('title')?.hasError('required')">
                 Le titre est requis
               </mat-error>
-              <mat-error *ngIf="documentForm.get('title')?.hasError('maxlength')">
+              <mat-error *ngIf="reportForm.get('title')?.hasError('maxlength')">
                 Le titre doit contenir au maximum 100 caractères
-              </mat-error>
-            </mat-form-field>
-          </div>
-  
-          <div class="form-field-container">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Type de document</mat-label>
-              <mat-select formControlName="type" required>
-                <mat-option *ngFor="let type of documentTypes" [value]="type">
-                  {{ type }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="documentForm.get('type')?.hasError('required')">
-                Le type de document est requis
               </mat-error>
             </mat-form-field>
           </div>
@@ -44,7 +30,7 @@
                   {{ level }}
                 </mat-option>
               </mat-select>
-              <mat-error *ngIf="documentForm.get('visibilityLevel')?.hasError('required')">
+              <mat-error *ngIf="reportForm.get('visibilityLevel')?.hasError('required')">
                 Le niveau de visibilité est requis
               </mat-error>
             </mat-form-field>
@@ -53,8 +39,8 @@
           <div class="form-field-container">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Contenu</mat-label>
-              <textarea matInput formControlName="content" placeholder="Contenu du document" rows="6"></textarea>
-              <mat-error *ngIf="documentForm.get('content')?.hasError('maxlength')">
+              <textarea matInput formControlName="content" placeholder="Contenu du rapport" rows="10"></textarea>
+              <mat-error *ngIf="reportForm.get('content')?.hasError('maxlength')">
                 Le contenu doit contenir au maximum 5000 caractères
               </mat-error>
             </mat-form-field>
@@ -78,8 +64,8 @@
           </div>
   
           <div class="form-actions">
-            <button mat-button type="button" [routerLink]="['/communication']">Annuler</button>
-            <button mat-raised-button color="primary" type="submit" [disabled]="documentForm.invalid || loading">
+            <button mat-button type="button" [routerLink]="['/communication/reports']">Annuler</button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="reportForm.invalid || loading">
               <mat-icon *ngIf="loading">
                 <mat-spinner diameter="20"></mat-spinner>
               </mat-icon>

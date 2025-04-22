@@ -1,0 +1,21 @@
+<!-- src/app/modules/communication/report-list/report-list.component.html -->
+<div class="report-list-container">
+    <div class="report-list-header">
+      <h1>Gestion des rapports</h1>
+      <button mat-raised-button color="primary" [routerLink]="['/communication/reports/add']">
+        <mat-icon>add</mat-icon>
+        Nouveau rapport
+      </button>
+    </div>
+  
+    <mat-card>
+      <mat-card-content>
+        <div class="report-filter">
+          <mat-form-field appearance="outline">
+            <mat-label>Rechercher</mat-label>
+            <input matInput (keyup)="applyFilter($event)" placeholder="Titre, créateur, etc." #input>
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>
+  
+        <div class="loading-spinner
