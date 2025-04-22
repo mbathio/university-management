@@ -1,6 +1,6 @@
 // src/app/modules/communication/services/document.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Document, DocumentType } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
@@ -9,7 +9,7 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root'
 })
 export class DocumentService {
-  private apiUrl = `${environment.apiUrl}/documents`;
+  private apiUrl = `${environment.apiUrl}/api/documents`;
 
   constructor(private http: HttpClient) { }
 
@@ -21,12 +21,38 @@ export class DocumentService {
     return this.http.get<Document>(`${this.apiUrl}/${id}`);
   }
 
-  createDocument(document: Document): Observable<Document> {
-    return this.http.post<Document>(this.apiUrl, document);
+  createDocument(document: any, file: File | null): Observable<Document> {
+    const formData = new FormData();
+    
+    // Ajouter les champs de document comme parties de form-data
+    formData.append('title', document.title);
+    formData.append('content', document.content);
+    formData.append('type', document.type);
+    formData.append('visibilityLevel', document.visibilityLevel);
+    
+    // Ajouter le fichier s'il existe
+    if (file) {
+      formData.append('file', file);
+    }
+    
+    return this.http.post<Document>(this.apiUrl, formData);
   }
 
-  updateDocument(id: number, document: Document): Observable<Document> {
-    return this.http.put<Document>(`${this.apiUrl}/${id}`, document);
+  updateDocument(id: number, document: any, file: File | null): Observable<Document> {
+    const formData = new FormData();
+    
+    // Ajouter les champs de document comme parties de form-data
+    formData.append('title', document.title);
+    formData.append('content', document.content);
+    formData.append('type', document.type);
+    formData.append('visibilityLevel', document.visibilityLevel);
+    
+    // Ajouter le fichier s'il existe
+    if (file) {
+      formData.append('file', file);
+    }
+    
+    return this.http.put<Document>(`${this.apiUrl}/${id}`, formData);
   }
 
   deleteDocument(id: number): Observable<void> {
@@ -34,22 +60,17 @@ export class DocumentService {
   }
   
   getDocumentsByType(type: DocumentType): Observable<Document[]> {
-    return this.http.get<Document[]>(`${this.apiUrl}/by-type/${type}`);
+    const params = new HttpParams().set('type', type);
+    return this.http.get<Document[]>(this.apiUrl, { params });
   }
   
-  getReports(): Observable<Document[]> {
-    return this.http.get<Document[]>(`${this.apiUrl}/reports`);
+  getDocumentsByVisibility(visibilityLevel: string): Observable<Document[]> {
+    const params = new HttpParams().set('visibilityLevel', visibilityLevel);
+    return this.http.get<Document[]>(this.apiUrl, { params });
   }
   
-  uploadDocumentFile(file: File, documentId: number): Observable<any> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    return this.http.post<any>(`${this.apiUrl}/${documentId}/upload`, formData);
-  }
-  
-  downloadDocument(documentId: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${documentId}/download`, {
+  downloadDocument(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/download`, {
       responseType: 'blob'
     });
   }

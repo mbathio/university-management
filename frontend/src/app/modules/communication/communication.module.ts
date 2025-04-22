@@ -21,6 +21,8 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 // Components
 import { DocumentListComponent } from './document-list/document-list.component';
@@ -71,7 +73,9 @@ const routes: Routes = [
     MatSnackBarModule,
     MatExpansionModule,
     MatChipsModule,
-    MatTabsModule
+    MatTabsModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule
   ]
 })
 export class CommunicationModule { }

@@ -4,7 +4,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { DocumentService } from '../services/document.service';
-import { Document, DocumentType } from '../../../core/models/user.model';
+import { Document } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/user.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -19,6 +19,7 @@ export class DocumentListComponent implements OnInit {
   dataSource = new MatTableDataSource<Document>();
   loading = true;
   error = '';
+  currentUsername = '';
   
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -27,7 +28,12 @@ export class DocumentListComponent implements OnInit {
     private documentService: DocumentService,
     private authService: AuthService,
     private snackBar: MatSnackBar
-  ) {}
+  ) {
+    // Get current user info
+    if (this.authService.currentUserValue) {
+      this.currentUsername = this.authService.currentUserValue.username;
+    }
+  }
   
   ngOnInit(): void {
     this.loadDocuments();
@@ -49,6 +55,7 @@ export class DocumentListComponent implements OnInit {
   
   loadDocuments(): void {
     this.loading = true;
+    this.error = '';
     
     this.documentService.getAllDocuments().subscribe({
       next: (documents) => {
@@ -56,7 +63,7 @@ export class DocumentListComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        this.error = error;
+        this.error = 'Erreur lors du chargement des documents';
         this.loading = false;
         this.snackBar.open('Erreur lors du chargement des documents', 'Fermer', {
           duration: 3000,
@@ -68,11 +75,31 @@ export class DocumentListComponent implements OnInit {
   }
   
   canEdit(document: Document): boolean {
-    return this.authService.hasRole([Role.ADMIN, Role.ADMINISTRATION]);
+    if (this.authService.hasRole([Role.ADMIN, Role.ADMINISTRATION])) {
+      return true;
+    }
+    
+    // Si le document existe et l'utilisateur en est le créateur
+    if (document && document.createdBy && 
+        document.createdBy.username === this.currentUsername) {
+      return true;
+    }
+    
+    return false;
   }
   
   canDelete(document: Document): boolean {
-    return this.authService.hasRole([Role.ADMIN]);
+    if (this.authService.hasRole([Role.ADMIN])) {
+      return true;
+    }
+    
+    // Si le document existe et l'utilisateur en est le créateur
+    if (document && document.createdBy && 
+        document.createdBy.username === this.currentUsername) {
+      return true;
+    }
+    
+    return false;
   }
   
   deleteDocument(id: number): void {
@@ -87,7 +114,7 @@ export class DocumentListComponent implements OnInit {
           });
         },
         error: (error) => {
-          this.snackBar.open('Erreur lors de la suppression: ' + error, 'Fermer', {
+          this.snackBar.open('Erreur lors de la suppression du document', 'Fermer', {
             duration: 3000,
             horizontalPosition: 'end',
             verticalPosition: 'bottom'
@@ -100,17 +127,21 @@ export class DocumentListComponent implements OnInit {
   downloadDocument(id: number): void {
     this.documentService.downloadDocument(id).subscribe({
       next: (blob) => {
+        // Trouver le document dans la liste pour obtenir son titre
+        const document = this.dataSource.data.find(doc => doc.id === id);
+        const fileName = document ? `${document.title}.pdf` : `document-${id}.pdf`;
+        
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `document-${id}.pdf`; // nom par défaut
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       },
       error: (error) => {
-        this.snackBar.open('Erreur lors du téléchargement: ' + error, 'Fermer', {
+        this.snackBar.open('Erreur lors du téléchargement du document', 'Fermer', {
           duration: 3000,
           horizontalPosition: 'end',
           verticalPosition: 'bottom'

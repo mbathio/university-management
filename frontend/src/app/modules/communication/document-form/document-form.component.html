@@ -1,0 +1,91 @@
+<!-- src/app/modules/communication/document-form/document-form.component.html -->
+<div class="document-form-container">
+    <div class="document-form-header">
+      <h1>{{ isEditMode ? 'Modifier le document' : 'Ajouter un nouveau document' }}</h1>
+      <button mat-stroked-button routerLink="/communication">
+        <mat-icon>arrow_back</mat-icon> Retour
+      </button>
+    </div>
+  
+    <mat-card>
+      <mat-card-content>
+        <div class="loading-container" *ngIf="loading">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+  
+        <form [formGroup]="documentForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Titre</mat-label>
+              <input matInput formControlName="title" placeholder="Titre du document">
+              <mat-error *ngIf="documentForm.get('title')?.hasError('required')">
+                Le titre est requis
+              </mat-error>
+              <mat-error *ngIf="documentForm.get('title')?.hasError('maxlength')">
+                Le titre ne doit pas dépasser 100 caractères
+              </mat-error>
+            </mat-form-field>
+          </div>
+  
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Type de document</mat-label>
+              <mat-select formControlName="type">
+                <mat-option *ngFor="let type of documentTypes" [value]="type">
+                  {{ type }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="documentForm.get('type')?.hasError('required')">
+                Le type de document est requis
+              </mat-error>
+            </mat-form-field>
+          </div>
+  
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Niveau de visibilité</mat-label>
+              <mat-select formControlName="visibilityLevel">
+                <mat-option *ngFor="let level of visibilityLevels" [value]="level">
+                  {{ level }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="documentForm.get('visibilityLevel')?.hasError('required')">
+                Le niveau de visibilité est requis
+              </mat-error>
+            </mat-form-field>
+          </div>
+  
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Contenu</mat-label>
+              <textarea matInput formControlName="content" placeholder="Contenu du document" rows="6"></textarea>
+              <mat-error *ngIf="documentForm.get('content')?.hasError('maxlength')">
+                Le contenu ne doit pas dépasser 5000 caractères
+              </mat-error>
+            </mat-form-field>
+          </div>
+  
+          <div class="form-row file-upload">
+            <label>Fichier (max 10MB)</label>
+            <div class="file-input-wrapper">
+              <button mat-stroked-button type="button" color="primary">
+                <mat-icon>cloud_upload</mat-icon>
+                {{ selectedFile ? selectedFile.name : 'Choisir un fichier' }}
+              </button>
+              <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.jpg,.jpeg,.png,.gif">
+            </div>
+            <div class="file-help">
+              <small>Types acceptés: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, JPG, JPEG, PNG, GIF</small>
+            </div>
+          </div>
+  
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+              {{ isEditMode ? 'Mettre à jour' : 'Créer' }}
+            </button>
+            <button mat-button type="button" routerLink="/communication">Annuler</button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>

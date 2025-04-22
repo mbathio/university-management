@@ -9,73 +9,30 @@ export enum Role {
 }
 
 export enum DocumentType {
+  ADMINISTRATIVE = 'ADMINISTRATIVE',
+  ACADEMIC = 'ACADEMIC',
   REPORT = 'REPORT',
-  MEETING_MINUTES = 'MEETING_MINUTES',
-  CIRCULAR = 'CIRCULAR',
-  ADMIN_NOTE = 'ADMIN_NOTE',
-  SERVICE_NOTE = 'SERVICE_NOTE',
-  INCOMING_MAIL = 'INCOMING_MAIL',
-  OUTGOING_MAIL = 'OUTGOING_MAIL'
+  ANNOUNCEMENT = 'ANNOUNCEMENT',
+  COURSE_MATERIAL = 'COURSE_MATERIAL',
+  OTHER = 'OTHER'
 }
 
 export interface User {
   id: number;
   username: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
   role: Role;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 export interface Document {
   id: number;
   title: string;
-  type: DocumentType;
   content?: string;
-  fileUrl?: string;
-  visibilityLevel: string;
-  createdBy?: number;
+  type: DocumentType;
   createdAt: Date;
-  updatedAt?: Date;
-}
-
-export interface Student {
-  id: number;
-  userId?: number;
-  studentId: string; // INE
-  firstName: string;
-  lastName: string;
-  dateOfBirth: Date;
-  formationId?: number;
-  formation?: Formation;
-  promo?: string;
-  startYear?: number;
-  endYear?: number;
-  diplomas?: string[];
-  otherFormations?: string[];
-  email?: string;
-  phoneNumber?: string;
-  address?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface Formation {
-  id: number;
-  name: string;
-  type?: string;
-  level?: string;
-  startDate?: Date;
-  endDate?: Date;
-  fundingAmount?: number;
-  fundingType?: string;
-  numberOfStudents?: number;
-  numberOfFemaleStudents?: number;
-  description?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  visibilityLevel: string;
+  filePath?: string;
+  createdBy?: User;
 }
 
 export interface LoginRequest {
@@ -85,5 +42,70 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  username: string;
+  email: string;
+  role: Role;
+}
+
+export interface Formation {
+  id: number;
+  name: string;
+  type: string;
+  level: string;
+  startDate: Date;
+  endDate?: Date;
+  description?: string;
+  fundingAmount?: number;
+  fundingType?: string;
+}
+
+export interface Student {
+  id: number;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  birthDate?: Date;
+  currentFormation?: Formation;
+  promo?: string;
+  startYear?: number;
+  endYear?: number;
   user: User;
+}
+
+export interface Staff {
+  id: number;
+  staffId: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+  department: string;
+  contactInfo?: string;
+  user: User;
+}
+
+export interface StudentDto {
+  username: string;
+  password: string;
+  email: string;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  birthDate?: Date;
+  formationId?: number;
+  promo: string;
+  startYear: number;
+  endYear: number;
+}
+
+export interface StaffDto {
+  username: string;
+  password: string;
+  email: string;
+  role: Role;
+  staffId: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+  department: string;
+  contactInfo: string;
 }
