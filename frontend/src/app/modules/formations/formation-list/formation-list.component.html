@@ -1,0 +1,111 @@
+<!-- src/app/modules/formations/formation-list/formation-list.component.html -->
+<div class="formations-container">
+    <div class="formations-header">
+      <h1>Formations</h1>
+      <button 
+        *ngIf="canCreate()" 
+        mat-raised-button 
+        color="primary" 
+        routerLink="/formations/add">
+        <mat-icon>add</mat-icon>
+        Nouvelle Formation
+      </button>
+    </div>
+  
+    <mat-card>
+      <mat-card-content>
+        <div class="filter-container">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Rechercher</mat-label>
+            <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Licence Informatique">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>
+  
+        <div class="loading-container" *ngIf="loading">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+  
+        <div class="error-container" *ngIf="error && !loading">
+          <p class="error-message">{{ error }}</p>
+          <button mat-button color="primary" (click)="loadFormations()">Réessayer</button>
+        </div>
+  
+        <table mat-table [dataSource]="dataSource" matSort *ngIf="!loading && !error" class="formations-table">
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Nom </th>
+            <td mat-cell *matCellDef="let formation"> {{ formation.name }} </td>
+          </ng-container>
+  
+          <!-- Type Column -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Type </th>
+            <td mat-cell *matCellDef="let formation"> {{ formation.type || 'Non spécifié' }} </td>
+          </ng-container>
+  
+          <!-- Level Column -->
+          <ng-container matColumnDef="level">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Niveau </th>
+            <td mat-cell *matCellDef="let formation"> {{ formation.level || 'Non spécifié' }} </td>
+          </ng-container>
+  
+          <!-- Start Date Column -->
+          <ng-container matColumnDef="startDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Date début </th>
+            <td mat-cell *matCellDef="let formation"> 
+              {{ formation.startDate ? (formation.startDate | date:'dd/MM/yyyy') : 'Non spécifiée' }} 
+            </td>
+          </ng-container>
+  
+          <!-- End Date Column -->
+          <ng-container matColumnDef="endDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Date fin </th>
+            <td mat-cell *matCellDef="let formation"> 
+              {{ formation.endDate ? (formation.endDate | date:'dd/MM/yyyy') : 'Non spécifiée' }} 
+            </td>
+          </ng-container>
+  
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef> Actions </th>
+            <td mat-cell *matCellDef="let formation">
+              <button mat-icon-button [routerLink]="['/formations', formation.id]" matTooltip="Détails">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                *ngIf="canEdit(formation)"
+                [routerLink]="['/formations/edit', formation.id]" 
+                matTooltip="Modifier">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                *ngIf="canDelete(formation)"
+                (click)="deleteFormation(formation.id)" 
+                matTooltip="Supprimer">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+  
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  
+          <!-- No Data Row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" colspan="6" class="no-data">
+              Aucune formation trouvée
+            </td>
+          </tr>
+        </table>
+  
+        <mat-paginator 
+          [pageSizeOptions]="[5, 10, 25, 100]"
+          showFirstLastButtons
+          aria-label="Sélectionner la page">
+        </mat-paginator>
+      </mat-card-content>
+    </mat-card>
+  </div>

@@ -1,0 +1,24 @@
+<!-- src/app/modules/administration/administration-dashboard/administration-dashboard.component.html -->
+<div class="admin-dashboard-container">
+    <div class="admin-header">
+      <h1>Administration</h1>
+      <p>Gestion administrative de l'Université Cheikh Hamidou Kane</p>
+    </div>
+  
+    <div class="admin-sections">
+      <mat-card *ngFor="let section of adminSections" 
+                class="admin-card" 
+                [routerLink]="section.route"
+                *ngIf="isAllowed(section)">
+        <mat-card-content>
+          <div class="card-icon" [style.background-color]="section.color">
+            <mat-icon>{{ section.icon }}</mat-icon>
+          </div>
+          <div class="card-content">
+            <h2>{{ section.title }}</h2>
+            <p>{{ section.description }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
