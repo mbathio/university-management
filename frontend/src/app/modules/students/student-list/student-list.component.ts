@@ -10,6 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-student-list',
@@ -29,7 +30,8 @@ export class StudentListComponent implements OnInit, AfterViewInit {
     private studentService: StudentService,
     private authService: AuthService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {}
   
   ngOnInit(): void {
@@ -95,4 +97,32 @@ export class StudentListComponent implements OnInit, AfterViewInit {
     this.router.navigate(['/students', id]);
   }
   
-  deleteStudent(id: number): voi
+  deleteStudent(id: number): void {
+    // Confirmation dialog would typically go here
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible.')) {
+      this.loading = true;
+      this.studentService.deleteStudent(id)
+        .pipe(
+          catchError(error => {
+            this.snackBar.open('Erreur lors de la suppression de l\'étudiant', 'Fermer', {
+              duration: 3000
+            });
+            return of(null);
+          }),
+          finalize(() => {
+            this.loading = false;
+          })
+        )
+        .subscribe(() => {
+          this.snackBar.open('Étudiant supprimé avec succès', 'Fermer', {
+            duration: 3000
+          });
+          this.loadStudents();
+        });
+    }
+  }
+  
+  getFormationName(student: Student): string {
+    return student.currentFormation ? student.currentFormation.name : 'Non assigné';
+  }
+}

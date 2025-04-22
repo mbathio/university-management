@@ -2,7 +2,6 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { AuthService } from '../../../core/auth/auth.service';
 import { User } from '../../../core/models/user.model';
-import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -11,13 +10,16 @@ import { Observable } from 'rxjs';
 })
 export class HeaderComponent {
   @Output() toggleSidenav = new EventEmitter<void>();
-  currentUser$: Observable<User | null>;
-  
+  currentUser: User | null = null;
+
   constructor(private authService: AuthService) {
-    this.currentUser$ = this.authService.currentUser;
+    this.authService.currentUser.subscribe(user => {
+      this.currentUser = user;
+    });
   }
-  
+
   logout(): void {
     this.authService.logout();
+    window.location.href = '/login';
   }
 }

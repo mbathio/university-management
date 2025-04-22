@@ -1,7 +1,8 @@
 // src/app/shared/components/sidenav/sidenav.component.ts
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Role } from '../../../core/models/user.model';
+import { Role, User } from '../../../core/models/user.model';
 
 interface NavItem {
   label: string;
@@ -15,59 +16,43 @@ interface NavItem {
   templateUrl: './sidenav.component.html',
   styleUrls: ['./sidenav.component.scss']
 })
-export class SidenavComponent {
-  @Output() navItemClicked = new EventEmitter<void>();
-  
+export class SidenavComponent implements OnInit {
   navItems: NavItem[] = [
-    { 
-      label: 'Tableau de bord', 
-      icon: 'dashboard', 
-      route: '/dashboard'
-    },
-    { 
-      label: 'Étudiants', 
-      icon: 'school', 
-      route: '/students',
-      roles: [Role.ADMIN, Role.TEACHER, Role.FORMATION_MANAGER, Role.TUTOR, Role.ADMINISTRATION]
-    },
-    { 
-      label: 'Formations', 
-      icon: 'book', 
-      route: '/formations',
-      roles: [Role.ADMIN, Role.TEACHER, Role.FORMATION_MANAGER, Role.STUDENT]
-    },
-    { 
-      label: 'Documents', 
-      icon: 'description', 
-      route: '/documents'
-    },
+    { label: 'Tableau de bord', icon: 'dashboard', route: '/dashboard' },
     { 
       label: 'Administration', 
       icon: 'admin_panel_settings', 
       route: '/administration',
       roles: [Role.ADMIN, Role.ADMINISTRATION]
     },
+    { label: 'Communications', icon: 'forum', route: '/communication' },
+    { label: 'Formations', icon: 'school', route: '/formations' },
+    { label: 'Étudiants', icon: 'people', route: '/students' },
     { 
-      label: 'Insertion Pro', 
+      label: 'Insertion professionnelle', 
       icon: 'work', 
       route: '/insertion',
-      roles: [Role.ADMIN, Role.FORMATION_MANAGER]
+      roles: [Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION]
     }
   ];
   
-  constructor(private authService: AuthService) {}
-  
-  handleNavItemClick(): void {
-    this.navItemClicked.emit();
+  currentUser: User | null = null;
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) { }
+
+  ngOnInit(): void {
+    this.authService.currentUser.subscribe(user => {
+      this.currentUser = user;
+    });
   }
-  
+
   isAllowed(item: NavItem): boolean {
-    // Si aucun rôle n'est spécifié, l'élément est visible pour tous
     if (!item.roles) {
       return true;
     }
-    
-    // Sinon, vérifiez si l'utilisateur a un des rôles requis
     return this.authService.hasRole(item.roles);
   }
 }
