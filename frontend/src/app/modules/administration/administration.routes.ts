@@ -7,16 +7,18 @@ export const administrationRoutes: Routes = [
   {
     path: '',
     component: AdministrationDashboardComponent,
-    children: [
-      {
-        path: 'documents',
-        component: DocumentManagementComponent,
-        children: [
-          { path: 'new', component: DocumentFormComponent },
-          { path: 'edit/:id', component: DocumentFormComponent },
-        ],
-      },
-    ],
+  },
+  {
+    path: 'documents',
+    component: DocumentManagementComponent,
+  },
+  {
+    path: 'documents/add',
+    component: DocumentFormComponent,
+  },
+  {
+    path: 'documents/edit/:id',
+    component: DocumentFormComponent,
   },
 ];
 

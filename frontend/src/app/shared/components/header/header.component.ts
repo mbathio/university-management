@@ -39,8 +39,4 @@ export class HeaderComponent implements OnInit {
   logout(): void {
     this.authService.logout();
   }
-
-  toggleSidenavMenu(): void {
-    this.toggleSidenav.emit();
-  }
 }

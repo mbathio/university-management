@@ -61,7 +61,7 @@ export class AppComponent implements OnInit {
         ),
       )
       .subscribe((event: NavigationEnd) => {
-        this.isLoginPage = event.url.includes('/auth');
+        this.isLoginPage = event.url.includes('/login');
         this.setupNavItems();
       });
   }

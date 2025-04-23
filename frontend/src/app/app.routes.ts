@@ -26,10 +26,10 @@ export const routes: Routes = [
   },
   {
     path: 'administration',
-    loadComponent: () =>
-      import(
-        './modules/administration/administration-dashboard/administration-dashboard.component'
-      ).then((m) => m.AdministrationDashboardComponent),
+    loadChildren: () =>
+      import('./modules/administration/administration.routes').then(
+        (mod) => mod.default,
+      ),
     canActivate: [authGuard],
     data: { roles: [Role.ADMIN, Role.ADMINISTRATION] },
   },

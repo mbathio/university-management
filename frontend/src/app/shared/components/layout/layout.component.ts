@@ -6,6 +6,9 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
 import { SidenavComponent } from '../sidenav/sidenav.component';
+import { AuthService } from '../../../core/auth/auth.service';
+import { NavItem } from '../sidenav/sidenav.component';
+import { Role } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-layout',
@@ -23,8 +26,12 @@ import { SidenavComponent } from '../sidenav/sidenav.component';
 export class LayoutComponent implements OnInit {
   @ViewChild('sidenav') sidenav!: MatSidenav;
   isMobile = false;
+  navItems: NavItem[] = [];
 
-  constructor(private breakpointObserver: BreakpointObserver) {}
+  constructor(
+    private breakpointObserver: BreakpointObserver,
+    private authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
     this.breakpointObserver
@@ -32,6 +39,8 @@ export class LayoutComponent implements OnInit {
       .subscribe((result) => {
         this.isMobile = result.matches;
       });
+
+    this.setupNavItems();
   }
 
   toggleSidenav(): void {
@@ -42,5 +51,42 @@ export class LayoutComponent implements OnInit {
     if (this.isMobile) {
       this.sidenav.close();
     }
+  }
+
+  private setupNavItems(): void {
+    this.navItems = [
+      {
+        label: 'Tableau de bord',
+        icon: 'dashboard',
+        route: '/dashboard',
+      },
+      {
+        label: 'Administration',
+        icon: 'admin_panel_settings',
+        route: '/administration',
+        roles: [Role.ADMIN, Role.ADMINISTRATION],
+      },
+      {
+        label: 'Communications',
+        icon: 'forum',
+        route: '/communication',
+      },
+      {
+        label: 'Formations',
+        icon: 'school',
+        route: '/formations',
+      },
+      {
+        label: 'Étudiants',
+        icon: 'people',
+        route: '/students',
+      },
+      {
+        label: 'Insertion professionnelle',
+        icon: 'work',
+        route: '/insertion',
+        roles: [Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION],
+      },
+    ];
   }
 }

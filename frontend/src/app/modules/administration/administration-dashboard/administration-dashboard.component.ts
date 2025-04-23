@@ -1,9 +1,11 @@
-// src/app/modules/administration/administration-dashboard/administration-dashboard.component.ts
+// Le template fait référence à router mais il n'est pas injecté
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router'; // Ajouter Router ici
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/user.model';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 
 interface AdminSection {
   title: string;
@@ -19,7 +21,7 @@ interface AdminSection {
   templateUrl: './administration-dashboard.component.html',
   styleUrls: ['./administration-dashboard.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MatCardModule, MatIconModule], // Ajouter les modules Angular Material
 })
 export class AdministrationDashboardComponent {
   adminSections: AdminSection[] = [
@@ -48,7 +50,11 @@ export class AdministrationDashboardComponent {
     },
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    public router: Router, // Ajouter l'injection du router pour le template
+  ) {}
+
   isAllowed(section: AdminSection): boolean {
     if (!section.roles) {
       return true;
