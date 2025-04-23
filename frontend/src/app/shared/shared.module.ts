@@ -12,6 +12,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
 
 // Components
 import { LayoutComponent } from './components/layout/layout.component';
@@ -27,7 +29,9 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
   imports: [
     CommonModule,
     RouterModule,
-    
+    FormsModule,
+    ReactiveFormsModule,
+    MatCardModule,
     // Material Modules
     MatToolbarModule,
     MatIconModule,
@@ -54,7 +58,9 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     MatMenuModule,
     MatDialogModule,
     MatDividerModule,
-    
+    FormsModule,
+    ReactiveFormsModule,
+    MatCardModule,
     // Components
     HeaderComponent,
     SidenavComponent,

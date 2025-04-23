@@ -51,7 +51,7 @@ export class DashboardComponent implements OnInit {
         case Role.ADMINISTRATION:
           this.addAdministrationCards();
           break;
-        case Role.TUTOR:
+        case Role.STAFF:
           this.addTutorCards();
           break;
       }
