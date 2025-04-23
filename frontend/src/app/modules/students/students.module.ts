@@ -29,20 +29,20 @@ const routes: Routes = [
   { path: 'add', component: StudentFormComponent },
   { path: 'edit/:id', component: StudentFormComponent },
   { path: ':id', component: StudentDetailComponent },
-  { path: 'profile', component: StudentDetailComponent }
+  { path: 'profile', component: StudentDetailComponent },
 ];
 
 @NgModule({
   declarations: [
     StudentListComponent,
     StudentDetailComponent,
-    StudentFormComponent
+    StudentFormComponent,
   ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
     ReactiveFormsModule,
-    
+
     // Material Modules
     MatTableModule,
     MatPaginatorModule,
@@ -56,7 +56,7 @@ const routes: Routes = [
     MatDatepickerModule,
     MatNativeDateModule,
     MatDialogModule,
-    MatSnackBarModule
-  ]
+    MatSnackBarModule,
+  ],
 })
-export class StudentsModule { }
+export class StudentsModule {}

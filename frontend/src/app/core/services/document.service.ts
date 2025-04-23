@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import { Document, DocumentType } from '../models/user.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DocumentService {
   private apiUrl = `${environment.apiUrl}/documents`;
@@ -42,6 +42,8 @@ export class DocumentService {
   }
 
   downloadDocument(filePath: string): Observable<Blob> {
-    return this.http.get(`${environment.apiUrl}/files/${filePath}`, { responseType: 'blob' });
+    return this.http.get(`${environment.apiUrl}/files/${filePath}`, {
+      responseType: 'blob',
+    });
   }
 }

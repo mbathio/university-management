@@ -12,26 +12,14 @@ import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
 
-// Components
-import { LayoutComponent } from './components/layout/layout.component';
-import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
-import { HeaderComponent } from './components/header/header.component';
-import { SidenavComponent } from './components/sidenav/sidenav.component';
+// Tous les composants sont maintenant standalone et ne sont pas déclarés ici
 
 @NgModule({
-  declarations: [
-    LayoutComponent,
-    ConfirmDialogComponent
-  ],
   imports: [
     CommonModule,
     RouterModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatCardModule,
+
     // Material Modules
     MatToolbarModule,
     MatIconModule,
@@ -41,10 +29,6 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     MatMenuModule,
     MatDialogModule,
     MatDividerModule,
-    
-    // Import standalone components
-    HeaderComponent,
-    SidenavComponent
   ],
   exports: [
     // Modules
@@ -58,14 +42,6 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     MatMenuModule,
     MatDialogModule,
     MatDividerModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    // Components
-    HeaderComponent,
-    SidenavComponent,
-    LayoutComponent,
-    ConfirmDialogComponent
-  ]
+  ],
 })
-export class SharedModule { }
+export class SharedModule {}

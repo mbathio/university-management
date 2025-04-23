@@ -1,0 +1,85 @@
+<!-- src/app/modules/formations/schedule/schedule.component.html -->
+<div class="schedule-container">
+  <div class="schedule-header">
+    <h1>Planning des Formations</h1>
+    <div class="schedule-actions">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="createNewSchedule()"
+        *ngIf="canCreateSchedule()"
+      >
+        <mat-icon>add</mat-icon>
+        Nouveau Planning
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && schedules.length === 0" class="no-schedules">
+    <mat-icon>calendar_today</mat-icon>
+    <p>Aucun planning de formation n'est actuellement disponible.</p>
+  </div>
+
+  <div *ngIf="!loading && schedules.length > 0" class="schedules-grid">
+    <mat-card *ngFor="let schedule of schedules" class="schedule-card">
+      <mat-card-header>
+        <mat-card-title>{{ schedule.name }}</mat-card-title>
+        <mat-card-subtitle>{{ schedule.period }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="schedule-details">
+          <div class="schedule-info">
+            <mat-icon>date_range</mat-icon>
+            <span
+              >{{ schedule.startDate | date: "dd/MM/yyyy" }} -
+              {{ schedule.endDate | date: "dd/MM/yyyy" }}</span
+            >
+          </div>
+
+          <div class="schedule-stats">
+            <div class="stat">
+              <mat-icon>group</mat-icon>
+              <span>{{ schedule.totalParticipants }} participants</span>
+            </div>
+            <div class="stat">
+              <mat-icon>school</mat-icon>
+              <span>{{ schedule.totalFormations }} formations</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button
+          mat-button
+          color="primary"
+          (click)="viewScheduleDetails(schedule.id)"
+        >
+          Détails
+        </button>
+        <button
+          mat-button
+          color="accent"
+          *ngIf="canEditSchedule(schedule)"
+          (click)="editSchedule(schedule.id)"
+        >
+          Modifier
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <mat-paginator
+    *ngIf="schedules.length > 0"
+    [length]="totalSchedules"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[5, 10, 25, 50]"
+    (page)="onPageChange($event)"
+  >
+  </mat-paginator>
+</div>

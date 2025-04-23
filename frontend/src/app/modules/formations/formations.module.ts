@@ -35,7 +35,11 @@ const routes: Routes = [
   { path: ':id', component: FormationDetailComponent },
   { path: ':id/schedule', component: ScheduleComponent },
   { path: ':id/trainers', component: TrainerListComponent },
-  { path: 'my-formation', component: FormationDetailComponent, data: { myFormation: true } }
+  {
+    path: 'my-formation',
+    component: FormationDetailComponent,
+    data: { myFormation: true },
+  },
 ];
 
 @NgModule({
@@ -44,13 +48,13 @@ const routes: Routes = [
     FormationDetailComponent,
     FormationFormComponent,
     ScheduleComponent,
-    TrainerListComponent
+    TrainerListComponent,
   ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
     ReactiveFormsModule,
-    
+
     // Material Modules
     MatTableModule,
     MatPaginatorModule,
@@ -66,7 +70,7 @@ const routes: Routes = [
     MatDialogModule,
     MatSnackBarModule,
     MatChipsModule,
-    MatTabsModule
-  ]
+    MatTabsModule,
+  ],
 })
-export class FormationsModule { }
+export class FormationsModule {}

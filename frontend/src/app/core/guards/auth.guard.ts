@@ -1,37 +1,31 @@
 // src/app/core/guards/auth.guard.ts
-import { Injectable } from '@angular/core';
-import { Router, CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { Role } from '../models/user.model';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard implements CanActivate {
-  constructor(
-    private router: Router,
-    private authService: AuthService
-  ) {}
+export const authGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    const user = this.authService.currentUserValue;
-    
-    // Check if user is logged in
-    if (!user) {
-      this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+  const currentUser = authService.currentUserValue;
+
+  // Check if user is authenticated
+  if (!currentUser) {
+    router.navigate(['/login'], {
+      queryParams: { returnUrl: state.url },
+    });
+    return false;
+  }
+
+  // Check role-based access if specified
+  if (route.data && route.data['roles']) {
+    const requiredRoles = route.data['roles'] as Role[];
+    if (!authService.hasRole(requiredRoles)) {
+      router.navigate(['/dashboard']);
       return false;
     }
-    
-    // Check if route has role restriction
-    if (route.data['roles'] && !this.checkRoles(route.data['roles'])) {
-      this.router.navigate(['/dashboard']);
-      return false;
-    }
-    
-    return true;
   }
-  
-  private checkRoles(routeRoles: Role[]): boolean {
-    return this.authService.hasRole(routeRoles);
-  }
-}
+
+  return true;
+};

@@ -1,16 +1,16 @@
 <!-- src/app/shared/components/layout/layout.component.html -->
 <div class="app-container">
-    <app-header (toggleSidenav)="toggleSidenav()"></app-header>
-    
-    <mat-sidenav-container class="sidenav-container">
-      <mat-sidenav #sidenav mode="side" [opened]="!isMobile" class="sidenav">
-        <app-sidenav (navItemClicked)="closeSidenav()"></app-sidenav>
-      </mat-sidenav>
-      
-      <mat-sidenav-content class="sidenav-content">
-        <div class="page-content">
-          <router-outlet></router-outlet>
-        </div>
-      </mat-sidenav-content>
-    </mat-sidenav-container>
-  </div>
+  <app-header (toggleSidenav)="toggleSidenav()"></app-header>
+
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav #sidenav mode="side" [opened]="!isMobile" class="sidenav">
+      <app-sidenav (navItemClicked)="closeSidenav()"></app-sidenav>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="sidenav-content">
+      <div class="page-content">
+        <router-outlet></router-outlet>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

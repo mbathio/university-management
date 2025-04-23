@@ -1,10 +1,13 @@
-<!-- src/app/modules/communication/document-detail/document-detail.component.html -->
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+
 <div class="document-detail-container">
   <mat-card class="document-card">
     <mat-card-header>
       <mat-card-title>
         <ng-container *ngIf="!loading">
-          <h1 *ngIf="document; else notFound">{{ document.title }}</h1>
+          <h1 *ngIf="document; else notFound">{{ document.title || '' }}</h1>
         </ng-container>
         <ng-template #notFound>
           <h1>Document non trouvé</h1>
@@ -18,30 +21,49 @@
     </mat-card-header>
 
     <mat-card-content>
+      <!-- Affichage du spinner pendant le chargement -->
       <ng-container *ngIf="loading">
         <div class="loading-spinner">
           <mat-spinner diameter="40"></mat-spinner>
         </div>
       </ng-container>
 
+      <!-- Affichage des erreurs -->
       <ng-container *ngIf="error && !loading">
         <div class="error-message">{{ error }}</div>
       </ng-container>
 
+      <!-- Affichage des détails du document -->
       <ng-container *ngIf="document && !loading">
         <div class="document-content">
           <div class="document-section">
             <h3>Contenu</h3>
-            <p>{{ document.content }}</p>
+            <p>{{ document.content || '' }}</p>
           </div>
 
-         
+          <!-- Section pour le fichier attaché -->
+          <div class="document-section" *ngIf="document.fileUrl">
+            <h3>Fichier attaché</h3>
+            <button mat-raised-button color="primary" (click)="downloadDocument()">
+              <mat-icon>file_download</mat-icon>
+              Télécharger le fichier
+            </button>
+          </div>
 
-        
+          <!-- Métadonnées du document -->
+          <div class="document-metadata">
+            <p *ngIf="document.createdBy">
+              <strong>Créé par :</strong> {{ document.createdBy.firstName }} {{ document.createdBy.lastName }}
+            </p>
+            <p *ngIf="document.updatedAt">
+              <strong>Dernière mise à jour :</strong> {{ document.updatedAt | date:'dd/MM/yyyy HH:mm' }}
+            </p>
+          </div>
         </div>
       </ng-container>
     </mat-card-content>
 
+    <!-- Actions disponibles -->
     <mat-card-actions *ngIf="document && !loading" align="end">
       <button mat-button (click)="downloadDocument()" matTooltip="Télécharger">
         <mat-icon>file_download</mat-icon> Télécharger

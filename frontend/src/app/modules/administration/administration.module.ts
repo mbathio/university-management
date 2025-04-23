@@ -1,7 +1,7 @@
 // src/app/modules/administration/administration.module.ts
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 
 // Material Modules
@@ -22,43 +22,23 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 
-// Components
-import { DocumentManagementComponent } from './document-management/document-management.component';
-import { BudgetManagementComponent } from './budget-management/budget-management.component';
-import { HrManagementComponent } from './hr-management/hr-management.component';
+// Standalone Components
 import { AdministrationDashboardComponent } from './administration-dashboard/administration-dashboard.component';
+import { DocumentManagementComponent } from './document-management/document-management.component';
 import { DocumentFormComponent } from './document-management/document-form/document-form.component';
-import { BudgetFormComponent } from './budget-management/budget-form/budget-form.component';
-import { EmployeeFormComponent } from './hr-management/employee-form/employee-form.component';
 
-const routes: Routes = [
-  { path: '', component: AdministrationDashboardComponent },
-  { path: 'documents', component: DocumentManagementComponent },
-  { path: 'documents/add', component: DocumentFormComponent },
-  { path: 'documents/edit/:id', component: DocumentFormComponent },
-  { path: 'budget', component: BudgetManagementComponent },
-  { path: 'budget/add', component: BudgetFormComponent },
-  { path: 'budget/edit/:id', component: BudgetFormComponent },
-  { path: 'hr', component: HrManagementComponent },
-  { path: 'hr/add', component: EmployeeFormComponent },
-  { path: 'hr/edit/:id', component: EmployeeFormComponent }
-];
+import { administrationRoutes } from './administration.routes';
 
 @NgModule({
-  declarations: [
-    DocumentManagementComponent,
-    BudgetManagementComponent,
-    HrManagementComponent,
-    AdministrationDashboardComponent,
-    DocumentFormComponent,
-    BudgetFormComponent,
-    EmployeeFormComponent
-  ],
   imports: [
     CommonModule,
-    RouterModule.forChild(routes),
+    RouterModule.forChild(administrationRoutes),
     ReactiveFormsModule,
-    
+
+    // Standalone Components
+    AdministrationDashboardComponent,
+    DocumentManagementComponent,
+
     // Material Modules
     MatTabsModule,
     MatCardModule,
@@ -75,7 +55,7 @@ const routes: Routes = [
     MatDialogModule,
     MatSnackBarModule,
     MatExpansionModule,
-    MatChipsModule
-  ]
+    MatChipsModule,
+  ],
 })
-export class AdministrationModule { }
+export class AdministrationModule {}

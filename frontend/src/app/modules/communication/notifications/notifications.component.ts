@@ -7,37 +7,43 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 @Component({
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
-  styleUrls: ['./notifications.component.scss']
+  styleUrls: ['./notifications.component.scss'],
 })
 export class NotificationsComponent implements OnInit {
   announcements: Document[] = [];
   loading = true;
   error = '';
-  
+
   constructor(
     private documentService: DocumentService,
-    private snackBar: MatSnackBar
-  ) { }
-  
+    private snackBar: MatSnackBar,
+  ) {}
+
   ngOnInit(): void {
     this.loadAnnouncements();
   }
-  
+
   loadAnnouncements(): void {
     this.loading = true;
-    
-    this.documentService.getDocumentsByType(DocumentType.ANNOUNCEMENT).subscribe({
-      next: (documents) => {
-        this.announcements = documents;
-        this.loading = false;
-      },
-      error: (error) => {
-        this.error = 'Erreur lors du chargement des annonces';
-        this.loading = false;
-        this.snackBar.open('Erreur lors du chargement des annonces', 'Fermer', {
-          duration: 3000
-        });
-      }
-    });
+
+    this.documentService
+      .getDocumentsByType(DocumentType.ANNOUNCEMENT)
+      .subscribe({
+        next: (documents) => {
+          this.announcements = documents;
+          this.loading = false;
+        },
+        error: (error) => {
+          this.error = 'Erreur lors du chargement des annonces';
+          this.loading = false;
+          this.snackBar.open(
+            'Erreur lors du chargement des annonces',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
+        },
+      });
   }
 }

@@ -24,16 +24,16 @@ export enum InsertionStatus {
   OFFER_RECEIVED = 'OFFER_RECEIVED',
   HIRED = 'HIRED',
   CONTINUING_STUDIES = 'CONTINUING_STUDIES',
-  OTHER = 'OTHER'
+  OTHER = 'OTHER',
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class InsertionService {
   private apiUrl = `${environment.apiUrl}/insertions`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getAllInsertions(): Observable<Insertion[]> {
     return this.http.get<Insertion[]>(this.apiUrl);
@@ -60,7 +60,9 @@ export class InsertionService {
   }
 
   getInsertionsByFormation(formationId: number): Observable<Insertion[]> {
-    return this.http.get<Insertion[]>(`${this.apiUrl}/by-formation/${formationId}`);
+    return this.http.get<Insertion[]>(
+      `${this.apiUrl}/by-formation/${formationId}`,
+    );
   }
 
   getInsertionsByYear(year: number): Observable<Insertion[]> {
@@ -72,7 +74,9 @@ export class InsertionService {
   }
 
   getInsertionStatisticsByFormation(formationId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/statistics/by-formation/${formationId}`);
+    return this.http.get<any>(
+      `${this.apiUrl}/statistics/by-formation/${formationId}`,
+    );
   }
 
   getInsertionStatisticsByYear(year: number): Observable<any> {

@@ -1,63 +1,65 @@
 // src/app/modules/formations/formation-form/formation-form.component.scss
 .formation-form-container {
-    max-width: 800px;
-    margin: 24px auto;
-    
-    mat-card {
-      padding: 24px;
-      position: relative;
-    }
-    
-    mat-card-header {
-      margin-bottom: 24px;
-      
-      mat-card-title {
-        font-size: 24px;
-        margin-bottom: 8px;
-      }
-    }
-    
-    .form-row {
-      margin-bottom: 16px;
-      
-      .form-field {
-        width: 100%;
-      }
-    }
-    
-    .date-fields, .funding-fields {
-      display: flex;
-      gap: 16px;
-      
-      .form-field {
-        flex: 1;
-      }
-    }
-    
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 16px;
-      margin-top: 24px;
-    }
-    
-    .loading-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(255, 255, 255, 0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1;
-    }
-    
-    @media screen and (max-width: 600px) {
-      .date-fields, .funding-fields {
-        flex-direction: column;
-        gap: 0;
-      }
+  max-width: 800px;
+  margin: 24px auto;
+
+  mat-card {
+    padding: 24px;
+    position: relative;
+  }
+
+  mat-card-header {
+    margin-bottom: 24px;
+
+    mat-card-title {
+      font-size: 24px;
+      margin-bottom: 8px;
     }
   }
+
+  .form-row {
+    margin-bottom: 16px;
+
+    .form-field {
+      width: 100%;
+    }
+  }
+
+  .date-fields,
+  .funding-fields {
+    display: flex;
+    gap: 16px;
+
+    .form-field {
+      flex: 1;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+  }
+
+  @media screen and (max-width: 600px) {
+    .date-fields,
+    .funding-fields {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+}

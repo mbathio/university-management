@@ -1,7 +1,7 @@
 // src/app/modules/dashboard/dashboard.module.ts
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule } from '@angular/router';
 
 // Material Modules
 import { MatCardModule } from '@angular/material/card';
@@ -11,28 +11,26 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
 
-// Components
+// Standalone Components
 import { DashboardComponent } from './dashboard.component';
 
-const routes: Routes = [
-  { path: '', component: DashboardComponent }
-];
+import { dashboardRoutes } from './dashboard.routes';
 
 @NgModule({
-  declarations: [
-    DashboardComponent
-  ],
   imports: [
     CommonModule,
-    RouterModule.forChild(routes),
-    
+    RouterModule.forChild(dashboardRoutes),
+
+    // Standalone Components
+    DashboardComponent,
+
     // Material modules
     MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    MatChipsModule
-  ]
+    MatChipsModule,
+  ],
 })
-export class DashboardModule { }
+export class DashboardModule {}

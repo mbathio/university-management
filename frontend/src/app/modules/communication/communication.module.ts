@@ -1,7 +1,7 @@
 // src/app/modules/communication/communication.module.ts
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 
 // Material Modules
@@ -24,7 +24,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-// Components
+// Standalone Components
 import { DocumentListComponent } from './document-list/document-list.component';
 import { DocumentDetailComponent } from './document-detail/document-detail.component';
 import { DocumentFormComponent } from './document-form/document-form.component';
@@ -32,31 +32,22 @@ import { NotificationsComponent } from './notifications/notifications.component'
 import { ReportListComponent } from './report-list/report-list.component';
 import { ReportFormComponent } from './report-form/report-form.component';
 
-const routes: Routes = [
-  { path: '', component: DocumentListComponent },
-  { path: 'add', component: DocumentFormComponent },
-  { path: 'edit/:id', component: DocumentFormComponent },
-  { path: 'notifications', component: NotificationsComponent },
-  { path: 'reports', component: ReportListComponent },
-  { path: 'reports/add', component: ReportFormComponent },
-  { path: 'reports/edit/:id', component: ReportFormComponent },
-  { path: ':id', component: DocumentDetailComponent }
-];
+import { communicationRoutes } from './communication.routes';
 
 @NgModule({
-  declarations: [
+  imports: [
+    CommonModule,
+    RouterModule.forChild(communicationRoutes),
+    ReactiveFormsModule,
+
+    // Standalone Components
     DocumentListComponent,
     DocumentDetailComponent,
     DocumentFormComponent,
     NotificationsComponent,
     ReportListComponent,
-    ReportFormComponent
-  ],
-  imports: [
-    CommonModule,
-    RouterModule.forChild(routes),
-    ReactiveFormsModule,
-    
+    ReportFormComponent,
+
     // Material Modules
     MatCardModule,
     MatButtonModule,
@@ -75,7 +66,7 @@ const routes: Routes = [
     MatChipsModule,
     MatTabsModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
-  ]
+    MatTooltipModule,
+  ],
 })
-export class CommunicationModule { }
+export class CommunicationModule {}

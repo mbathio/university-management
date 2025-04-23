@@ -1,90 +1,127 @@
 <!-- src/app/modules/formations/formation-detail/formation-detail.component.html -->
 <div class="formation-detail-container">
-    <div class="formation-header">
-      <h1>{{ isMyFormationView ? 'Ma Formation' : 'Détails de la Formation' }}</h1>
-      <div class="formation-actions" *ngIf="!loading && formation">
-        <button 
-          mat-icon-button 
-          *ngIf="canEdit()" 
-          (click)="onEdit()"
-          matTooltip="Modifier">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button 
-          mat-icon-button 
-          *ngIf="canDelete()" 
-          (click)="onDelete()"
-          matTooltip="Supprimer">
-          <mat-icon>delete</mat-icon>
-        </button>
-        <button 
-          mat-raised-button 
-          color="primary" 
-          [routerLink]="['/formations']">
-          <mat-icon>arrow_back</mat-icon>
-          Retour à la liste
-        </button>
-      </div>
+  <div class="formation-header">
+    <h1>
+      {{ isMyFormationView ? "Ma Formation" : "Détails de la Formation" }}
+    </h1>
+    <div class="formation-actions" *ngIf="!loading && formation">
+      <button
+        mat-icon-button
+        *ngIf="canEdit()"
+        (click)="onEdit()"
+        matTooltip="Modifier"
+      >
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        *ngIf="canDelete()"
+        (click)="onDelete()"
+        matTooltip="Supprimer"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
+      <button mat-raised-button color="primary" [routerLink]="['/formations']">
+        <mat-icon>arrow_back</mat-icon>
+        Retour à la liste
+      </button>
     </div>
-  
-    <div class="loading-container" *ngIf="loading">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
-  
-    <div class="formation-content" *ngIf="!loading && formation">
-      <mat-card>
-        <mat-card-content>
-          <mat-tab-group>
-            <!-- Informations générales -->
-            <mat-tab label="Informations générales">
-              <div class="tab-content">
-                <div class="info-section">
-                  <h2>{{ formation.name }}</h2>
-                  <div class="info-badges">
-                    <span class="info-badge type">{{ formation.type || 'Type non spécifié' }}</span>
-                    <span class="info-badge level">{{ formation.level || 'Niveau non spécifié' }}</span>
+  </div>
+
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div class="formation-content" *ngIf="!loading && formation">
+    <mat-card>
+      <mat-card-content>
+        <mat-tab-group>
+          <!-- Informations générales -->
+          <mat-tab label="Informations générales">
+            <div class="tab-content">
+              <div class="info-section">
+                <h2>{{ formation.name }}</h2>
+                <div class="info-badges">
+                  <span class="info-badge type">{{
+                    formation.type || "Type non spécifié"
+                  }}</span>
+                  <span class="info-badge level">{{
+                    formation.level || "Niveau non spécifié"
+                  }}</span>
+                </div>
+
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">Date de début:</span>
+                    <span class="info-value">{{
+                      formation.startDate
+                        ? (formation.startDate | date: "dd/MM/yyyy")
+                        : "Non spécifiée"
+                    }}</span>
                   </div>
-                  
-                  <div class="info-grid">
-                    <div class="info-item">
-                      <span class="info-label">Date de début:</span>
-                      <span class="info-value">{{ formation.startDate ? (formation.startDate | date:'dd/MM/yyyy') : 'Non spécifiée' }}</span>
-                    </div>
-                    
-                    <div class="info-item">
-                      <span class="info-label">Date de fin:</span>
-                      <span class="info-value">{{ formation.endDate ? (formation.endDate | date:'dd/MM/yyyy') : 'Non spécifiée' }}</span>
-                    </div>
-                    
-                    <div class="info-item">
-                      <span class="info-label">Financement:</span>
-                      <span class="info-value">{{ formation.fundingAmount || 0 }} € ({{ formation.fundingType || 'Non spécifié' }})</span>
-                    </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Date de fin:</span>
+                    <span class="info-value">{{
+                      formation.endDate
+                        ? (formation.endDate | date: "dd/MM/yyyy")
+                        : "Non spécifiée"
+                    }}</span>
                   </div>
-                  
-                  <div class="description-section">
-                    <h3>Description</h3>
-                    <p>{{ formation.description || 'Aucune description disponible.' }}</p>
+
+                  <div class="info-item">
+                    <span class="info-label">Financement:</span>
+                    <span class="info-value"
+                      >{{ formation.fundingAmount || 0 }} € ({{
+                        formation.fundingType || "Non spécifié"
+                      }})</span
+                    >
                   </div>
                 </div>
+
+                <div class="description-section">
+                  <h3>Description</h3>
+                  <p>
+                    {{
+                      formation.description || "Aucune description disponible."
+                    }}
+                  </p>
+                </div>
               </div>
-            </mat-tab>
-            
-            <!-- Liste des étudiants (visible selon les droits) -->
-            <mat-tab label="Étudiants" *ngIf="canViewStudents()">
-              <div class="tab-content">
-                <div class="students-section">
-                  <h3>Étudiants inscrits ({{ students.length }})</h3>
-                  
-                  <div *ngIf="students.length === 0" class="no-data">
-                    Aucun étudiant inscrit à cette formation.
+            </div>
+          </mat-tab>
+
+          <!-- Liste des étudiants (visible selon les droits) -->
+          <mat-tab label="Étudiants" *ngIf="canViewStudents()">
+            <div class="tab-content">
+              <div class="students-section">
+                <h3>Étudiants inscrits ({{ students.length }})</h3>
+
+                <div *ngIf="students.length === 0" class="no-data">
+                  Aucun étudiant inscrit à cette formation.
+                </div>
+
+                <mat-card *ngFor="let student of students" class="student-card">
+                  <div class="student-info">
+                    <span class="student-name"
+                      >{{ student.firstName }} {{ student.lastName }}</span
+                    >
+                    <span class="student-id">ID: {{ student.studentId }}</span>
                   </div>
-                  
-                  <mat-card *ngFor="let student of students" class="student-card">
-                    <div class="student-info">
-                      <span class="student-name">{{ student.firstName }} {{ student.lastName }}</span>
-                      <span class="student-id">ID: {{ student.studentId }}</span>
-                    </div>
-                    <div class="student-details">
-                      <span class="student-promo">Promo: {{ student.promo }}</span>
-                      <span class="student-years">{{ student.startYear }} - {{ student.endYear
+                  <div class="student-details">
+                    <span class="student-promo"
+                      >Promo: {{ student.promo }}</span
+                    >
+                    <span class="student-years"
+                      >{{ student.startYear }} - {{ student.endYear</span
+                    >
+                  </div></mat-card
+                >
+              </div>
+            </div></mat-tab
+          ></mat-tab-group
+        ></mat-card-content
+      ></mat-card
+    >
+  </div>
+</div>

@@ -1,5 +1,5 @@
 // src/app/modules/administration/document-management/document-management.component.ts
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
@@ -13,10 +13,17 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 @Component({
   selector: 'app-document-management',
   templateUrl: './document-management.component.html',
-  styleUrls: ['./document-management.component.scss']
+  styleUrls: ['./document-management.component.scss'],
 })
-export class DocumentManagementComponent implements OnInit {
-  displayedColumns: string[] = ['title', 'type', 'createdAt', 'visibilityLevel', 'createdBy', 'actions'];
+export class DocumentManagementComponent implements OnInit, AfterViewInit {
+  displayedColumns: string[] = [
+    'title',
+    'type',
+    'createdAt',
+    'visibilityLevel',
+    'createdBy',
+    'actions',
+  ];
   dataSource = new MatTableDataSource<Document>([]);
   loading = true;
   documentTypes = Object.values(DocumentType);
@@ -28,7 +35,7 @@ export class DocumentManagementComponent implements OnInit {
     private documentService: DocumentService,
     private router: Router,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -50,10 +57,14 @@ export class DocumentManagementComponent implements OnInit {
       error: (error) => {
         console.error('Error loading documents', error);
         this.loading = false;
-        this.snackBar.open('Erreur lors du chargement des documents', 'Fermer', {
-          duration: 3000
-        });
-      }
+        this.snackBar.open(
+          'Erreur lors du chargement des documents',
+          'Fermer',
+          {
+            duration: 3000,
+          },
+        );
+      },
     });
   }
 
@@ -79,25 +90,29 @@ export class DocumentManagementComponent implements OnInit {
       width: '350px',
       data: {
         title: 'Confirmer la suppression',
-        message: `Êtes-vous sûr de vouloir supprimer le document "${document.title}" ?`
-      }
+        message: `Êtes-vous sûr de vouloir supprimer le document "${document.title}" ?`,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.documentService.deleteDocument(document.id).subscribe({
           next: () => {
             this.loadDocuments();
             this.snackBar.open('Document supprimé avec succès', 'Fermer', {
-              duration: 3000
+              duration: 3000,
             });
           },
           error: (error) => {
             console.error('Error deleting document', error);
-            this.snackBar.open('Erreur lors de la suppression du document', 'Fermer', {
-              duration: 3000
-            });
-          }
+            this.snackBar.open(
+              'Erreur lors de la suppression du document',
+              'Fermer',
+              {
+                duration: 3000,
+              },
+            );
+          },
         });
       }
     });

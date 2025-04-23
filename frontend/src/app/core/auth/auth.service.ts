@@ -1,4 +1,3 @@
-// frontend/src/app/auth/auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -8,7 +7,7 @@ import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
@@ -17,11 +16,11 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
   ) {
     const storedUser = localStorage.getItem('currentUser');
     this.currentUserSubject = new BehaviorSubject<User | null>(
-      storedUser ? JSON.parse(storedUser) : null
+      storedUser ? JSON.parse(storedUser) : null,
     );
     this.currentUser = this.currentUserSubject.asObservable();
   }
@@ -32,34 +31,42 @@ export class AuthService {
 
   login(username: string, password: string): Observable<LoginResponse> {
     const loginRequest: LoginRequest = { username, password };
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, loginRequest)
-      .pipe(map(response => {
-        // Store user details and jwt token in local storage to keep user logged in
-        const user: User = {
-          id: 0, // We don't have the ID in the response
-          username: response.username,
-          email: response.email,
-          role: response.role
-        };
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        localStorage.setItem('token', response.token);
-        this.currentUserSubject.next(user);
-        return response;
-      }));
+    return this.http
+      .post<LoginResponse>(`${this.apiUrl}/login`, loginRequest)
+      .pipe(
+        map((response) => {
+          // Store user details and jwt token in local storage to keep user logged in
+          const user: User = {
+            id: 0, // We don't have the ID in the response
+            username: response.username,
+            email: response.email,
+            role: response.role,
+          };
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          localStorage.setItem('token', response.token);
+          this.currentUserSubject.next(user);
+          return response;
+        }),
+      );
   }
 
   logout(): void {
-    // Remove user from local storage and set current user to null
-    localStorage.removeItem('currentUser');
+    // Clear local storage
     localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
+
+    // Reset the current user subject
     this.currentUserSubject.next(null);
+
+    // Navigate to login page
     this.router.navigate(['/login']);
   }
 
-  hasRole(roles: Role[]): boolean {
+  hasRole(requiredRoles: Role[]): boolean {
     const currentUser = this.currentUserValue;
-    if (!currentUser) return false;
-    return roles.includes(currentUser.role);
+    return (
+      !!currentUser && requiredRoles.some((role) => role === currentUser.role)
+    );
   }
 
   isLoggedIn(): boolean {
@@ -70,25 +77,21 @@ export class AuthService {
     return localStorage.getItem('token');
   }
 
+  isAuthenticated(): boolean {
+    return !!this.currentUserValue;
+  }
+
   autoLogin(): void {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('currentUser');
-    
+
     if (token && storedUser) {
       try {
-        // Parse the stored user data
         const user: User = JSON.parse(storedUser);
-        
-        // Update the current user subject
         this.currentUserSubject.next(user);
-        
-        // Optional: Validate token with backend
-        // this.validateToken(token).subscribe();
-        
-        console.log('Auto login successful');
       } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        this.logout(); // Clear invalid data
+        console.error('Failed to parse stored user', error);
+        this.logout();
       }
     }
   }

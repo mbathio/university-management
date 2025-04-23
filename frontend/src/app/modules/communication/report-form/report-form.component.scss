@@ -1,63 +1,63 @@
 // src/app/modules/communication/report-form/report-form.component.scss
 .report-form-container {
-    padding: 20px;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  
-  .full-width {
-    width: 100%;
-  }
-  
-  .form-field-container {
-    margin-bottom: 20px;
-  }
-  
-  .file-upload-container {
-    margin-bottom: 10px;
-  }
-  
-  .file-upload-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: rgba(0, 0, 0, 0.6);
-  }
-  
-  .file-input {
-    display: none;
-  }
-  
-  .hidden-file-input {
-    display: none;
-  }
-  
-  .file-button {
-    margin-right: 10px;
-  }
-  
-  .selected-file-name {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-field-container {
+  margin-bottom: 20px;
+}
+
+.file-upload-container {
+  margin-bottom: 10px;
+}
+
+.file-upload-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.file-input {
+  display: none;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.file-button {
+  margin-right: 10px;
+}
+
+.selected-file-name {
+  margin-left: 10px;
+  font-size: 0.9em;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.file-info {
+  font-size: 0.8em;
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 5px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+
+  button {
     margin-left: 10px;
-    font-size: 0.9em;
-    color: rgba(0, 0, 0, 0.6);
   }
-  
-  .file-info {
-    font-size: 0.8em;
-    color: rgba(0, 0, 0, 0.6);
-    margin-top: 5px;
-  }
-  
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 30px;
-    
-    button {
-      margin-left: 10px;
-    }
-  }
-  
-  mat-spinner {
-    display: inline-block;
-  }
+}
+
+mat-spinner {
+  display: inline-block;
+}

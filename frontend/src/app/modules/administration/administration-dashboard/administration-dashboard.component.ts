@@ -1,8 +1,9 @@
 // src/app/modules/administration/administration-dashboard/administration-dashboard.component.ts
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/user.model';
-import { Router } from '@angular/router'; // Added the missing import
 
 interface AdminSection {
   title: string;
@@ -16,7 +17,9 @@ interface AdminSection {
 @Component({
   selector: 'app-administration-dashboard',
   templateUrl: './administration-dashboard.component.html',
-  styleUrls: ['./administration-dashboard.component.scss']
+  styleUrls: ['./administration-dashboard.component.scss'],
+  standalone: true,
+  imports: [CommonModule, RouterModule],
 })
 export class AdministrationDashboardComponent {
   adminSections: AdminSection[] = [
@@ -25,7 +28,7 @@ export class AdministrationDashboardComponent {
       description: 'Courriers, notes de service, circulaires',
       icon: 'description',
       route: '/administration/documents',
-      color: '#4CAF50'
+      color: '#4CAF50',
     },
     {
       title: 'Gestion Budgétaire',
@@ -33,7 +36,7 @@ export class AdministrationDashboardComponent {
       icon: 'account_balance',
       route: '/administration/budget',
       color: '#2196F3',
-      roles: [Role.ADMIN, Role.ADMINISTRATION]
+      roles: [Role.ADMIN, Role.ADMINISTRATION],
     },
     {
       title: 'Ressources Humaines',
@@ -41,14 +44,11 @@ export class AdministrationDashboardComponent {
       icon: 'people',
       route: '/administration/hr',
       color: '#FF9800',
-      roles: [Role.ADMIN, Role.ADMINISTRATION]
-    }
+      roles: [Role.ADMIN, Role.ADMINISTRATION],
+    },
   ];
-  
-  constructor(
-    private authService: AuthService,
-    private router: Router // Ajouter cette injection
-  ) {}  
+
+  constructor(private authService: AuthService) {}
   isAllowed(section: AdminSection): boolean {
     if (!section.roles) {
       return true;

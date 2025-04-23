@@ -1,6 +1,19 @@
 // frontend/src/app/modules/formations/formation-detail/formation-detail.component.ts
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
+
+// Material Modules
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
+import { MatTabsModule } from '@angular/material/tabs';
+
+// Services and Models
 import { FormationService } from '../services/formation.service';
 import { StudentService } from '../../students/services/student.service';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -12,32 +25,45 @@ import { of } from 'rxjs';
 @Component({
   selector: 'app-formation-detail',
   templateUrl: './formation-detail.component.html',
-  styleUrls: ['./formation-detail.component.scss']
+  styleUrls: ['./formation-detail.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+    MatCardModule,
+    MatTabsModule,
+  ],
 })
 export class FormationDetailComponent implements OnInit {
   formation!: Formation;
   students: Student[] = [];
   loading = true;
   isMyFormationView = false;
-  
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private formationService: FormationService,
     private studentService: StudentService,
     private authService: AuthService,
-    private snackBar: MatSnackBar
-  ) { }
-  
+    private snackBar: MatSnackBar,
+  ) {}
+
   ngOnInit(): void {
-    this.route.data.subscribe(data => {
+    this.route.data.subscribe((data) => {
       this.isMyFormationView = data['myFormation'] || false;
     });
-    
+
     if (this.isMyFormationView) {
       this.loadMyFormation();
     } else {
-      this.route.paramMap.subscribe(params => {
+      this.route.paramMap.subscribe((params) => {
         const id = params.get('id');
         if (id) {
           this.loadFormation(+id);
@@ -47,46 +73,56 @@ export class FormationDetailComponent implements OnInit {
       });
     }
   }
-  
+
   loadFormation(id: number): void {
     this.loading = true;
-    this.formationService.getFormationById(id)
+    this.formationService
+      .getFormationById(id)
       .pipe(
-        catchError(error => {
-          this.snackBar.open('Erreur lors du chargement de la formation', 'Fermer', {
-            duration: 3000
-          });
+        catchError((error) => {
+          this.snackBar.open(
+            'Erreur lors du chargement de la formation',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           this.router.navigate(['/formations']);
           return of(null);
         }),
         finalize(() => {
           this.loading = false;
-        })
+        }),
       )
-      .subscribe(formation => {
+      .subscribe((formation) => {
         if (formation) {
           this.formation = formation;
           this.loadStudents(id);
         }
       });
   }
-  
+
   loadMyFormation(): void {
     this.loading = true;
-    this.formationService.getMyFormation()
+    this.formationService
+      .getMyFormation()
       .pipe(
-        catchError(error => {
-          this.snackBar.open('Erreur lors du chargement de votre formation', 'Fermer', {
-            duration: 3000
-          });
+        catchError((error) => {
+          this.snackBar.open(
+            'Erreur lors du chargement de votre formation',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           this.router.navigate(['/dashboard']);
           return of(null);
         }),
         finalize(() => {
           this.loading = false;
-        })
+        }),
       )
-      .subscribe(formation => {
+      .subscribe((formation) => {
         if (formation) {
           this.formation = formation;
           if (formation.id) {
@@ -95,54 +131,69 @@ export class FormationDetailComponent implements OnInit {
         }
       });
   }
-  
+
   loadStudents(formationId: number): void {
     if (this.canViewStudents()) {
-      this.studentService.getStudentsByFormation(formationId)
+      this.studentService
+        .getStudentsByFormation(formationId)
         .pipe(
-          catchError(error => {
-            this.snackBar.open('Erreur lors du chargement des étudiants', 'Fermer', {
-              duration: 3000
-            });
+          catchError((error) => {
+            this.snackBar.open(
+              'Erreur lors du chargement des étudiants',
+              'Fermer',
+              {
+                duration: 3000,
+              },
+            );
             return of([]);
-          })
+          }),
         )
-        .subscribe(students => {
+        .subscribe((students) => {
           this.students = students;
         });
     }
   }
-  
+
   canEdit(): boolean {
     return this.authService.hasRole([Role.ADMIN, Role.FORMATION_MANAGER]);
   }
-  
+
   canDelete(): boolean {
     return this.authService.hasRole([Role.ADMIN]);
   }
-  
+
   canViewStudents(): boolean {
-    return this.authService.hasRole([Role.ADMIN, Role.FORMATION_MANAGER, Role.TEACHER, Role.TUTOR]);
+    return this.authService.hasRole([
+      Role.ADMIN,
+      Role.FORMATION_MANAGER,
+      Role.TEACHER,
+      Role.TUTOR,
+    ]);
   }
-  
+
   onEdit(): void {
     this.router.navigate(['/formations/edit', this.formation.id]);
   }
-  
+
   onDelete(): void {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
-      this.formationService.deleteFormation(this.formation.id)
+      this.formationService
+        .deleteFormation(this.formation.id)
         .pipe(
-          catchError(error => {
-            this.snackBar.open('Erreur lors de la suppression de la formation', 'Fermer', {
-              duration: 3000
-            });
+          catchError((error) => {
+            this.snackBar.open(
+              'Erreur lors de la suppression de la formation',
+              'Fermer',
+              {
+                duration: 3000,
+              },
+            );
             return of(null);
-          })
+          }),
         )
         .subscribe(() => {
           this.snackBar.open('Formation supprimée avec succès', 'Fermer', {
-            duration: 3000
+            duration: 3000,
           });
           this.router.navigate(['/formations']);
         });

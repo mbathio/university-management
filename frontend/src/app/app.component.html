@@ -1,8 +1,17 @@
 <!-- src/app/app.component.html -->
 <div class="app-container">
-  <app-header *ngIf="!isLoginPage"></app-header>
-  <div class="content-container" [ngClass]="{'login-container': isLoginPage}">
-    <app-sidenav *ngIf="!isLoginPage"></app-sidenav>
+  <!-- Affichage du header si ce n'est pas une page de connexion -->
+  <ng-container *ngIf="!isLoginPage">
+    <app-header></app-header>
+  </ng-container>
+
+  <div class="content-container" [ngClass]="{ 'login-container': isLoginPage }">
+    <!-- Affichage du sidenav si ce n'est pas une page de connexion -->
+    <ng-container *ngIf="!isLoginPage">
+      <app-sidenav [navItems]="navItems"></app-sidenav>
+    </ng-container>
+
+    <!-- Contenu principal -->
     <main class="main-content">
       <router-outlet></router-outlet>
     </main>

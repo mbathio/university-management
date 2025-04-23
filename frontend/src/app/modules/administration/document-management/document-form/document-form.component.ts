@@ -10,7 +10,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
 @Component({
   selector: 'app-document-form',
   templateUrl: './document-form.component.html',
-  styleUrls: ['./document-form.component.scss']
+  styleUrls: ['./document-form.component.scss'],
 })
 export class DocumentFormComponent implements OnInit {
   documentForm!: FormGroup;
@@ -27,7 +27,7 @@ export class DocumentFormComponent implements OnInit {
     private router: Router,
     private documentService: DocumentService,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -47,7 +47,7 @@ export class DocumentFormComponent implements OnInit {
       content: [''],
       type: ['', Validators.required],
       visibilityLevel: ['PUBLIC', Validators.required],
-      file: ['']
+      file: [''],
     });
   }
 
@@ -59,16 +59,18 @@ export class DocumentFormComponent implements OnInit {
           title: document.title,
           content: document.content,
           type: document.type,
-          visibilityLevel: document.visibilityLevel
+          visibilityLevel: document.visibilityLevel,
         });
         this.loading = false;
       },
       error: (error) => {
         console.error('Erreur lors du chargement du document', error);
-        this.snackBar.open('Erreur lors du chargement du document', 'Fermer', { duration: 3000 });
+        this.snackBar.open('Erreur lors du chargement du document', 'Fermer', {
+          duration: 3000,
+        });
         this.loading = false;
         this.router.navigate(['/administration/documents']);
-      }
+      },
     });
   }
 
@@ -81,7 +83,7 @@ export class DocumentFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.documentForm.invalid) {
-      Object.keys(this.documentForm.controls).forEach(key => {
+      Object.keys(this.documentForm.controls).forEach((key) => {
         this.documentForm.get(key)?.markAsTouched();
       });
       return;
@@ -94,10 +96,13 @@ export class DocumentFormComponent implements OnInit {
       title: this.documentForm.value.title,
       content: this.documentForm.value.content,
       type: this.documentForm.value.type,
-      visibilityLevel: this.documentForm.value.visibilityLevel
+      visibilityLevel: this.documentForm.value.visibilityLevel,
     };
 
-    formData.append('document', new Blob([JSON.stringify(document)], { type: 'application/json' }));
+    formData.append(
+      'document',
+      new Blob([JSON.stringify(document)], { type: 'application/json' }),
+    );
 
     if (this.selectedFile) {
       formData.append('file', this.selectedFile);
@@ -106,36 +111,52 @@ export class DocumentFormComponent implements OnInit {
     if (this.isEditMode && this.documentId) {
       this.documentService.updateDocument(this.documentId, formData).subscribe({
         next: () => {
-          this.snackBar.open('Document mis à jour avec succès', 'Fermer', { duration: 3000 });
+          this.snackBar.open('Document mis à jour avec succès', 'Fermer', {
+            duration: 3000,
+          });
           this.router.navigate(['/administration/documents']);
           this.loading = false;
         },
         error: (error) => {
           console.error('Erreur lors de la mise à jour', error);
-          this.snackBar.open('Erreur lors de la mise à jour du document', 'Fermer', { duration: 3000 });
+          this.snackBar.open(
+            'Erreur lors de la mise à jour du document',
+            'Fermer',
+            { duration: 3000 },
+          );
           this.loading = false;
-        }
+        },
       });
     } else {
       const currentUser = this.authService.currentUserValue;
 
       if (!currentUser || !currentUser.id) {
-        this.snackBar.open('Vous devez être connecté pour effectuer cette action', 'Fermer', { duration: 3000 });
+        this.snackBar.open(
+          'Vous devez être connecté pour effectuer cette action',
+          'Fermer',
+          { duration: 3000 },
+        );
         this.loading = false;
         return;
       }
 
       this.documentService.createDocument(formData, currentUser.id).subscribe({
         next: () => {
-          this.snackBar.open('Document créé avec succès', 'Fermer', { duration: 3000 });
+          this.snackBar.open('Document créé avec succès', 'Fermer', {
+            duration: 3000,
+          });
           this.router.navigate(['/administration/documents']);
           this.loading = false;
         },
         error: (error) => {
           console.error('Erreur lors de la création', error);
-          this.snackBar.open('Erreur lors de la création du document', 'Fermer', { duration: 3000 });
+          this.snackBar.open(
+            'Erreur lors de la création du document',
+            'Fermer',
+            { duration: 3000 },
+          );
           this.loading = false;
-        }
+        },
       });
     }
   }

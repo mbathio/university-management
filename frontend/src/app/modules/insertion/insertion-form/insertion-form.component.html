@@ -1,146 +1,195 @@
 <div class="container">
-    <mat-card class="form-card">
-      <mat-card-header>
-        <mat-card-title>{{ isEditMode ? 'Modifier' : 'Ajouter' }} une insertion professionnelle</mat-card-title>
-      </mat-card-header>
-      
-      <mat-card-content>
-        <form [formGroup]="insertionForm" (ngSubmit)="onSubmit()">
-          <div *ngIf="loading" class="loading-spinner">
-            <mat-spinner diameter="40"></mat-spinner>
-          </div>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Étudiant</mat-label>
-              <mat-select formControlName="studentId" [disabled]="isEditMode">
-                <mat-option *ngFor="let student of students" [value]="student.id">
-                  {{ student.firstName }} {{ student.lastName }} ({{ student.studentId }})
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="studentIdControl?.hasError('required')">
-                L'étudiant est obligatoire
-              </mat-error>
-            </mat-form-field>
-          </div>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Entreprise</mat-label>
-              <input matInput formControlName="companyName" placeholder="Nom de l'entreprise">
-              <mat-error *ngIf="companyNameControl?.hasError('required')">
-                Le nom de l'entreprise est obligatoire
-              </mat-error>
-              <mat-error *ngIf="companyNameControl?.hasError('maxlength')">
-                Le nom ne doit pas dépasser 100 caractères
-              </mat-error>
-            </mat-form-field>
-          </div>
-          
-          <div class="form-row two-columns">
-            <mat-form-field appearance="outline">
-              <mat-label>Poste</mat-label>
-              <input matInput formControlName="position" placeholder="Poste occupé">
-              <mat-error *ngIf="positionControl?.hasError('required')">
-                Le poste est obligatoire
-              </mat-error>
-              <mat-error *ngIf="positionControl?.hasError('maxlength')">
-                Le poste ne doit pas dépasser 100 caractères
-              </mat-error>
-            </mat-form-field>
-            
-            <mat-form-field appearance="outline">
-              <mat-label>Secteur d'activité</mat-label>
-              <input matInput formControlName="industry" placeholder="Secteur d'activité">
-              <mat-error *ngIf="industryControl?.hasError('required')">
-                Le secteur d'activité est obligatoire
-              </mat-error>
-              <mat-error *ngIf="industryControl?.hasError('maxlength')">
-                Le secteur ne doit pas dépasser 100 caractères
-              </mat-error>
-            </mat-form-field>
-          </div>
-          
-          <div class="form-row two-columns">
-            <mat-form-field appearance="outline">
-              <mat-label>Date de début</mat-label>
-              <input matInput [matDatepicker]="startDatePicker" formControlName="startDate" placeholder="JJ/MM/AAAA">
-              <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
-              <mat-datepicker #startDatePicker></mat-datepicker>
-              <mat-error *ngIf="startDateControl?.hasError('required')">
-                La date de début est obligatoire
-              </mat-error>
-            </mat-form-field>
-            
-            <mat-form-field appearance="outline">
-              <mat-label>Lieu</mat-label>
-              <input matInput formControlName="location" placeholder="Ville, Pays">
-              <mat-error *ngIf="locationControl?.hasError('required')">
-                Le lieu est obligatoire
-              </mat-error>
-              <mat-error *ngIf="locationControl?.hasError('maxlength')">
-                Le lieu ne doit pas dépasser 100 caractères
-              </mat-error>
-            </mat-form-field>
-          </div>
-          
-          <div class="form-row two-columns">
-            <mat-form-field appearance="outline">
-              <mat-label>Type de contrat</mat-label>
-              <mat-select formControlName="contractType">
-                <mat-option *ngFor="let type of contractTypes" [value]="type">
-                  {{ type }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="contractTypeControl?.hasError('required')">
-                Le type de contrat est obligatoire
-              </mat-error>
-            </mat-form-field>
-            
-            <mat-form-field appearance="outline">
-              <mat-label>Fourchette salariale</mat-label>
-              <mat-select formControlName="salaryRange">
-                <mat-option value="">Non spécifié</mat-option>
-                <mat-option *ngFor="let range of salaryRanges" [value]="range">
-                  {{ range }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Statut</mat-label>
-              <mat-select formControlName="status">
-                <mat-option *ngFor="let status of insertionStatuses" [value]="status">
-                  {{ getStatusDisplay(status) }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="statusControl?.hasError('required')">
-                Le statut est obligatoire
-              </mat-error>
-            </mat-form-field>
-          </div>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Retour d'expérience</mat-label>
-              <textarea matInput formControlName="feedback" rows="4" placeholder="Retour d'expérience ou commentaires"></textarea>
-              <mat-hint align="end">{{ insertionForm.get('feedback')?.value?.length || 0 }}/500</mat-hint>
-              <mat-error *ngIf="insertionForm.get('feedback')?.hasError('maxlength')">
-                Le retour d'expérience ne doit pas dépasser 500 caractères
-              </mat-error>
-            </mat-form-field>
-          </div>
-          
-        </form>
-      </mat-card-content>
-      
-      <mat-card-actions align="end">
-        <button mat-button type="button" [routerLink]="['/insertion']">Annuler</button>
-        <button mat-raised-button color="primary" [disabled]="insertionForm.invalid || loading" (click)="onSubmit()">
-          {{ isEditMode ? 'Mettre à jour' : 'Enregistrer' }}
-        </button>
-      </mat-card-actions>
-    </mat-card>
-  </div>
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title
+        >{{ isEditMode ? "Modifier" : "Ajouter" }} une insertion
+        professionnelle</mat-card-title
+      >
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="insertionForm" (ngSubmit)="onSubmit()">
+        <div *ngIf="loading" class="loading-spinner">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Étudiant</mat-label>
+            <mat-select formControlName="studentId" [disabled]="isEditMode">
+              <mat-option *ngFor="let student of students" [value]="student.id">
+                {{ student.firstName }} {{ student.lastName }} ({{
+                  student.studentId
+                }})
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="studentIdControl?.hasError('required')">
+              L'étudiant est obligatoire
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Entreprise</mat-label>
+            <input
+              matInput
+              formControlName="companyName"
+              placeholder="Nom de l'entreprise"
+            />
+            <mat-error *ngIf="companyNameControl?.hasError('required')">
+              Le nom de l'entreprise est obligatoire
+            </mat-error>
+            <mat-error *ngIf="companyNameControl?.hasError('maxlength')">
+              Le nom ne doit pas dépasser 100 caractères
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Poste</mat-label>
+            <input
+              matInput
+              formControlName="position"
+              placeholder="Poste occupé"
+            />
+            <mat-error *ngIf="positionControl?.hasError('required')">
+              Le poste est obligatoire
+            </mat-error>
+            <mat-error *ngIf="positionControl?.hasError('maxlength')">
+              Le poste ne doit pas dépasser 100 caractères
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Secteur d'activité</mat-label>
+            <input
+              matInput
+              formControlName="industry"
+              placeholder="Secteur d'activité"
+            />
+            <mat-error *ngIf="industryControl?.hasError('required')">
+              Le secteur d'activité est obligatoire
+            </mat-error>
+            <mat-error *ngIf="industryControl?.hasError('maxlength')">
+              Le secteur ne doit pas dépasser 100 caractères
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Date de début</mat-label>
+            <input
+              matInput
+              [matDatepicker]="startDatePicker"
+              formControlName="startDate"
+              placeholder="JJ/MM/AAAA"
+            />
+            <mat-datepicker-toggle
+              matSuffix
+              [for]="startDatePicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #startDatePicker></mat-datepicker>
+            <mat-error *ngIf="startDateControl?.hasError('required')">
+              La date de début est obligatoire
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Lieu</mat-label>
+            <input
+              matInput
+              formControlName="location"
+              placeholder="Ville, Pays"
+            />
+            <mat-error *ngIf="locationControl?.hasError('required')">
+              Le lieu est obligatoire
+            </mat-error>
+            <mat-error *ngIf="locationControl?.hasError('maxlength')">
+              Le lieu ne doit pas dépasser 100 caractères
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row two-columns">
+          <mat-form-field appearance="outline">
+            <mat-label>Type de contrat</mat-label>
+            <mat-select formControlName="contractType">
+              <mat-option *ngFor="let type of contractTypes" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="contractTypeControl?.hasError('required')">
+              Le type de contrat est obligatoire
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fourchette salariale</mat-label>
+            <mat-select formControlName="salaryRange">
+              <mat-option value="">Non spécifié</mat-option>
+              <mat-option *ngFor="let range of salaryRanges" [value]="range">
+                {{ range }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Statut</mat-label>
+            <mat-select formControlName="status">
+              <mat-option
+                *ngFor="let status of insertionStatuses"
+                [value]="status"
+              >
+                {{ getStatusDisplay(status) }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="statusControl?.hasError('required')">
+              Le statut est obligatoire
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Retour d'expérience</mat-label>
+            <textarea
+              matInput
+              formControlName="feedback"
+              rows="4"
+              placeholder="Retour d'expérience ou commentaires"
+            ></textarea>
+            <mat-hint align="end"
+              >{{
+                insertionForm.get("feedback")?.value?.length || 0
+              }}/500</mat-hint
+            >
+            <mat-error
+              *ngIf="insertionForm.get('feedback')?.hasError('maxlength')"
+            >
+              Le retour d'expérience ne doit pas dépasser 500 caractères
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-button type="button" [routerLink]="['/insertion']">
+        Annuler
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="insertionForm.invalid || loading"
+        (click)="onSubmit()"
+      >
+        {{ isEditMode ? "Mettre à jour" : "Enregistrer" }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

@@ -6,12 +6,12 @@ import { Formation } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FormationService {
   private apiUrl = `${environment.apiUrl}/formations`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getAllFormations(): Observable<Formation[]> {
     return this.http.get<Formation[]>(this.apiUrl);
@@ -32,23 +32,23 @@ export class FormationService {
   deleteFormation(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
-  
+
   getFormationSchedule(id: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${id}/schedule`);
   }
-  
+
   getFormationTrainers(id: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${id}/trainers`);
   }
-  
+
   getMyFormation(): Observable<Formation> {
     return this.http.get<Formation>(`${this.apiUrl}/my-formation`);
   }
-  
+
   getFormationsByType(type: string): Observable<Formation[]> {
     return this.http.get<Formation[]>(`${this.apiUrl}/by-type/${type}`);
   }
-  
+
   getFormationsByLevel(level: string): Observable<Formation[]> {
     return this.http.get<Formation[]>(`${this.apiUrl}/by-level/${level}`);
   }

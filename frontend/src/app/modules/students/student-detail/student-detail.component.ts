@@ -11,22 +11,22 @@ import { of } from 'rxjs';
 @Component({
   selector: 'app-student-detail',
   templateUrl: './student-detail.component.html',
-  styleUrls: ['./student-detail.component.scss']
+  styleUrls: ['./student-detail.component.scss'],
 })
 export class StudentDetailComponent implements OnInit {
   student: Student | null = null;
   loading = true;
   error = '';
   isCurrentUserProfile = false;
-  
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private studentService: StudentService,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {}
-  
+
   ngOnInit(): void {
     // Check if this is the current user's profile
     if (this.router.url === '/students/profile') {
@@ -38,123 +38,141 @@ export class StudentDetailComponent implements OnInit {
       if (studentId) {
         this.loadStudentById(+studentId);
       } else {
-        this.error = 'Identifiant de l\'étudiant manquant';
+        this.error = "Identifiant de l'étudiant manquant";
         this.loading = false;
       }
     }
   }
-  
+
   loadStudentById(id: number): void {
     this.loading = true;
-    
-    this.studentService.getStudentById(id)
+
+    this.studentService
+      .getStudentById(id)
       .pipe(
-        catchError(error => {
-          this.error = 'Erreur lors du chargement des informations de l\'étudiant';
+        catchError((error) => {
+          this.error =
+            "Erreur lors du chargement des informations de l'étudiant";
           this.snackBar.open(this.error, 'Fermer', {
-            duration: 3000
+            duration: 3000,
           });
           return of(null);
         }),
         finalize(() => {
           this.loading = false;
-        })
+        }),
       )
-      .subscribe(student => {
+      .subscribe((student) => {
         if (student) {
           this.student = student;
         }
       });
   }
-  
+
   loadCurrentUserProfile(): void {
     this.loading = true;
     const currentUser = this.authService.currentUserValue;
-    
+
     if (!currentUser) {
       this.router.navigate(['/login']);
       return;
     }
-    
+
     if (currentUser.role !== Role.STUDENT) {
-      this.snackBar.open('Vous n\'êtes pas un étudiant', 'Fermer', {
-        duration: 3000
+      this.snackBar.open("Vous n'êtes pas un étudiant", 'Fermer', {
+        duration: 3000,
       });
       this.router.navigate(['/dashboard']);
       return;
     }
-    
+
     // Find the student by the current user's username
-    this.studentService.getStudentByStudentId(currentUser.username)
+    this.studentService
+      .getStudentByStudentId(currentUser.username)
       .pipe(
-        catchError(error => {
+        catchError((error) => {
           this.error = 'Erreur lors du chargement de votre profil';
           this.snackBar.open(this.error, 'Fermer', {
-            duration: 3000
+            duration: 3000,
           });
           return of(null);
         }),
         finalize(() => {
           this.loading = false;
-        })
+        }),
       )
-      .subscribe(student => {
+      .subscribe((student) => {
         if (student) {
           this.student = student;
         }
       });
   }
-  
+
   canEdit(): boolean {
     if (this.isCurrentUserProfile) {
       return true; // Allow students to edit their own profile
     }
-    
-    return this.authService.hasRole([Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION]);
+
+    return this.authService.hasRole([
+      Role.ADMIN,
+      Role.FORMATION_MANAGER,
+      Role.ADMINISTRATION,
+    ]);
   }
-  
+
   canDelete(): boolean {
     return this.authService.hasRole([Role.ADMIN]);
   }
-  
+
   editStudent(): void {
     if (this.student) {
       this.router.navigate(['/students/edit', this.student.id]);
     }
   }
-  
+
   deleteStudent(): void {
     if (!this.student) return;
-    
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible.')) {
+
+    if (
+      confirm(
+        'Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible.',
+      )
+    ) {
       this.loading = true;
-      
-      this.studentService.deleteStudent(this.student.id)
+
+      this.studentService
+        .deleteStudent(this.student.id)
         .pipe(
-          catchError(error => {
-            this.snackBar.open('Erreur lors de la suppression de l\'étudiant', 'Fermer', {
-              duration: 3000
-            });
+          catchError((error) => {
+            this.snackBar.open(
+              "Erreur lors de la suppression de l'étudiant",
+              'Fermer',
+              {
+                duration: 3000,
+              },
+            );
             return of(null);
           }),
           finalize(() => {
             this.loading = false;
-          })
+          }),
         )
         .subscribe(() => {
           this.snackBar.open('Étudiant supprimé avec succès', 'Fermer', {
-            duration: 3000
+            duration: 3000,
           });
           this.router.navigate(['/students']);
         });
     }
   }
-  
+
   goBack(): void {
     this.router.navigate(['/students']);
   }
-  
+
   getFormationName(): string {
-    return this.student?.currentFormation ? this.student.currentFormation.name : 'Non assigné';
+    return this.student?.currentFormation
+      ? this.student.currentFormation.name
+      : 'Non assigné';
   }
 }

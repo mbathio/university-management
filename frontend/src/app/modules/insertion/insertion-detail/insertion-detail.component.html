@@ -1,78 +1,104 @@
 <div class="container">
-    <div *ngIf="loading" class="loading-container">
-      <mat-spinner></mat-spinner>
-    </div>
-    
-    <div *ngIf="error" class="error-container">
-      <p>{{ error }}</p>
-    </div>
-    
-    <div *ngIf="!loading && !error && insertion" class="insertion-detail">
-      <div class="header">
-        <button mat-icon-button (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="error" class="error-container">
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="!loading && !error && insertion" class="insertion-detail">
+    <div class="header">
+      <button mat-icon-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h2>Détail d'insertion professionnelle</h2>
+      <div class="actions">
+        <button
+          *ngIf="canEdit()"
+          mat-button
+          color="primary"
+          (click)="editInsertion()"
+        >
+          <mat-icon>edit</mat-icon> Modifier
         </button>
-        <h2>Détail d'insertion professionnelle</h2>
-        <div class="actions">
-          <button *ngIf="canEdit()" mat-button color="primary" (click)="editInsertion()">
-            <mat-icon>edit</mat-icon> Modifier
-          </button>
-          <button *ngIf="canDelete()" mat-button color="warn" (click)="deleteInsertion()">
-            <mat-icon>delete</mat-icon> Supprimer
-          </button>
-        </div>
+        <button
+          *ngIf="canDelete()"
+          mat-button
+          color="warn"
+          (click)="deleteInsertion()"
+        >
+          <mat-icon>delete</mat-icon> Supprimer
+        </button>
       </div>
-      
-      <div class="content">
-        <mat-card class="student-info">
-          <mat-card-header>
-            <mat-icon mat-card-avatar>person</mat-icon>
-            <mat-card-title>{{student.firstName}} {{student.lastName}}</mat-card-title>
-            <mat-card-subtitle>{{student.studentId}} - {{student.promo || 'Promo non spécifiée'}}</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <p><strong>Formation:</strong> {{student.currentFormation.name}}</p>
-            <p><strong>Période:</strong> {{student.startYear}} - {{student.endYear}}</p>
-          </mat-card-content>
-        </mat-card>
-        
-        <mat-card class="company-info">
-          <mat-card-header>
-            <mat-icon mat-card-avatar>business</mat-icon>
-            <mat-card-title>{{insertion.companyName}}</mat-card-title>
-            <mat-card-subtitle [style.color]="getStatusColor(insertion.status)">{{getStatusLabel(insertion.status)}}</mat-card-subtitle>
-          </mat-card-header>
-          
-          <mat-card-content>
-            <div class="info-row">
-              <mat-icon>work</mat-icon> <strong>Poste:</strong> {{insertion.position}}
-            </div>
-            <div class="info-row">
-              <mat-icon>category</mat-icon> <strong>Secteur:</strong> {{insertion.industry}}
-            </div>
-            <div class="info-row">
-              <mat-icon>calendar_today</mat-icon> <strong>Date de début:</strong> {{formatDate(insertion.startDate)}}
-            </div>
-            <div class="info-row">
-              <mat-icon>location_on</mat-icon> <strong>Lieu:</strong> {{insertion.location}}
-            </div>
-            <div class="info-row">
-              <mat-icon>description</mat-icon> <strong>Type de contrat:</strong> {{insertion.contractType}}
-            </div>
-            <div class="info-row">
-              <mat-icon>euro</mat-icon> <strong>Fourchette salariale:</strong> {{insertion.salaryRange}}
-            </div>
-          </mat-card-content>
-        </mat-card>
-        
-        <mat-card *ngIf="insertion.feedback" class="feedback-info">
-          <mat-card-header>
-            <h3>Retour d'expérience</h3>
-          </mat-card-header>
-          <mat-card-content>
-            <p>{{insertion.feedback}}</p>
-          </mat-card-content>
-        </mat-card>
-      </div>
+    </div>
+
+    <div class="content">
+      <mat-card class="student-info">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>person</mat-icon>
+          <mat-card-title
+            >{{ student.firstName }} {{ student.lastName }}</mat-card-title
+          >
+          <mat-card-subtitle
+            >{{ student.studentId }} -
+            {{ student.promo || "Promo non spécifiée" }}</mat-card-subtitle
+          >
+        </mat-card-header>
+        <mat-card-content>
+          <p><strong>Formation:</strong> {{ student.currentFormation.name }}</p>
+          <p>
+            <strong>Période:</strong> {{ student.startYear }} -
+            {{ student.endYear }}
+          </p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="company-info">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>business</mat-icon>
+          <mat-card-title>{{ insertion.companyName }}</mat-card-title>
+          <mat-card-subtitle [style.color]="getStatusColor(insertion.status)">{{
+            getStatusLabel(insertion.status)
+          }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="info-row">
+            <mat-icon>work</mat-icon> <strong>Poste:</strong>
+            {{ insertion.position }}
+          </div>
+          <div class="info-row">
+            <mat-icon>category</mat-icon> <strong>Secteur:</strong>
+            {{ insertion.industry }}
+          </div>
+          <div class="info-row">
+            <mat-icon>calendar_today</mat-icon> <strong>Date de début:</strong>
+            {{ formatDate(insertion.startDate) }}
+          </div>
+          <div class="info-row">
+            <mat-icon>location_on</mat-icon> <strong>Lieu:</strong>
+            {{ insertion.location }}
+          </div>
+          <div class="info-row">
+            <mat-icon>description</mat-icon> <strong>Type de contrat:</strong>
+            {{ insertion.contractType }}
+          </div>
+          <div class="info-row">
+            <mat-icon>euro</mat-icon> <strong>Fourchette salariale:</strong>
+            {{ insertion.salaryRange }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card *ngIf="insertion.feedback" class="feedback-info">
+        <mat-card-header>
+          <h3>Retour d'expérience</h3>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ insertion.feedback }}</p>
+        </mat-card-content>
+      </mat-card>
     </div>
   </div>
+</div>

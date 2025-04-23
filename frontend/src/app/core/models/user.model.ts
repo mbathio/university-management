@@ -5,7 +5,7 @@ export enum Role {
   STUDENT = 'STUDENT',
   FORMATION_MANAGER = 'FORMATION_MANAGER',
   ADMINISTRATION = 'ADMINISTRATION',
-  STAFF = 'STAFF'
+  STAFF = 'STAFF',
 }
 
 export enum DocumentType {
@@ -14,7 +14,7 @@ export enum DocumentType {
   REPORT = 'REPORT',
   ANNOUNCEMENT = 'ANNOUNCEMENT',
   COURSE_MATERIAL = 'COURSE_MATERIAL',
-  OTHER = 'OTHER'
+  OTHER = 'OTHER',
 }
 
 export interface User {

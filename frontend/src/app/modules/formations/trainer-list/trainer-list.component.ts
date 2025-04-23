@@ -9,7 +9,7 @@ import { of } from 'rxjs';
 @Component({
   selector: 'app-trainer-list',
   templateUrl: './trainer-list.component.html',
-  styleUrls: ['./trainer-list.component.scss']
+  styleUrls: ['./trainer-list.component.scss'],
 })
 export class TrainerListComponent implements OnInit {
   formationId!: number;
@@ -17,16 +17,16 @@ export class TrainerListComponent implements OnInit {
   loading = true;
   formationName = '';
   displayedColumns: string[] = ['name', 'position', 'department', 'contact'];
-  
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private formationService: FormationService,
-    private snackBar: MatSnackBar
-  ) { }
-  
+    private snackBar: MatSnackBar,
+  ) {}
+
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id) {
         this.formationId = +id;
@@ -37,43 +37,53 @@ export class TrainerListComponent implements OnInit {
       }
     });
   }
-  
+
   private loadFormationDetails(): void {
-    this.formationService.getFormationById(this.formationId)
+    this.formationService
+      .getFormationById(this.formationId)
       .pipe(
-        catchError(error => {
-          this.snackBar.open('Erreur lors du chargement des détails de la formation', 'Fermer', {
-            duration: 3000
-          });
+        catchError((error) => {
+          this.snackBar.open(
+            'Erreur lors du chargement des détails de la formation',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           return of(null);
-        })
+        }),
       )
-      .subscribe(formation => {
+      .subscribe((formation) => {
         if (formation) {
           this.formationName = formation.name;
         }
       });
   }
-  
+
   private loadTrainers(): void {
     this.loading = true;
-    this.formationService.getFormationTrainers(this.formationId)
+    this.formationService
+      .getFormationTrainers(this.formationId)
       .pipe(
-        catchError(error => {
-          this.snackBar.open('Erreur lors du chargement des formateurs', 'Fermer', {
-            duration: 3000
-          });
+        catchError((error) => {
+          this.snackBar.open(
+            'Erreur lors du chargement des formateurs',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           return of([]);
         }),
         finalize(() => {
           this.loading = false;
-        })
+        }),
       )
-      .subscribe(trainers => {
+      .subscribe((trainers) => {
         this.trainers = trainers;
       });
   }
-  
+
   goBack(): void {
     this.router.navigate(['/formations', this.formationId]);
   }

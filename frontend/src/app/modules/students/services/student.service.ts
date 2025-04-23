@@ -6,12 +6,12 @@ import { Student } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class StudentService {
   private apiUrl = `${environment.apiUrl}/students`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getAllStudents(): Observable<Student[]> {
     return this.http.get<Student[]>(this.apiUrl);
@@ -38,7 +38,9 @@ export class StudentService {
   }
 
   getStudentsByFormation(formationId: number): Observable<Student[]> {
-    return this.http.get<Student[]>(`${this.apiUrl}/by-formation/${formationId}`);
+    return this.http.get<Student[]>(
+      `${this.apiUrl}/by-formation/${formationId}`,
+    );
   }
 
   getStudentsByPromo(promo: string): Observable<Student[]> {

@@ -9,23 +9,23 @@ import { of } from 'rxjs';
 @Component({
   selector: 'app-schedule',
   templateUrl: './schedule.component.html',
-  styleUrls: ['./schedule.component.scss']
+  styleUrls: ['./schedule.component.scss'],
 })
 export class ScheduleComponent implements OnInit {
   formationId!: number;
   scheduleItems: any[] = [];
   loading = true;
   formationName = '';
-  
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private formationService: FormationService,
-    private snackBar: MatSnackBar
-  ) { }
-  
+    private snackBar: MatSnackBar,
+  ) {}
+
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id) {
         this.formationId = +id;
@@ -36,43 +36,53 @@ export class ScheduleComponent implements OnInit {
       }
     });
   }
-  
+
   private loadFormationDetails(): void {
-    this.formationService.getFormationById(this.formationId)
+    this.formationService
+      .getFormationById(this.formationId)
       .pipe(
-        catchError(error => {
-          this.snackBar.open('Erreur lors du chargement des détails de la formation', 'Fermer', {
-            duration: 3000
-          });
+        catchError((error) => {
+          this.snackBar.open(
+            'Erreur lors du chargement des détails de la formation',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           return of(null);
-        })
+        }),
       )
-      .subscribe(formation => {
+      .subscribe((formation) => {
         if (formation) {
           this.formationName = formation.name;
         }
       });
   }
-  
+
   private loadSchedule(): void {
     this.loading = true;
-    this.formationService.getFormationSchedule(this.formationId)
+    this.formationService
+      .getFormationSchedule(this.formationId)
       .pipe(
-        catchError(error => {
-          this.snackBar.open('Erreur lors du chargement du planning', 'Fermer', {
-            duration: 3000
-          });
+        catchError((error) => {
+          this.snackBar.open(
+            'Erreur lors du chargement du planning',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           return of([]);
         }),
         finalize(() => {
           this.loading = false;
-        })
+        }),
       )
-      .subscribe(scheduleItems => {
+      .subscribe((scheduleItems) => {
         this.scheduleItems = scheduleItems;
       });
   }
-  
+
   goBack(): void {
     this.router.navigate(['/formations', this.formationId]);
   }

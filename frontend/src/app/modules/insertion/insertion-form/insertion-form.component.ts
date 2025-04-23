@@ -3,7 +3,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { InsertionService, InsertionStatus } from '../services/insertion.service';
+import {
+  InsertionService,
+  Insertion,
+  InsertionStatus,
+} from '../services/insertion.service';
 import { StudentService } from '../../students/services/student.service';
 import { FormationService } from '../../formations/services/formation.service';
 import { catchError, finalize } from 'rxjs/operators';
@@ -12,7 +16,7 @@ import { forkJoin, of } from 'rxjs';
 @Component({
   selector: 'app-insertion-form',
   templateUrl: './insertion-form.component.html',
-  styleUrls: ['./insertion-form.component.scss']
+  styleUrls: ['./insertion-form.component.scss'],
 })
 export class InsertionFormComponent implements OnInit {
   insertionForm!: FormGroup;
@@ -30,24 +34,24 @@ export class InsertionFormComponent implements OnInit {
     '50K€ - 60K€',
     '60K€ - 70K€',
     '70K€ - 80K€',
-    'Plus de 80K€'
+    'Plus de 80K€',
   ];
-  
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private insertionService: InsertionService,
     private studentService: StudentService,
-    private snackBar: MatSnackBar
-  ) { }
-  
+    private snackBar: MatSnackBar,
+  ) {}
+
   ngOnInit(): void {
     this.initForm();
     this.loadStudents();
-    
+
     // Check if we're in edit mode
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id) {
         this.isEditMode = true;
@@ -56,7 +60,7 @@ export class InsertionFormComponent implements OnInit {
       }
     });
   }
-  
+
   private initForm(): void {
     this.insertionForm = this.fb.group({
       studentId: ['', [Validators.required]],
@@ -68,123 +72,189 @@ export class InsertionFormComponent implements OnInit {
       contractType: ['', [Validators.required]],
       location: ['', [Validators.required, Validators.maxLength(100)]],
       feedback: ['', [Validators.maxLength(500)]],
-      status: ['', [Validators.required]]
+      status: ['', [Validators.required]],
     });
   }
-  
+
   private loadStudents(): void {
-    this.studentService.getAllStudents()
+    this.studentService
+      .getAllStudents()
       .pipe(
-        catchError(error => {
-          this.snackBar.open('Erreur lors du chargement des étudiants', 'Fermer', {
-            duration: 3000
-          });
+        catchError((error) => {
+          this.snackBar.open(
+            'Erreur lors du chargement des étudiants',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           return of([]);
-        })
+        }),
       )
-      .subscribe(students => {
+      .subscribe((students) => {
         this.students = students;
       });
   }
-  
+
   private loadInsertion(id: number): void {
     this.loading = true;
-    this.insertionService.getInsertionById(id)
+    this.insertionService
+      .getInsertionById(id)
       .pipe(
-        catchError(error => {
-          this.snackBar.open('Erreur lors du chargement des données d\'insertion', 'Fermer', {
-            duration: 3000
-          });
+        catchError((error) => {
+          this.snackBar.open(
+            "Erreur lors du chargement des données d'insertion",
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           this.router.navigate(['/insertion']);
           return of(null);
         }),
         finalize(() => {
           this.loading = false;
-        })
+        }),
       )
-      .subscribe(insertion => {
+      .subscribe((insertion) => {
         if (insertion) {
           this.insertionForm.patchValue({
             studentId: insertion.studentId,
             companyName: insertion.companyName,
             position: insertion.position,
             industry: insertion.industry,
-            startDate: insertion.startDate ? new Date(insertion.startDate) : null,
+            startDate: insertion.startDate
+              ? new Date(insertion.startDate)
+              : null,
             salaryRange: insertion.salaryRange,
             contractType: insertion.contractType,
             location: insertion.location,
             feedback: insertion.feedback,
-            status: insertion.status
+            status: insertion.status,
           });
         }
       });
   }
-  
+
   onSubmit(): void {
     if (this.insertionForm.invalid) {
       // Mark all fields as touched to trigger validation visualization
-      Object.keys(this.insertionForm.controls).forEach(key => {
+      Object.keys(this.insertionForm.controls).forEach((key) => {
         const control = this.insertionForm.get(key);
         control?.markAsTouched();
       });
       return;
     }
-    
+
     this.loading = true;
     const insertionData = this.insertionForm.value;
-    
+
     if (this.isEditMode && this.insertionId) {
-      this.insertionService.updateInsertion(this.insertionId, insertionData)
+      this.insertionService
+        .updateInsertion(this.insertionId, insertionData)
         .pipe(
-          catchError(error => {
-            this.snackBar.open('Erreur lors de la mise à jour des données d\'insertion', 'Fermer', {
-              duration: 3000
-            });
+          catchError((error) => {
+            this.snackBar.open(
+              "Erreur lors de la mise à jour des données d'insertion",
+              'Fermer',
+              {
+                duration: 3000,
+              },
+            );
             return of(null);
           }),
           finalize(() => {
             this.loading = false;
-          })
+          }),
         )
-        .subscribe(response => {
+        .subscribe((response) => {
           if (response) {
-            this.snackBar.open('Données d\'insertion mises à jour avec succès', 'Fermer', {
-              duration: 3000
-            });
+            this.snackBar.open(
+              "Données d'insertion mises à jour avec succès",
+              'Fermer',
+              {
+                duration: 3000,
+              },
+            );
             this.router.navigate(['/insertion']);
           }
         });
     } else {
-      this.insertionService.createInsertion(insertionData)
+      this.insertionService
+        .createInsertion(insertionData)
         .pipe(
-          catchError(error => {
-            this.snackBar.open('Erreur lors de la création des données d\'insertion', 'Fermer', {
-              duration: 3000
-            });
+          catchError((error) => {
+            this.snackBar.open(
+              "Erreur lors de la création des données d'insertion",
+              'Fermer',
+              {
+                duration: 3000,
+              },
+            );
             return of(null);
           }),
           finalize(() => {
             this.loading = false;
-          })
+          }),
         )
-        .subscribe(response => {
+        .subscribe((response) => {
           if (response) {
-            this.snackBar.open('Données d\'insertion créées avec succès', 'Fermer', {
-              duration: 3000
-            });
+            this.snackBar.open(
+              "Données d'insertion créées avec succès",
+              'Fermer',
+              {
+                duration: 3000,
+              },
+            );
             this.router.navigate(['/insertion']);
           }
         });
     }
   }
-  
+
+  // Method to display user-friendly status strings
+  getStatusDisplay(status: InsertionStatus): string {
+    switch (status) {
+      case InsertionStatus.SEARCHING:
+        return 'En recherche';
+      case InsertionStatus.INTERVIEW_PROCESS:
+        return "En processus d'entretien";
+      case InsertionStatus.OFFER_RECEIVED:
+        return 'Offre reçue';
+      case InsertionStatus.HIRED:
+        return 'Embauché';
+      case InsertionStatus.CONTINUING_STUDIES:
+        return "Poursuite d'études";
+      case InsertionStatus.OTHER:
+        return 'Autre';
+      default:
+        return status; // Fallback to raw value if not matched
+    }
+  }
+
   // Getters for form controls to easily access in the template
-  get studentIdControl() { return this.insertionForm.get('studentId'); }
-  get companyNameControl() { return this.insertionForm.get('companyName'); }
-  get positionControl() { return this.insertionForm.get('position'); }
-  get industryControl() { return this.insertionForm.get('industry'); }
-  get startDateControl() { return this.insertionForm.get('startDate'); }
-  get contractTypeControl() { return this.insertionForm.get('contractType'); }
-  get locationControl() { return this.insertionForm.get('location'); }
-  get statusControl() { return this.insertionForm.get('status'); }
+  get studentIdControl() {
+    return this.insertionForm.get('studentId');
+  }
+  get companyNameControl() {
+    return this.insertionForm.get('companyName');
+  }
+  get positionControl() {
+    return this.insertionForm.get('position');
+  }
+  get industryControl() {
+    return this.insertionForm.get('industry');
+  }
+  get startDateControl() {
+    return this.insertionForm.get('startDate');
+  }
+  get contractTypeControl() {
+    return this.insertionForm.get('contractType');
+  }
+  get locationControl() {
+    return this.insertionForm.get('location');
+  }
+  get statusControl() {
+    return this.insertionForm.get('status');
+  }
 }
