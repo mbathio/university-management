@@ -1,28 +1,27 @@
 // frontend/src/app/modules/students/student-list/student-list.component.ts
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-
-// Material Imports
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
-import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { RouterModule } from '@angular/router';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-
-// Service and Model Imports
-import { StudentService } from '../services/student.service';
-import { AuthService } from '../../../core/auth/auth.service';
-import { Student, Role } from '../../../core/models/user.model';
-
-// RxJS Imports
-import { catchError, finalize } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { AfterViewInit, OnInit, ViewChild } from '@angular/core';
+interface Student {
+  id: number;
+  firstName: string;
+  lastName: string;
+  formation: string;
+}
 
 @Component({
   selector: 'app-student-list',
@@ -45,6 +44,28 @@ import { of } from 'rxjs';
   ],
 })
 export class StudentListComponent implements OnInit, AfterViewInit {
+  ngOnInit(): void {
+    // Simulate fetching data from an API
+    setTimeout(() => {
+      this.dataSource.data = this.students;
+      this.loading = false;
+    }, 1000); // Simulate a 1-second delay
+  }
+
+  ngAfterViewInit(): void {
+    // Assign paginator and sort to the data source
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
   displayedColumns: string[] = [
     'studentId',
     'firstName',
@@ -60,115 +81,39 @@ export class StudentListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(
-    private studentService: StudentService,
-    private authService: AuthService,
-    private snackBar: MatSnackBar,
-    private router: Router,
-    private dialog: MatDialog,
-  ) {}
+  students = [
+    { id: 1, firstName: 'Amy', lastName: 'Ndiaye', formation: 'Engineering' },
+    { id: 2, firstName: 'Josephine', lastName: 'Bio', formation: 'Medicine' },
+    { id: 3, firstName: 'Mba', lastName: 'Diallo', formation: 'Law' },
+  ];
 
-  ngOnInit(): void {
-    this.loadStudents();
+  // Example logic for canEdit
+  canEdit(): boolean {
+    // Replace this logic with your actual permission check
+    return true; // Allow editing for all students
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+  // Example logic for canDelete
+  canDelete(): boolean {
+    // Replace this logic with your actual permission check
+    return true; // Allow deleting for all students
   }
 
-  applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
+  createStudent() {
+    // Logic to create a student
   }
 
-  loadStudents(): void {
-    this.loading = true;
-
-    this.studentService
-      .getAllStudents()
-      .pipe(
-        catchError((error) => {
-          this.error = 'Erreur lors du chargement des étudiants';
-          this.snackBar.open(this.error, 'Fermer', {
-            duration: 3000,
-          });
-          return of([]);
-        }),
-        finalize(() => {
-          this.loading = false;
-        }),
-      )
-      .subscribe((students) => {
-        this.dataSource.data = students;
-      });
+  viewStudent(id: number) {
+    console.log(`Viewing student with ID: ${id}`);
+    // Add logic to view a student here
   }
 
-  canCreate(): boolean {
-    return this.authService.hasRole([Role.ADMIN, Role.ADMINISTRATION]);
+  editStudent(id: number) {
+    console.log(`Editing student with ID: ${id}`);
+    // Add logic to edit a student here
   }
 
-  canEdit(student: Student): boolean {
-    return this.authService.hasRole([Role.ADMIN, Role.ADMINISTRATION]);
-  }
-
-  canDelete(student: Student): boolean {
-    return this.authService.hasRole([Role.ADMIN]);
-  }
-
-  createStudent(): void {
-    this.router.navigate(['/students/add']);
-  }
-
-  editStudent(id: number): void {
-    this.router.navigate(['/students/edit', id]);
-  }
-
-  viewStudent(id: number): void {
-    this.router.navigate(['/students', id]);
-  }
-
-  deleteStudent(id: number): void {
-    // Confirmation dialog would typically go here
-    if (
-      confirm(
-        'Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible.',
-      )
-    ) {
-      this.loading = true;
-      this.studentService
-        .deleteStudent(id)
-        .pipe(
-          catchError((error) => {
-            this.snackBar.open(
-              "Erreur lors de la suppression de l'étudiant",
-              'Fermer',
-              {
-                duration: 3000,
-              },
-            );
-            return of(null);
-          }),
-          finalize(() => {
-            this.loading = false;
-          }),
-        )
-        .subscribe(() => {
-          this.snackBar.open('Étudiant supprimé avec succès', 'Fermer', {
-            duration: 3000,
-          });
-          this.loadStudents();
-        });
-    }
-  }
-
-  getFormationName(student: Student): string {
-    return student.currentFormation
-      ? student.currentFormation.name
-      : 'Non assigné';
+  deleteStudent() {
+    // Logic to delete a student
   }
 }

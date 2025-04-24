@@ -11,8 +11,6 @@ import { AuthService } from './core/auth/auth.service';
 import { Observable } from 'rxjs';
 import { User } from './core/models/user.model';
 import { CommonModule } from '@angular/common';
-import { HeaderComponent } from './shared/components/header/header.component';
-import { SidenavComponent } from './shared/components/sidenav/sidenav.component';
 import { Role } from './core/models/user.model';
 
 interface NavItem {
@@ -24,16 +22,49 @@ interface NavItem {
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',
+  template: `
+    <div class="container mt-4">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">UCHK</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/dashboard">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/students">Étudiants</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/formations">Formations</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/administration"
+                >Administration</a
+              >
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <div class="content mt-4">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  `,
   styleUrls: ['./app.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    RouterOutlet,
-    HeaderComponent,
-    SidenavComponent,
-  ],
+  imports: [CommonModule, RouterModule, RouterOutlet],
 })
 export class AppComponent implements OnInit {
   title = 'Université Cheikh Hamidou Kane';

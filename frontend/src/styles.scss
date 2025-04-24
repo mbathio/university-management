@@ -1,8 +1,33 @@
-/* Global styles */
+@use "sass:color";
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+// Variables globales
+$primary-color: #4caf50;
+$secondary-color: #2196f3;
+$accent-color: #ff9800;
+$error-color: #f44336;
+$text-color: #333;
+$background-color: #f9f9f9;
+$border-color: #ccc;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin card-style {
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  background-color: $background-color;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
 }
 
 html,
@@ -10,9 +35,11 @@ body {
   font-family: "Roboto", "Helvetica Neue", sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: #333;
-  background-color: #f8f9fa;
+  color: $text-color;
+  background-color: #f5f5f5;
   height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -25,7 +52,8 @@ h3,
 h4,
 h5,
 h6 {
-  margin-bottom: 0.5em;
+  color: $primary-color;
+  margin: 0 0 16px;
   font-weight: 500;
   line-height: 1.2;
 }
@@ -37,6 +65,41 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+button {
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+
+  &.primary {
+    background-color: $primary-color;
+    color: white;
+
+    &:hover {
+      background-color: color.adjust($primary-color, $lightness: -10%);
+    }
+  }
+
+  &.secondary {
+    background-color: $secondary-color;
+    color: white;
+
+    &:hover {
+      background-color: color.adjust($secondary-color, $lightness: -10%);
+    }
+  }
+
+  &.danger {
+    background-color: $error-color;
+    color: white;
+
+    &:hover {
+      background-color: color.adjust($error-color, $lightness: -10%);
+    }
+  }
 }
 
 /* Utility classes */
@@ -110,5 +173,139 @@ a:hover {
 @media (min-width: 1200px) {
   .container {
     max-width: 1140px;
+  }
+}
+
+// Conteneurs principaux
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.card {
+  @include card-style;
+  margin-bottom: 16px;
+
+  .card-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-content {
+    font-size: 14px;
+    color: $text-color;
+  }
+}
+
+// Tableaux
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  margin-top: 20px;
+
+  th,
+  td {
+    border: 1px solid $border-color;
+    padding: 8px;
+    text-align: left;
+  }
+
+  th {
+    background-color: $primary-color;
+    color: white;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+}
+
+// Messages
+.alert {
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+
+  &.success {
+    background-color: color.adjust($primary-color, $lightness: 40%);
+    color: $primary-color;
+  }
+
+  &.error {
+    background-color: color.adjust($error-color, $lightness: 40%);
+    color: $error-color;
+  }
+
+  &.info {
+    background-color: color.adjust($secondary-color, $lightness: 40%);
+    color: $secondary-color;
+  }
+}
+
+// Loader
+.loading-container {
+  @include flex-center;
+  height: 100px;
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid $border-color;
+    border-top: 5px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+// Formulaires
+.form-group {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid $border-color;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+}
+
+// Navigation
+.navbar {
+  background-color: $primary-color;
+  color: white;
+  padding: 16px;
+
+  .nav-item {
+    margin-right: 16px;
+    color: white;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }
