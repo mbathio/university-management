@@ -3,13 +3,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Document, DocumentType } from '../models/user.model';
+import { Document, DocumentType } from '../../core/models/document.model'; // Correct path
 
 @Injectable({
   providedIn: 'root',
 })
 export class DocumentService {
-  private apiUrl = `${environment.apiUrl}/documents`;
+  private apiUrl = `${environment.apiUrl}/documents`; // Use apiUrl instead of apiBaseUrl
 
   constructor(private http: HttpClient) {}
 

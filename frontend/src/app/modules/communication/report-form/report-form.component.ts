@@ -1,8 +1,16 @@
 // src/app/modules/communication/report-form/report-form.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 import { DocumentService } from '../../../core/services/document.service';
 import { DocumentType } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -11,6 +19,19 @@ import { AuthService } from '../../../core/auth/auth.service';
   selector: 'app-report-form',
   templateUrl: './report-form.component.html',
   styleUrls: ['./report-form.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    MatCardModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule
+  ]
 })
 export class ReportFormComponent implements OnInit {
   reportForm!: FormGroup;
@@ -70,7 +91,7 @@ export class ReportFormComponent implements OnInit {
         });
         this.loading = false;
       },
-      error: (error) => {
+      error: () => {
         this.snackBar.open('Erreur lors du chargement du rapport', 'Fermer', {
           duration: 3000,
         });
@@ -80,8 +101,9 @@ export class ReportFormComponent implements OnInit {
     });
   }
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
+  onFileSelected(event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    const file = inputElement.files?.[0];
 
     // Vérifier si un fichier a été sélectionné
     if (file) {
@@ -95,7 +117,7 @@ export class ReportFormComponent implements OnInit {
           },
         );
         // Réinitialiser l'input file
-        event.target.value = '';
+        inputElement.value = '';
         this.selectedFile = null;
         return;
       }
@@ -123,7 +145,7 @@ export class ReportFormComponent implements OnInit {
           duration: 3000,
         });
         // Réinitialiser l'input file
-        event.target.value = '';
+        inputElement.value = '';
         this.selectedFile = null;
         return;
       }
@@ -143,10 +165,24 @@ export class ReportFormComponent implements OnInit {
     }
 
     this.loading = true;
-    const formData = {
+    const formData = new FormData();
+    const documentData = {
       ...this.reportForm.value,
       type: DocumentType.REPORT,
     };
+
+    // Add document data as JSON
+    formData.append(
+      'document',
+      new Blob([JSON.stringify(documentData)], {
+        type: 'application/json',
+      }),
+    );
+
+    // Add file if selected
+    if (this.selectedFile) {
+      formData.append('file', this.selectedFile, this.selectedFile.name);
+    }
 
     if (this.isEditMode && this.reportId) {
       // Mode édition
@@ -170,7 +206,7 @@ export class ReportFormComponent implements OnInit {
       });
     } else {
       // Mode création
-      this.authService.currentUser?.subscribe((user) => {
+      this.authService.currentUser.subscribe((user) => {
         const currentUserId = user?.id;
         if (!currentUserId) {
           this.snackBar.open('Utilisateur non authentifié', 'Fermer', {
@@ -179,6 +215,9 @@ export class ReportFormComponent implements OnInit {
           this.loading = false;
           return;
         }
+
+        // Add userId to formData
+        formData.append('userId', currentUserId.toString());
 
         this.documentService.createDocument(formData, currentUserId).subscribe({
           next: () => {

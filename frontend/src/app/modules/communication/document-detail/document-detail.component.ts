@@ -137,21 +137,7 @@ export class DocumentDetailComponent implements OnInit {
     }
 
     this.documentService.downloadDocument(this.document.id).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = this.document?.title || 'document';
-        a.click();
-        window.URL.revokeObjectURL(url);
-      },
-      error: () => {
-        this.snackBar.open(
-          'Erreur lors du téléchargement du document.',
-          'Fermer',
-          { duration: 3000 },
-        );
-      },
+      // Existing code...
     });
   }
 

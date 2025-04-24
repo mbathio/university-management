@@ -1,4 +1,6 @@
 // src/app/core/models/user.model.ts
+import { VisibilityLevel } from './document.model';
+
 export enum Role {
   ADMIN = 'ADMIN',
   TEACHER = 'TEACHER',
@@ -31,7 +33,7 @@ export interface Document {
   content?: string;
   type: DocumentType;
   createdAt: Date;
-  visibilityLevel: string;
+  visibilityLevel: VisibilityLevel;
   filePath?: string;
   createdBy?: User;
 }

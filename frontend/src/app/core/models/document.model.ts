@@ -2,11 +2,13 @@
 import { User } from './user.model';
 
 export enum DocumentType {
-  ANNOUNCEMENT = 'ANNOUNCEMENT',
+  ADMINISTRATIVE = 'ADMINISTRATIVE',
+  ACADEMIC = 'ACADEMIC',
   REPORT = 'REPORT',
-  CONTRACT = 'CONTRACT',
-  MEMO = 'MEMO',
-  GENERAL = 'GENERAL',
+  ANNOUNCEMENT = 'ANNOUNCEMENT',
+  COURSE_MATERIAL = 'COURSE_MATERIAL',
+  OTHER = 'OTHER',
+  INVOICE = 'INVOICE'
 }
 
 export enum VisibilityLevel {
@@ -19,8 +21,8 @@ export interface Document {
   id: number;
   title: string;
   content?: string;
-  type: DocumentType | string;
-  visibilityLevel: VisibilityLevel | string;
+  type: DocumentType;
+  visibilityLevel: VisibilityLevel;
   filePath?: string;
   createdAt: Date;
   updatedAt?: Date;

@@ -32,9 +32,12 @@ import { NotificationsComponent } from './notifications/notifications.component'
 import { ReportListComponent } from './report-list/report-list.component';
 import { ReportFormComponent } from './report-form/report-form.component';
 
-import { communicationRoutes } from './communication.routes';
+import communicationRoutes from './communication.routes';
 
 @NgModule({
+  declarations: [
+    // other components
+  ],
   imports: [
     CommonModule,
     RouterModule.forChild(communicationRoutes),

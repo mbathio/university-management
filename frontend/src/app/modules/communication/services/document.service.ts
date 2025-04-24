@@ -1,8 +1,8 @@
-// src/app/modules/communication/services/document.service.ts
+// src/app/core/services/document.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Document } from '../../../core/models/document.model';
+import { Document, DocumentType } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -13,59 +13,35 @@ export class DocumentService {
 
   constructor(private http: HttpClient) {}
 
-  getAllDocuments(): Observable<Document[]> {
-    return this.http.get<Document[]>(this.apiUrl);
+  init(): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/init`, {});
   }
 
   getDocumentById(id: number): Observable<Document> {
     return this.http.get<Document>(`${this.apiUrl}/${id}`);
   }
 
-  getDocumentsByType(type: string): Observable<Document[]> {
-    const params = new HttpParams().set('type', type);
-    return this.http.get<Document[]>(this.apiUrl, { params });
+  getAllDocuments(): Observable<Document[]> {
+    return this.http.get<Document[]>(this.apiUrl);
+  }
+
+  getDocumentsByType(type: DocumentType): Observable<Document[]> {
+    return this.http.get<Document[]>(`${this.apiUrl}/type/${type}`);
+  }
+
+  getDocumentsByCreator(userId: number): Observable<Document[]> {
+    return this.http.get<Document[]>(`${this.apiUrl}/creator/${userId}`);
   }
 
   getDocumentsByVisibilityLevel(level: string): Observable<Document[]> {
-    const params = new HttpParams().set('visibilityLevel', level);
-    return this.http.get<Document[]>(this.apiUrl, { params });
+    return this.http.get<Document[]>(`${this.apiUrl}/visibility/${level}`);
   }
 
-  createDocument(document: Document, file?: File): Observable<Document> {
-    const formData = new FormData();
-
-    // Convertir l'objet document en JSON et l'ajouter au FormData
-    formData.append(
-      'document',
-      new Blob([JSON.stringify(document)], { type: 'application/json' }),
-    );
-
-    // Ajouter le fichier s'il existe
-    if (file) {
-      formData.append('file', file, file.name);
-    }
-
+  createDocument(formData: FormData): Observable<Document> {
     return this.http.post<Document>(this.apiUrl, formData);
   }
 
-  updateDocument(
-    id: number,
-    document: Document,
-    file?: File,
-  ): Observable<Document> {
-    const formData = new FormData();
-
-    // Convertir l'objet document en JSON et l'ajouter au FormData
-    formData.append(
-      'document',
-      new Blob([JSON.stringify(document)], { type: 'application/json' }),
-    );
-
-    // Ajouter le fichier s'il existe
-    if (file) {
-      formData.append('file', file, file.name);
-    }
-
+  updateDocument(id: number, formData: FormData): Observable<Document> {
     return this.http.put<Document>(`${this.apiUrl}/${id}`, formData);
   }
 
@@ -74,8 +50,14 @@ export class DocumentService {
   }
 
   downloadDocument(id: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${id}/download`, {
-      responseType: 'blob',
+    return this.http.get(`${this.apiUrl}/${id}/download`, { 
+      responseType: 'blob' 
     });
+  }
+
+  isDocumentCreator(documentId: number, username: string): Observable<boolean> {
+    return this.http.get<boolean>(
+      `${this.apiUrl}/${documentId}/isCreator/${username}`,
+    );
   }
 }

@@ -8,9 +8,10 @@ import { ReportListComponent } from './report-list/report-list.component';
 import { ReportFormComponent } from './report-form/report-form.component';
 
 export const communicationRoutes: Routes = [
-  { path: '', component: DocumentListComponent },
-  { path: 'add', component: DocumentFormComponent },
-  { path: 'edit/:id', component: DocumentFormComponent },
+  { path: '', redirectTo: 'documents', pathMatch: 'full' },
+  { path: 'documents', component: DocumentListComponent },
+  { path: 'documents/add', component: DocumentFormComponent },
+  { path: 'documents/edit/:id', component: DocumentFormComponent },
   { path: 'detail/:id', component: DocumentDetailComponent },
   { path: 'notifications', component: NotificationsComponent },
   { path: 'reports', component: ReportListComponent },

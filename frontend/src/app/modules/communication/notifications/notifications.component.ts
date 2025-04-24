@@ -7,9 +7,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { DocumentType } from '../../../core/models/document.model';
 import { Document } from '../../../core/models/document.model';
 import { DocumentService } from '../services/document.service';
+import { DocumentType } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-notifications',
@@ -50,7 +50,7 @@ export class NotificationsComponent implements OnInit {
           this.announcements = documents;
           this.loading = false;
         },
-        error: (error) => {
+        error: () => {
           this.error = 'Erreur lors du chargement des annonces';
           this.loading = false;
           this.snackBar.open(

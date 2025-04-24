@@ -184,17 +184,17 @@ export class DocumentFormComponent implements OnInit {
 
     // Ajouter le fichier si présent
     if (this.selectedFile) {
-      formData.append('file', this.selectedFile, this.selectedFile.name);
+      formData.append(
+        'file',
+        this.selectedFile ?? undefined,
+        this.selectedFile.name,
+      );
     }
 
     if (this.isEditMode && this.documentId) {
       // Mode édition
       this.documentService
-        .updateDocument(
-          this.documentId,
-          documentData,
-          this.selectedFile ?? undefined,
-        )
+        .updateDocument(this.documentId, documentData)
         .subscribe({
           next: () => {
             this.snackBar.open('Document mis à jour avec succès', 'Fermer', {
@@ -224,26 +224,24 @@ export class DocumentFormComponent implements OnInit {
         return;
       }
 
-      this.documentService
-        .createDocument(documentData, this.selectedFile ?? undefined)
-        .subscribe({
-          next: () => {
-            this.snackBar.open('Document créé avec succès', 'Fermer', {
+      this.documentService.createDocument(documentData).subscribe({
+        next: () => {
+          this.snackBar.open('Document créé avec succès', 'Fermer', {
+            duration: 3000,
+          });
+          this.router.navigate(['/communication']);
+        },
+        error: () => {
+          this.snackBar.open(
+            'Erreur lors de la création du document',
+            'Fermer',
+            {
               duration: 3000,
-            });
-            this.router.navigate(['/communication']);
-          },
-          error: () => {
-            this.snackBar.open(
-              'Erreur lors de la création du document',
-              'Fermer',
-              {
-                duration: 3000,
-              },
-            );
-            this.loading = false;
-          },
-        });
+            },
+          );
+          this.loading = false;
+        },
+      });
     }
   }
 }

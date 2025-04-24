@@ -1,18 +1,42 @@
 // src/app/modules/communication/report-list/report-list.component.ts
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+
 import { DocumentService } from '../../../core/services/document.service';
-import { Document, DocumentType } from '../../../core/models/user.model';
-import { AuthService } from '../../../core/auth/auth.service';
+import { Document, DocumentType } from '../../../core/models/document.model';
 import { Role } from '../../../core/models/user.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-report-list',
   templateUrl: './report-list.component.html',
   styleUrls: ['./report-list.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatCardModule,
+    MatInputModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+  ],
 })
 export class ReportListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['title', 'createdAt', 'createdBy', 'actions'];
@@ -62,7 +86,7 @@ export class ReportListComponent implements OnInit, AfterViewInit {
         this.dataSource.data = documents;
         this.loading = false;
       },
-      error: (error) => {
+      error: () => {
         this.error = 'Erreur lors du chargement des rapports';
         this.loading = false;
         this.snackBar.open('Erreur lors du chargement des rapports', 'Fermer', {
@@ -115,7 +139,7 @@ export class ReportListComponent implements OnInit, AfterViewInit {
             duration: 3000,
           });
         },
-        error: (error) => {
+        error: () => {
           this.snackBar.open(
             'Erreur lors de la suppression du rapport',
             'Fermer',
@@ -129,22 +153,33 @@ export class ReportListComponent implements OnInit, AfterViewInit {
   }
 
   downloadReport(id: number): void {
-    this.documentService.downloadDocument(id.toString()).subscribe({
-      next: (blob) => {
-        // Trouver le document dans la liste pour obtenir son titre
-        const doc = this.dataSource.data.find((d) => d.id === id);
-        const fileName = doc ? `${doc.title}.pdf` : `rapport-${id}.pdf`;
+    // Find the document in the list to get its filename
+    const reportDocument = this.dataSource.data.find((doc) => doc.id === id);
 
+    if (!reportDocument || !reportDocument.filePath) {
+      this.snackBar.open('Aucun fichier associé à ce rapport', 'Fermer', {
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Extract filename from filePath
+    const filename = reportDocument.filePath.split('/').pop() || `report-${id}`;
+
+    this.documentService.downloadDocument(filename).subscribe({
+      next: (blob) => {
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = window.document.createElement('a');
         a.href = url;
-        a.download = fileName;
+        a.download = reportDocument.title
+          ? `${reportDocument.title}.pdf`
+          : filename;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       },
-      error: (error) => {
+      error: () => {
         this.snackBar.open(
           'Erreur lors du téléchargement du rapport',
           'Fermer',
