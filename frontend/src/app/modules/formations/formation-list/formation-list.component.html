@@ -27,11 +27,11 @@
         </mat-form-field>
       </div>
 
-      <div class="loading-container" *ngIf="loading">
+      <div class="loading-container" *ngIf="isLoading">
         <mat-spinner diameter="40"></mat-spinner>
       </div>
 
-      <div class="error-container" *ngIf="error && !loading">
+      <div class="error-container" *ngIf="error && !isLoading">
         <p class="error-message">{{ error }}</p>
         <button mat-button color="primary" (click)="loadFormations()">
           Réessayer
@@ -42,7 +42,7 @@
         mat-table
         [dataSource]="dataSource"
         matSort
-        *ngIf="!loading && !error"
+        *ngIf="!isLoading && !error"
         class="formations-table"
       >
         <!-- Name Column -->

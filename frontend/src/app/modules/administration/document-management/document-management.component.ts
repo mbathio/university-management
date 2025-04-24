@@ -1,122 +1,147 @@
-<div class="document-management-container">
-  <div class="header-section">
-    <h1>Gestion Documentaire</h1>
-    <button mat-raised-button color="primary" (click)="addDocument()">
-      <mat-icon>add</mat-icon>
-      Nouveau Document
-    </button>
-  </div>
+// src/app/modules/administration/document-management/document-management.component.ts
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { DocumentService } from '../../../core/services/document.service';
+import { Document, DocumentType } from '../../../core/models/user.model';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-  <mat-card>
-    <mat-card-content>
-      <div class="filter-section">
-        <mat-form-field appearance="outline">
-          <mat-label>Rechercher un document</mat-label>
-          <input
-            matInput
-            (keyup)="applyFilter($event)"
-            placeholder="Ex. note de service"
-          />
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-      </div>
+@Component({
+  selector: 'app-document-management',
+  templateUrl: './document-management.component.html',
+  styleUrls: ['./document-management.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatProgressSpinnerModule,
+    MatDialogModule,
+    MatSnackBarModule,
+  ],
+})
+export class DocumentManagementComponent implements OnInit, AfterViewInit {
+  displayedColumns: string[] = [
+    'title',
+    'type',
+    'createdAt',
+    'visibilityLevel',
+    'createdBy',
+    'actions',
+  ];
+  dataSource = new MatTableDataSource<Document>([]);
+  loading = true;
+  documentTypes = Object.values(DocumentType);
 
-      <div class="loading-shade" *ngIf="loading">
-        <mat-spinner diameter="50"></mat-spinner>
-      </div>
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
-      <div class="table-container">
-        <table mat-table [dataSource]="dataSource" matSort>
-          <!-- Title Column -->
-          <ng-container matColumnDef="title">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Titre</th>
-            <td mat-cell *matCellDef="let document">{{ document.title }}</td>
-          </ng-container>
+  constructor(
+    private documentService: DocumentService,
+    private router: Router,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
+  ) {}
 
-          <!-- Type Column -->
-          <ng-container matColumnDef="type">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
-            <td mat-cell *matCellDef="let document">
-              {{ getDocumentTypeLabel(document.type) }}
-            </td>
-          </ng-container>
+  ngOnInit(): void {
+    this.loadDocuments();
+  }
 
-          <!-- Created Date Column -->
-          <ng-container matColumnDef="createdAt">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>
-              Date de création
-            </th>
-            <td mat-cell *matCellDef="let document">
-              {{ document.createdAt | date: "dd/MM/yyyy" }}
-            </td>
-          </ng-container>
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
 
-          <!-- Visibility Level Column -->
-          <ng-container matColumnDef="visibilityLevel">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>
-              Visibilité
-            </th>
-            <td mat-cell *matCellDef="let document">
-              {{ document.visibilityLevel }}
-            </td>
-          </ng-container>
+  loadDocuments(): void {
+    this.loading = true;
+    this.documentService.getAllDocuments().subscribe({
+      next: (documents) => {
+        this.dataSource.data = documents;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading documents', error);
+        this.loading = false;
+        this.snackBar.open(
+          'Erreur lors du chargement des documents',
+          'Fermer',
+          {
+            duration: 3000,
+          },
+        );
+      },
+    });
+  }
 
-          <!-- Created By Column -->
-          <ng-container matColumnDef="createdBy">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Créé par</th>
-            <td mat-cell *matCellDef="let document">
-              {{ document.createdBy?.username }}
-            </td>
-          </ng-container>
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
 
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let document">
-              <button
-                mat-icon-button
-                color="primary"
-                (click)="editDocument(document)"
-                matTooltip="Modifier"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="deleteDocument(document)"
-                matTooltip="Supprimer"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr
-            mat-row
-            *matRowDef="let row; columns: displayedColumns"
-            (click)="editDocument(row)"
-            class="document-row"
-          ></tr>
+  addDocument(): void {
+    this.router.navigate(['/administration/documents/add']);
+  }
 
-          <!-- Row shown when there is no matching data. -->
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" colspan="6">
-              <div class="no-data-message">
-                <mat-icon>search_off</mat-icon>
-                <p>Aucun document correspondant trouvé</p>
-              </div>
-            </td>
-          </tr>
-        </table>
+  editDocument(document: Document): void {
+    this.router.navigate(['/administration/documents/edit', document.id]);
+  }
 
-        <mat-paginator
-          [pageSizeOptions]="[5, 10, 25, 100]"
-          [pageSize]="10"
-          showFirstLastButtons
-        ></mat-paginator>
-      </div>
-    </mat-card-content>
-  </mat-card>
-</div>
+  deleteDocument(document: Document): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: {
+        title: 'Confirmer la suppression',
+        message: `Êtes-vous sûr de vouloir supprimer le document "${document.title}" ?`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.documentService.deleteDocument(document.id).subscribe({
+          next: () => {
+            this.loadDocuments();
+            this.snackBar.open('Document supprimé avec succès', 'Fermer', {
+              duration: 3000,
+            });
+          },
+          error: (error) => {
+            console.error('Error deleting document', error);
+            this.snackBar.open(
+              'Erreur lors de la suppression du document',
+              'Fermer',
+              {
+                duration: 3000,
+              },
+            );
+          },
+        });
+      }
+    });
+  }
+
+  getDocumentTypeLabel(type: DocumentType): string {
+    return type.replace('_', ' ');
+  }
+}

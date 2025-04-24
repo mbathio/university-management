@@ -33,11 +33,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [
-    StudentListComponent,
-    StudentDetailComponent,
-    StudentFormComponent,
-  ],
+  declarations: [],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
@@ -57,6 +53,12 @@ const routes: Routes = [
     MatNativeDateModule,
     MatDialogModule,
     MatSnackBarModule,
+    MatIconModule,
+
+    // Standalone Components
+    StudentListComponent,
+    StudentFormComponent, // Ensure this standalone component is imported
+    StudentDetailComponent, // Import standalone component
   ],
 })
 export class StudentsModule {}

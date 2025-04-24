@@ -1,0 +1,65 @@
+/* frontend/src/app/modules/students/student-form/student-form.component.scss */
+.container {
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.error-container {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  margin-bottom: 24px;
+
+  mat-icon {
+    color: #f44336;
+    margin-right: 12px;
+  }
+
+  p {
+    margin: 0;
+    color: #d32f2f;
+  }
+}
+
+.student-form {
+  max-width: 800px;
+  margin: 0 auto;
+
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+
+    mat-form-field {
+      flex: 1 1 300px;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 24px;
+  }
+}

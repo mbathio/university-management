@@ -1,17 +1,59 @@
 // frontend/src/app/modules/students/student-detail/student-detail.component.ts
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Location } from '@angular/common';
+
+// Material Imports
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+
+// Service and Model Imports
 import { StudentService } from '../services/student.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Student, Role } from '../../../core/models/user.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { Role } from '../../../core/models/user.model';
+
+// RxJS Imports
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { DatePipe } from '@angular/common';
+
+export interface Student {
+  id: number; // Added id property
+  firstName: string;
+  lastName: string;
+  studentId: string;
+  birthDate?: Date;
+  promo?: string;
+  startYear?: number;
+  endYear?: number;
+  user?: {
+    email: string;
+  };
+  username?: string; // Added username property
+  role?: Role; // Added role property
+  formationName?: string; // Added formationName property
+}
 
 @Component({
   selector: 'app-student-detail',
   templateUrl: './student-detail.component.html',
   styleUrls: ['./student-detail.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    RouterModule,
+    DatePipe,
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class StudentDetailComponent implements OnInit {
   student: Student | null = null;
@@ -25,6 +67,7 @@ export class StudentDetailComponent implements OnInit {
     private studentService: StudentService,
     private authService: AuthService,
     private snackBar: MatSnackBar,
+    private location: Location,
   ) {}
 
   ngOnInit(): void {
@@ -64,7 +107,11 @@ export class StudentDetailComponent implements OnInit {
       )
       .subscribe((student) => {
         if (student) {
-          this.student = student;
+          this.student = {
+            ...student,
+            username: student?.username || 'Unknown',
+            role: student?.role || Role.STUDENT,
+          };
         }
       });
   }
@@ -129,6 +176,12 @@ export class StudentDetailComponent implements OnInit {
       this.router.navigate(['/students/edit', this.student.id]);
     }
   }
+  file = false;
+
+  // Method to get the formation name
+  getFormationName(): string {
+    return this.student?.formationName || 'Non renseigné';
+  }
 
   deleteStudent(): void {
     if (!this.student) return;
@@ -158,21 +211,37 @@ export class StudentDetailComponent implements OnInit {
           }),
         )
         .subscribe(() => {
-          this.snackBar.open('Étudiant supprimé avec succès', 'Fermer', {
-            duration: 3000,
-          });
+          this.snackBar.open(
+            "L'étudiant a été supprimé avec succès",
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           this.router.navigate(['/students']);
         });
     }
+    this.loading = false;
+    this.router.navigate(['/students']);
+
+    this.snackBar.open("L'étudiant a été supprimé avec succès", 'Fermer', {
+      duration: 3000,
+    });
   }
 
   goBack(): void {
-    this.router.navigate(['/students']);
-  }
-
-  getFormationName(): string {
-    return this.student?.currentFormation
-      ? this.student.currentFormation.name
-      : 'Non assigné';
+    this.location.back();
   }
 }
+
+@NgModule({
+  declarations: [
+    // other components
+  ],
+  imports: [
+    CommonModule,
+    MatProgressSpinnerModule,
+    // other modules
+  ],
+})
+export class StudentsModule {}

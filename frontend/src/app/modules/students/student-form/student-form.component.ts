@@ -1,7 +1,21 @@
 // frontend/src/app/modules/students/student-form/student-form.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+
+// Material Imports
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
+// Service and Model Imports
 import { StudentService } from '../services/student.service';
 import { FormationService } from '../../formations/services/formation.service';
 import {
@@ -9,7 +23,8 @@ import {
   Formation,
   StudentDto,
 } from '../../../core/models/user.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
+
+// RxJS Imports
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
@@ -17,6 +32,21 @@ import { Observable, of } from 'rxjs';
   selector: 'app-student-form',
   templateUrl: './student-form.component.html',
   styleUrls: ['./student-form.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
+    MatSnackBarModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatProgressSpinnerModule
+  ],
 })
 export class StudentFormComponent implements OnInit {
   studentForm!: FormGroup;

@@ -41,9 +41,10 @@ import { of } from 'rxjs';
   ],
 })
 export class FormationListComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['name', 'description', 'actions'];
+  displayedColumns: string[] = ['name', 'type', 'level', 'startDate', 'endDate', 'actions'];
   dataSource = new MatTableDataSource<Formation>();
   isLoading = true;
+  error = '';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -66,15 +67,19 @@ export class FormationListComponent implements OnInit, AfterViewInit {
 
   loadFormations(): void {
     this.isLoading = true;
+    this.error = '';
     this.formationService
       .getAllFormations()
       .pipe(
-        finalize(() => (this.isLoading = false)),
-        catchError((error) => {
-          this.snackBar.open('Failed to load formations', 'Close', {
+        catchError((err) => {
+          this.error = 'Impossible de charger les formations';
+          this.snackBar.open(this.error, 'Fermer', {
             duration: 3000,
           });
           return of([]);
+        }),
+        finalize(() => {
+          this.isLoading = false;
         })
       )
       .subscribe((formations) => {
@@ -105,5 +110,16 @@ export class FormationListComponent implements OnInit, AfterViewInit {
   navigateToDetails(id: string): void {
     this.router.navigate(['/formations', id]);
   }
-  // Le reste du code reste inchangé
+
+  canCreate(): boolean {
+    return this.authService.hasRole([Role.ADMIN, Role.FORMATION_MANAGER]);
+  }
+
+  canEdit(formation?: Formation): boolean {
+    return this.authService.hasRole([Role.ADMIN, Role.FORMATION_MANAGER]);
+  }
+
+  canDelete(formation?: Formation): boolean {
+    return this.authService.hasRole([Role.ADMIN]);
+  }
 }

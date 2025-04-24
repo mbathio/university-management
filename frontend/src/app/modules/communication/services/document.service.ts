@@ -2,14 +2,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Document, DocumentType } from '../../../core/models/user.model';
+import { Document } from '../../../core/models/document.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DocumentService {
-  private apiUrl = `${environment.apiUrl}/api/documents`;
+  private apiUrl = `${environment.apiUrl}/documents`;
 
   constructor(private http: HttpClient) {}
 
@@ -21,18 +21,28 @@ export class DocumentService {
     return this.http.get<Document>(`${this.apiUrl}/${id}`);
   }
 
-  createDocument(document: any, file: File | null): Observable<Document> {
+  getDocumentsByType(type: string): Observable<Document[]> {
+    const params = new HttpParams().set('type', type);
+    return this.http.get<Document[]>(this.apiUrl, { params });
+  }
+
+  getDocumentsByVisibilityLevel(level: string): Observable<Document[]> {
+    const params = new HttpParams().set('visibilityLevel', level);
+    return this.http.get<Document[]>(this.apiUrl, { params });
+  }
+
+  createDocument(document: Document, file?: File): Observable<Document> {
     const formData = new FormData();
 
-    // Ajouter les champs de document comme parties de form-data
-    formData.append('title', document.title);
-    formData.append('content', document.content);
-    formData.append('type', document.type);
-    formData.append('visibilityLevel', document.visibilityLevel);
+    // Convertir l'objet document en JSON et l'ajouter au FormData
+    formData.append(
+      'document',
+      new Blob([JSON.stringify(document)], { type: 'application/json' }),
+    );
 
     // Ajouter le fichier s'il existe
     if (file) {
-      formData.append('file', file);
+      formData.append('file', file, file.name);
     }
 
     return this.http.post<Document>(this.apiUrl, formData);
@@ -40,20 +50,20 @@ export class DocumentService {
 
   updateDocument(
     id: number,
-    document: any,
-    file: File | null,
+    document: Document,
+    file?: File,
   ): Observable<Document> {
     const formData = new FormData();
 
-    // Ajouter les champs de document comme parties de form-data
-    formData.append('title', document.title);
-    formData.append('content', document.content);
-    formData.append('type', document.type);
-    formData.append('visibilityLevel', document.visibilityLevel);
+    // Convertir l'objet document en JSON et l'ajouter au FormData
+    formData.append(
+      'document',
+      new Blob([JSON.stringify(document)], { type: 'application/json' }),
+    );
 
     // Ajouter le fichier s'il existe
     if (file) {
-      formData.append('file', file);
+      formData.append('file', file, file.name);
     }
 
     return this.http.put<Document>(`${this.apiUrl}/${id}`, formData);
@@ -61,16 +71,6 @@ export class DocumentService {
 
   deleteDocument(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
-  getDocumentsByType(type: DocumentType): Observable<Document[]> {
-    const params = new HttpParams().set('type', type);
-    return this.http.get<Document[]>(this.apiUrl, { params });
-  }
-
-  getDocumentsByVisibility(visibilityLevel: string): Observable<Document[]> {
-    const params = new HttpParams().set('visibilityLevel', visibilityLevel);
-    return this.http.get<Document[]>(this.apiUrl, { params });
   }
 
   downloadDocument(id: number): Observable<Blob> {

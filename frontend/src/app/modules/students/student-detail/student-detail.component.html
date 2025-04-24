@@ -1,0 +1,92 @@
+<!-- frontend/src/app/modules/students/student-detail/student-detail.component.html -->
+<div class="container">
+  <div class="header">
+    <h1>
+      <span *ngIf="isCurrentUserProfile">Mon Profil Étudiant</span>
+      <span *ngIf="!isCurrentUserProfile">Détails de l'étudiant</span>
+    </h1>
+    <div class="actions">
+      <button mat-button color="primary" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Retour
+      </button>
+      <button
+        mat-raised-button
+        color="accent"
+        *ngIf="canEdit()"
+        (click)="editStudent()"
+      >
+        <mat-icon>edit</mat-icon>
+        Modifier
+      </button>
+      <button
+        mat-raised-button
+        color="warn"
+        *ngIf="canDelete()"
+        (click)="deleteStudent()"
+      >
+        <mat-icon>delete</mat-icon>
+        Supprimer
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="error" class="error-container">
+    <mat-icon>error</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="!loading && !error && student" class="student-details">
+    <mat-card>
+      <mat-card-header>
+        <div mat-card-avatar class="student-avatar">
+          <mat-icon>person</mat-icon>
+        </div>
+        <mat-card-title
+          >{{ student.firstName }} {{ student.lastName }}</mat-card-title
+        >
+        <mat-card-subtitle
+          >Numéro d'étudiant: {{ student.studentId }}</mat-card-subtitle
+        >
+      </mat-card-header>
+      <mat-card-content>
+        <div class="details-grid">
+          <div class="detail-item">
+            <div class="label">Email</div>
+            <div class="value">{{ student.user?.email }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="label">Date de naissance</div>
+            <div class="value">
+              {{
+                student.birthDate
+                  ? (student.birthDate | date: "dd/MM/yyyy")
+                  : "Non renseigné"
+              }}
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="label">Formation</div>
+            <div class="value">{{ getFormationName() }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="label">Promotion</div>
+            <div class="value">{{ student.promo || "Non assigné" }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="label">Année de début</div>
+            <div class="value">{{ student.startYear }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="label">Année de fin</div>
+            <div class="value">{{ student.endYear }}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

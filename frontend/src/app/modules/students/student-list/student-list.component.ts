@@ -1,21 +1,48 @@
 // frontend/src/app/modules/students/student-list/student-list.component.ts
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+
+// Material Imports
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+
+// Service and Model Imports
 import { StudentService } from '../services/student.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Student, Role } from '../../../core/models/user.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
+
+// RxJS Imports
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-student-list',
   templateUrl: './student-list.component.html',
   styleUrls: ['./student-list.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatProgressSpinnerModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatButtonModule,
+  ],
 })
 export class StudentListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [

@@ -1,0 +1,57 @@
+<div class="trainer-list-container">
+  <!-- Affichage du spinner pendant le chargement -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <!-- Affichage des erreurs -->
+  <div *ngIf="!loading && trainers.length === 0" class="error-message">
+    <mat-icon color="warn">error</mat-icon>
+    Aucun formateur trouvé pour cette formation.
+  </div>
+
+  <!-- Table des formateurs -->
+  <div *ngIf="!loading && trainers.length > 0">
+    <mat-card>
+      <mat-card-title
+        >Liste des formateurs pour {{ formationName }}</mat-card-title
+      >
+      <table mat-table [dataSource]="trainers" class="mat-elevation-z8">
+        <!-- Colonne : Nom -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Nom</th>
+          <td mat-cell *matCellDef="let trainer">{{ trainer.name }}</td>
+        </ng-container>
+
+        <!-- Colonne : Poste -->
+        <ng-container matColumnDef="position">
+          <th mat-header-cell *matHeaderCellDef>Poste</th>
+          <td mat-cell *matCellDef="let trainer">{{ trainer.position }}</td>
+        </ng-container>
+
+        <!-- Colonne : Département -->
+        <ng-container matColumnDef="department">
+          <th mat-header-cell *matHeaderCellDef>Département</th>
+          <td mat-cell *matCellDef="let trainer">{{ trainer.department }}</td>
+        </ng-container>
+
+        <!-- Colonne : Contact -->
+        <ng-container matColumnDef="contact">
+          <th mat-header-cell *matHeaderCellDef>Contact</th>
+          <td mat-cell *matCellDef="let trainer">{{ trainer.contact }}</td>
+        </ng-container>
+
+        <!-- En-tête et lignes -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </mat-card>
+  </div>
+
+  <!-- Bouton de retour -->
+  <div class="actions">
+    <button mat-raised-button color="primary" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon> Retour
+    </button>
+  </div>
+</div>

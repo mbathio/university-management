@@ -1,18 +1,43 @@
 // src/app/modules/communication/document-detail/document-detail.component.ts
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { DocumentService } from '../services/document.service';
-import { Document } from '../../../core/models/user.model';
-import { AuthService } from '../../../core/auth/auth.service';
-import { Role } from '../../../core/models/user.model';
-import { NgModule } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  CUSTOM_ELEMENTS_SCHEMA,
+  NgModule,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+
+// Material Imports
 import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
+// Service and Model Imports
+import { DocumentService } from '../services/document.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { Document } from '../../../core/models/user.model';
+import { Role } from '../../../core/models/user.model';
+
 @Component({
   selector: 'app-document-detail',
   templateUrl: './document-detail.component.html',
   styleUrls: ['./document-detail.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class DocumentDetailComponent implements OnInit {
   document: Document | null = null;
@@ -27,7 +52,6 @@ export class DocumentDetailComponent implements OnInit {
     private authService: AuthService,
     private snackBar: MatSnackBar,
   ) {
-    // Get current user info
     if (this.authService.currentUserValue) {
       this.currentUsername = this.authService.currentUserValue.username;
     }
@@ -38,25 +62,19 @@ export class DocumentDetailComponent implements OnInit {
     if (id) {
       this.loadDocument(+id);
     } else {
-      this.router.navigate(['/communication']);
+      this.handleError('ID de document invalide.');
     }
   }
 
   loadDocument(id: number): void {
     this.loading = true;
-
     this.documentService.getDocumentById(id).subscribe({
       next: (document) => {
         this.document = document;
         this.loading = false;
       },
-      error: (error) => {
-        this.error = 'Erreur lors du chargement du document';
-        this.loading = false;
-        this.snackBar.open('Erreur lors du chargement du document', 'Fermer', {
-          duration: 3000,
-        });
-        this.router.navigate(['/communication']);
+      error: () => {
+        this.handleError('Erreur lors du chargement du document.');
       },
     });
   }
@@ -68,15 +86,10 @@ export class DocumentDetailComponent implements OnInit {
       return true;
     }
 
-    // Si le document existe et l'utilisateur en est le créateur
-    if (
-      this.document.createdBy &&
+    return (
+      this.document.createdBy !== undefined &&
       this.document.createdBy.username === this.currentUsername
-    ) {
-      return true;
-    }
-
-    return false;
+    );
   }
 
   canDelete(): boolean {
@@ -86,34 +99,33 @@ export class DocumentDetailComponent implements OnInit {
       return true;
     }
 
-    // Si le document existe et l'utilisateur en est le créateur
-    if (
-      this.document.createdBy &&
+    return (
+      !!this.document.createdBy &&
       this.document.createdBy.username === this.currentUsername
-    ) {
-      return true;
-    }
-
-    return false;
+    );
   }
 
   deleteDocument(): void {
-    if (!this.document) return;
+    if (!this.document) {
+      this.snackBar.open('Aucun document à supprimer.', 'Fermer', {
+        duration: 3000,
+      });
+      return;
+    }
+
     if (confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
       this.documentService.deleteDocument(this.document.id).subscribe({
         next: () => {
-          this.snackBar.open('Document supprimé avec succès', 'Fermer', {
+          this.snackBar.open('Document supprimé avec succès.', 'Fermer', {
             duration: 3000,
           });
           this.router.navigate(['/communication']);
         },
         error: () => {
           this.snackBar.open(
-            'Erreur lors de la suppression du document',
+            'Erreur lors de la suppression du document.',
             'Fermer',
-            {
-              duration: 3000,
-            },
+            { duration: 3000 },
           );
         },
       });
@@ -121,25 +133,36 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   downloadDocument(): void {
-    if (!this.document) return;
+    if (!this.document) {
+      this.snackBar.open('Aucun document à télécharger.', 'Fermer', {
+        duration: 3000,
+      });
+      return;
+    }
+
     this.documentService.downloadDocument(this.document.id).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = this.document?.title ? this.document.title : 'document';
+        a.download = this.document?.title || 'document';
         a.click();
         window.URL.revokeObjectURL(url);
       },
       error: () => {
         this.snackBar.open(
-          'Erreur lors du téléchargement du document',
+          'Erreur lors du téléchargement du document.',
           'Fermer',
-          {
-            duration: 3000,
-          },
+          { duration: 3000 },
         );
       },
     });
+  }
+
+  private handleError(message: string): void {
+    this.error = message;
+    this.loading = false;
+    this.snackBar.open(this.error, 'Fermer', { duration: 3000 });
+    this.router.navigate(['/communication']);
   }
 }

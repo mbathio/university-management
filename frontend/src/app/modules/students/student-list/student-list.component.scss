@@ -1,0 +1,65 @@
+/* frontend/src/app/modules/students/student-list/student-list.component.scss */
+.container {
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+  }
+}
+
+.table-container {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.filter-container {
+  padding: 16px 24px 0;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+table {
+  width: 100%;
+}
+
+.mat-column-actions {
+  width: 150px;
+  text-align: center;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  color: rgba(0, 0, 0, 0.54);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin: 0;
+  }
+}
