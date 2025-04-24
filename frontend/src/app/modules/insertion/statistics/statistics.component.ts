@@ -10,6 +10,15 @@ import { FormationService } from '../../formations/services/formation.service';
 import { catchError, finalize } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 
+// Import Angular Material Modules
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
 interface StatData {
   name: string;
   value: number;
@@ -20,7 +29,16 @@ interface StatData {
   templateUrl: './statistics.component.html',
   styleUrls: ['./statistics.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
 })
 export class StatisticsComponent implements OnInit {
   filterForm!: FormGroup;
@@ -40,6 +58,7 @@ export class StatisticsComponent implements OnInit {
     private fb: FormBuilder,
     private insertionService: InsertionService,
     private formationService: FormationService,
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -73,6 +92,15 @@ export class StatisticsComponent implements OnInit {
       .getAllFormations()
       .pipe(
         catchError((error) => {
+          this.snackBar.open(
+            'Erreur lors du chargement des formations',
+            'Fermer',
+            {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'bottom',
+            },
+          );
           return of([]);
         }),
       )
@@ -83,6 +111,7 @@ export class StatisticsComponent implements OnInit {
 
   private loadStatistics(): void {
     this.loading = true;
+    this.error = '';
 
     const year = this.filterForm.get('year')?.value;
     const formationId = this.filterForm.get('formationId')?.value;
@@ -92,7 +121,7 @@ export class StatisticsComponent implements OnInit {
     if (year && formationId) {
       // Filter by both year and formation
       statsObservable = this.insertionService
-        .getInsertionStatisticsByFormation(formationId)
+        .getInsertionStatisticsByYearAndFormation(year, formationId)
         .pipe(catchError(() => this.insertionService.getInsertionStatistics()));
     } else if (year) {
       // Filter by year only
@@ -108,6 +137,11 @@ export class StatisticsComponent implements OnInit {
       .pipe(
         catchError((error) => {
           this.error = 'Erreur lors du chargement des statistiques';
+          this.snackBar.open(this.error, 'Fermer', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'bottom',
+          });
           return of({
             statusStats: [],
             contractTypeStats: [],
@@ -143,11 +177,16 @@ export class StatisticsComponent implements OnInit {
 
   resetFilters(): void {
     this.filterForm.reset();
+    this.loadStatistics();
   }
 
   exportToPDF(): void {
     // Implement PDF export functionality
-    alert("Fonctionnalité d'export PDF à implémenter");
+    this.snackBar.open("Fonctionnalité d'export PDF à implémenter", 'Fermer', {
+      duration: 3000,
+      horizontalPosition: 'end',
+      verticalPosition: 'bottom',
+    });
   }
 
   getStatusColor(status: string): string {

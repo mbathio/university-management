@@ -1,56 +1,119 @@
 <div class="statistics-container">
-  <form [formGroup]="filterForm" class="filter-form" *ngIf="filterForm">
-    <div class="form-group">
-      <label for="year">Année</label>
-      <select id="year" formControlName="year">
-        <option *ngFor="let year of years" [value]="year">{{ year }}</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="formationId">Formation</label>
-      <select id="formationId" formControlName="formationId">
-        <option *ngFor="let formation of formations" [value]="formation.id">
-          {{ formation.name }}
-        </option>
-      </select>
-    </div>
-    <button type="button" (click)="resetFilters()">Réinitialiser</button>
-  </form>
+  <!-- Formulaire de filtre -->
+  <mat-card class="filter-card" *ngIf="filterForm">
+    <mat-card-header>
+      <mat-card-title>Filtres</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filter-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Année</mat-label>
+            <mat-select formControlName="year">
+              <mat-option *ngFor="let year of years" [value]="year">{{
+                year
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
 
-  <div *ngIf="loading" class="loading">Chargement...</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
+          <mat-form-field appearance="outline">
+            <mat-label>Formation</mat-label>
+            <mat-select formControlName="formationId">
+              <mat-option
+                *ngFor="let formation of formations"
+                [value]="formation.id"
+              >
+                {{ formation.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
 
-  <div *ngIf="!loading && !error" class="statistics">
-    <h3>Statistiques par statut</h3>
-    <div class="stat-item" *ngFor="let stat of statusStats">
-      <span [style.color]="getStatusColor(stat.name)">{{ stat.name }}</span>
-      <span>{{ stat.value }}</span>
-    </div>
+          <button mat-raised-button color="primary" (click)="resetFilters()">
+            <mat-icon>refresh</mat-icon> Réinitialiser
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
 
-    <h3>Statistiques par type de contrat</h3>
-    <div class="stat-item" *ngFor="let stat of contractTypeStats">
-      <span>{{ stat.name }}</span>
-      <span>{{ stat.value }}</span>
-    </div>
-
-    <h3>Statistiques par secteur</h3>
-    <div class="stat-item" *ngFor="let stat of industryStats">
-      <span>{{ stat.name }}</span>
-      <span>{{ stat.value }}</span>
-    </div>
-
-    <h3>Statistiques par tranche de salaire</h3>
-    <div class="stat-item" *ngFor="let stat of salaryRangeStats">
-      <span>{{ stat.name }}</span>
-      <span>{{ stat.value }}</span>
-    </div>
-
-    <h3>Taux d'embauche par formation</h3>
-    <div class="stat-item" *ngFor="let stat of hiringRatePerFormation">
-      <span>{{ stat.name }}</span>
-      <span>{{ stat.value }}</span>
-    </div>
+  <!-- Affichage du spinner pendant le chargement -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
   </div>
 
-  <button type="button" (click)="exportToPDF()">Exporter en PDF</button>
+  <!-- Affichage des erreurs -->
+  <div *ngIf="error" class="error-message">
+    <mat-icon color="warn">error</mat-icon>
+    {{ error }}
+  </div>
+
+  <!-- Statistiques -->
+  <div *ngIf="!loading && !error" class="statistics-content">
+    <mat-card class="statistics-card">
+      <mat-card-header>
+        <mat-card-title>Statistiques par statut</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stat-item" *ngFor="let stat of statusStats">
+          <span [style.color]="getStatusColor(stat.name)">{{ stat.name }}</span>
+          <span>{{ stat.value }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="statistics-card">
+      <mat-card-header>
+        <mat-card-title>Statistiques par type de contrat</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stat-item" *ngFor="let stat of contractTypeStats">
+          <span>{{ stat.name }}</span>
+          <span>{{ stat.value }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="statistics-card">
+      <mat-card-header>
+        <mat-card-title>Statistiques par secteur</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stat-item" *ngFor="let stat of industryStats">
+          <span>{{ stat.name }}</span>
+          <span>{{ stat.value }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="statistics-card">
+      <mat-card-header>
+        <mat-card-title>Statistiques par tranche de salaire</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stat-item" *ngFor="let stat of salaryRangeStats">
+          <span>{{ stat.name }}</span>
+          <span>{{ stat.value }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="statistics-card">
+      <mat-card-header>
+        <mat-card-title>Taux d'embauche par formation</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stat-item" *ngFor="let stat of hiringRatePerFormation">
+          <span>{{ stat.name }}</span>
+          <span>{{ stat.value }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Bouton d'export -->
+  <div class="export-button-container">
+    <button mat-raised-button color="accent" (click)="exportToPDF()">
+      <mat-icon>picture_as_pdf</mat-icon> Exporter en PDF
+    </button>
+  </div>
 </div>
