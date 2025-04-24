@@ -40,9 +40,8 @@
             announcement.createdAt | date: "dd/MM/yyyy"
           }}</span>
           <span *ngIf="announcement.createdBy">
-            • {{ announcement.createdBy.firstName }}
-            {{ announcement.createdBy.lastName }}</span
-          >
+            • {{ announcement.createdBy?.username }}
+          </span>
         </mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
@@ -54,7 +53,7 @@
         >
         <button
           mat-button
-          *ngIf="announcement.fileUrl"
+          *ngIf="announcement.filePath"
           (click)="downloadDocument(announcement.id)"
         >
           <mat-icon>file_download</mat-icon> Télécharger
