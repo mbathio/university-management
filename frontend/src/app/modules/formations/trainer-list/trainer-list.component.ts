@@ -1,8 +1,18 @@
 // frontend/src/app/modules/formations/trainer-list/trainer-list.component.ts
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormationService } from '../services/formation.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+
+// Material imports
+import { MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { NgModule } from '@angular/core';
+
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 
@@ -10,6 +20,18 @@ import { of } from 'rxjs';
   selector: 'app-trainer-list',
   templateUrl: './trainer-list.component.html',
   styleUrls: ['./trainer-list.component.scss'],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatTableModule,
+    MatProgressSpinnerModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    MatSnackBarModule,
+    MatTableModule,
+    MatSnackBarModule,
+  ],
 })
 export class TrainerListComponent implements OnInit {
   formationId!: number;

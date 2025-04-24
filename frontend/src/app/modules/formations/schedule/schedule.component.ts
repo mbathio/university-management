@@ -1,10 +1,21 @@
-// frontend/src/app/modules/formations/schedule/schedule.component.ts
-import { Component, OnInit } from '@angular/core';
+// Correction du schedule.component.ts
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormationService } from '../services/formation.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+
+interface Schedule {
+  id: number;
+  name: string;
+  period: string;
+  startDate: Date;
+  endDate: Date;
+  totalParticipants: number;
+  totalFormations: number;
+}
 
 @Component({
   selector: 'app-schedule',
@@ -13,9 +24,13 @@ import { of } from 'rxjs';
 })
 export class ScheduleComponent implements OnInit {
   formationId!: number;
-  scheduleItems: any[] = [];
+  schedules: Schedule[] = [];
   loading = true;
   formationName = '';
+  totalSchedules = 0;
+  pageSize = 10;
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private route: ActivatedRoute,
@@ -79,8 +94,40 @@ export class ScheduleComponent implements OnInit {
         }),
       )
       .subscribe((scheduleItems) => {
-        this.scheduleItems = scheduleItems;
+        // Assuming the API returns the appropriate format
+        this.schedules = scheduleItems;
+        this.totalSchedules = scheduleItems.length;
       });
+  }
+
+  canCreateSchedule(): boolean {
+    // Implement authorization logic
+    return true;
+  }
+
+  canEditSchedule(schedule: Schedule): boolean {
+    // Implement authorization logic
+    return true;
+  }
+
+  createNewSchedule(): void {
+    // Implement navigation to schedule creation
+    console.log('Create new schedule');
+  }
+
+  viewScheduleDetails(scheduleId: number): void {
+    // Implement navigation to schedule details
+    console.log('View schedule', scheduleId);
+  }
+
+  editSchedule(scheduleId: number): void {
+    // Implement navigation to schedule edit
+    console.log('Edit schedule', scheduleId);
+  }
+
+  onPageChange(event: PageEvent): void {
+    // Handle pagination
+    console.log('Page event', event);
   }
 
   goBack(): void {

@@ -1,5 +1,6 @@
 // src/app/app.routes.ts
 import { Routes } from '@angular/router';
+import { PageNotFoundComponent } from './core/components/page-not-found/page-not-found.component';
 import { authGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/user.model';
 
@@ -43,10 +44,10 @@ export const routes: Routes = [
   },
   {
     path: 'formations',
-    loadComponent: () =>
-      import(
-        './modules/formations/formation-list/formation-list.component'
-      ).then((m) => m.FormationListComponent),
+    loadChildren: () =>
+      import('./modules/formations/formations.routes').then(
+        (mod) => mod.default,
+      ),
     canActivate: [authGuard],
   },
   {
@@ -68,6 +69,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'dashboard',
+    component: PageNotFoundComponent,
   },
 ];

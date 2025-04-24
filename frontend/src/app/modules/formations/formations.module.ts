@@ -43,20 +43,21 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [
+  declarations: [],
+
+  imports: [
+    FormationListComponent,
     FormationListComponent,
     FormationDetailComponent,
     FormationFormComponent,
-    ScheduleComponent,
     TrainerListComponent,
-  ],
-  imports: [
     CommonModule,
     RouterModule.forChild(routes),
     ReactiveFormsModule,
-
-    // Material Modules
-    MatTableModule,
+    ReactiveFormsModule,
+    FormationFormComponent,
+    TrainerListComponent,
+    FormationDetailComponent,
     MatPaginatorModule,
     MatSortModule,
     MatInputModule,
