@@ -22,22 +22,13 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 
-// Standalone Components
-import { AdministrationDashboardComponent } from './administration-dashboard/administration-dashboard.component';
-import { DocumentManagementComponent } from './document-management/document-management.component';
-import { DocumentFormComponent } from './document-management/document-form/document-form.component';
-
-import { administrationRoutes } from './administration.routes';
+import administrationRoutes from './administration.routes';
 
 @NgModule({
   imports: [
     CommonModule,
     RouterModule.forChild(administrationRoutes),
     ReactiveFormsModule,
-
-    // Standalone Components
-    AdministrationDashboardComponent,
-    DocumentManagementComponent,
 
     // Material Modules
     MatTabsModule,

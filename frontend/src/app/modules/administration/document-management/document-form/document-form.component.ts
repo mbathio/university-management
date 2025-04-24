@@ -18,7 +18,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
+import { NgModule } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-document-form',
   templateUrl: './document-form.component.html',
@@ -34,6 +35,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatCardModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatIconModule,
   ],
 })
 export class DocumentFormComponent implements OnInit {
@@ -42,9 +44,16 @@ export class DocumentFormComponent implements OnInit {
   documentId?: number;
   loading = false;
   selectedFile: File | null = null;
+  documentFilePath: string | null = null; // Add this property to resolve the error
+  document: Document | null = null;
   documentTypes = Object.values(DocumentType);
   visibilityLevels = ['PUBLIC', 'ADMINISTRATION', 'STAFF', 'STUDENTS'];
-
+  clearExistingFile(): void {
+    this.documentFilePath = null; // Clear the existing file path
+  }
+  clearSelectedFile(): void {
+    this.selectedFile = null;
+  }
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,

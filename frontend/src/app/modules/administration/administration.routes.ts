@@ -1,24 +1,50 @@
 import { Routes } from '@angular/router';
-import { AdministrationDashboardComponent } from './administration-dashboard/administration-dashboard.component';
-import { DocumentManagementComponent } from './document-management/document-management.component';
-import { DocumentFormComponent } from './document-management/document-form/document-form.component';
+import { Role } from '../../core/models/user.model';
 
-export const administrationRoutes: Routes = [
+const administrationRoutes: Routes = [
   {
     path: '',
-    component: AdministrationDashboardComponent,
+    loadComponent: () =>
+      import(
+        './administration-dashboard/administration-dashboard.component'
+      ).then((m) => m.AdministrationDashboardComponent),
   },
   {
     path: 'documents',
-    component: DocumentManagementComponent,
+    loadComponent: () =>
+      import('./document-management/document-management.component').then(
+        (m) => m.DocumentManagementComponent,
+      ),
   },
   {
     path: 'documents/add',
-    component: DocumentFormComponent,
+    loadComponent: () =>
+      import(
+        './document-management/document-form/document-form.component'
+      ).then((m) => m.DocumentFormComponent),
   },
   {
     path: 'documents/edit/:id',
-    component: DocumentFormComponent,
+    loadComponent: () =>
+      import(
+        './document-management/document-form/document-form.component'
+      ).then((m) => m.DocumentFormComponent),
+  },
+  {
+    path: 'budget',
+    loadComponent: () =>
+      import(
+        './administration-dashboard/administration-dashboard.component'
+      ).then((m) => m.AdministrationDashboardComponent),
+    data: { roles: [Role.ADMIN, Role.ADMINISTRATION] },
+  },
+  {
+    path: 'hr',
+    loadComponent: () =>
+      import(
+        './administration-dashboard/administration-dashboard.component'
+      ).then((m) => m.AdministrationDashboardComponent),
+    data: { roles: [Role.ADMIN, Role.ADMINISTRATION] },
   },
 ];
 

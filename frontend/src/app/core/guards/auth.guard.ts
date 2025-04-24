@@ -21,7 +21,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   // Check role-based access if specified
   if (route.data && route.data['roles']) {
     const requiredRoles = route.data['roles'] as Role[];
-    if (!authService.hasRole(requiredRoles)) {
+    if (!requiredRoles.includes(currentUser.role)) {
       router.navigate(['/dashboard']);
       return false;
     }

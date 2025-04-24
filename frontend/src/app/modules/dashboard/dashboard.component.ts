@@ -2,11 +2,17 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { User, Role } from '../../core/models/user.model';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
+  standalone: true,
+  imports: [CommonModule, RouterModule, MatCardModule, MatIconModule],
 })
 export class DashboardComponent implements OnInit {
   currentUser: User | null = null;
@@ -28,7 +34,7 @@ export class DashboardComponent implements OnInit {
         title: 'Documents',
         description: 'Accéder aux documents et annonces',
         icon: 'description',
-        route: '/documents',
+        route: '/communication',
         color: '#4CAF50',
       },
     ];

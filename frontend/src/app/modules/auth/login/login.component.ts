@@ -1,14 +1,38 @@
 // src/app/modules/auth/login/login.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { first } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth/auth.service';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
@@ -55,10 +79,7 @@ export class LoginComponent implements OnInit {
 
     this.loading = true;
     this.authService
-      .login({
-        username: this.f['username'].value,
-        password: this.f['password'].value,
-      })
+      .login(this.f['username'].value, this.f['password'].value)
       .pipe(first())
       .subscribe({
         next: () => {

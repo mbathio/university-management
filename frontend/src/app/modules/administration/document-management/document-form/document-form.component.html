@@ -1,0 +1,151 @@
+<div class="document-form-container">
+  <div class="header-section">
+    <h1>{{ isEditMode ? "Modifier" : "Ajouter" }} un document</h1>
+    <button
+      mat-icon-button
+      color="primary"
+      routerLink="/administration/documents"
+      matTooltip="Retour à la liste"
+    >
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <form
+        [formGroup]="documentForm"
+        (ngSubmit)="onSubmit()"
+        class="document-form"
+      >
+        <!-- Titre du document -->
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Titre du document</mat-label>
+            <input
+              matInput
+              formControlName="title"
+              placeholder="Saisissez le titre"
+            />
+            <mat-error *ngIf="documentForm.get('title')?.hasError('required')">
+              Le titre est obligatoire
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Type de document -->
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Type de document</mat-label>
+            <mat-select formControlName="type">
+              <mat-option *ngFor="let type of documentTypes" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="documentForm.get('type')?.hasError('required')">
+              Le type est obligatoire
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Contenu du document -->
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contenu</mat-label>
+            <textarea
+              matInput
+              formControlName="content"
+              rows="6"
+              placeholder="Contenu du document"
+            ></textarea>
+          </mat-form-field>
+        </div>
+
+        <!-- Niveau de visibilité -->
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Niveau de visibilité</mat-label>
+            <mat-select formControlName="visibilityLevel">
+              <mat-option value="PUBLIC">Public</mat-option>
+              <mat-option value="INTERNAL">Interne</mat-option>
+              <mat-option value="RESTRICTED">Restreint</mat-option>
+              <mat-option value="CONFIDENTIAL">Confidentiel</mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="documentForm.get('visibilityLevel')?.hasError('required')"
+            >
+              Le niveau de visibilité est obligatoire
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Pièce jointe -->
+        <div class="form-row file-upload-section">
+          <div class="file-upload-label">
+            <mat-icon>attach_file</mat-icon>
+            <span>Pièce jointe</span>
+          </div>
+          <input
+            type="file"
+            #fileInput
+            (change)="onFileSelected($event)"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.jpg,.jpeg,.png,.gif"
+          />
+          <button
+            type="button"
+            mat-stroked-button
+            color="primary"
+            (click)="fileInput.click()"
+          >
+            <mat-icon>upload_file</mat-icon>
+            Choisir un fichier
+          </button>
+          <span class="selected-file" *ngIf="selectedFile">
+            {{ selectedFile.name }}
+            <button
+              type="button"
+              mat-icon-button
+              color="warn"
+              (click)="clearSelectedFile()"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </span>
+          <span class="selected-file" *ngIf="documentFilePath && !selectedFile">
+            Document existant
+            <button
+              type="button"
+              mat-icon-button
+              color="warn"
+              (click)="clearExistingFile()"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button
+            type="button"
+            mat-button
+            routerLink="/administration/documents"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            mat-raised-button
+            color="primary"
+            [disabled]="documentForm.invalid || loading"
+          >
+            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+            <span *ngIf="!loading">{{
+              isEditMode ? "Mettre à jour" : "Enregistrer"
+            }}</span>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

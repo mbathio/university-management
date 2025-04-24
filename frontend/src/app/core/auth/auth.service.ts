@@ -13,6 +13,7 @@ export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
   private apiUrl = `${environment.apiUrl}/auth`;
+  private tokenExpirationTimer: any;
 
   constructor(
     private http: HttpClient,
@@ -42,8 +43,10 @@ export class AuthService {
             email: response.email,
             role: response.role,
           };
-          localStorage.setItem('currentUser', JSON.stringify(user));
-          localStorage.setItem('token', response.token);
+
+          // Store token with expiration (assuming JWT has standard exp claim)
+          this.storeUserData(user, response.token);
+
           this.currentUserSubject.next(user);
           return response;
         }),
@@ -53,7 +56,13 @@ export class AuthService {
   logout(): void {
     // Clear local storage
     localStorage.removeItem('token');
+    localStorage.removeItem('tokenExpiration');
     localStorage.removeItem('currentUser');
+
+    // Clear any timeout
+    if (this.tokenExpirationTimer) {
+      clearTimeout(this.tokenExpirationTimer);
+    }
 
     // Reset the current user subject
     this.currentUserSubject.next(null);
@@ -70,25 +79,61 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return this.currentUserValue !== null;
+    return !!this.getToken() && !!this.currentUserValue;
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    const expiration = localStorage.getItem('tokenExpiration');
+    const token = localStorage.getItem('token');
+
+    if (!expiration || !token) {
+      return null;
+    }
+
+    // Check if token is expired
+    if (new Date(expiration) <= new Date()) {
+      this.logout();
+      return null;
+    }
+
+    return token;
   }
 
-  isAuthenticated(): boolean {
-    return !!this.currentUserValue;
+  private storeUserData(user: User, token: string): void {
+    // Set token expiration to 1 hour from now (adjust based on your JWT config)
+    const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
+
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    localStorage.setItem('token', token);
+    localStorage.setItem('tokenExpiration', expirationDate.toISOString());
+
+    // Auto logout when token expires
+    this.autoLogoutOnExpiration(3600 * 1000);
+  }
+
+  private autoLogoutOnExpiration(expirationDuration: number): void {
+    this.tokenExpirationTimer = setTimeout(() => {
+      this.logout();
+    }, expirationDuration);
   }
 
   autoLogin(): void {
-    const token = localStorage.getItem('token');
+    const token = this.getToken(); // This already checks expiration
     const storedUser = localStorage.getItem('currentUser');
+    const expiration = localStorage.getItem('tokenExpiration');
 
-    if (token && storedUser) {
+    if (token && storedUser && expiration) {
       try {
         const user: User = JSON.parse(storedUser);
         this.currentUserSubject.next(user);
+
+        // Set timer for auto logout
+        const expirationDate = new Date(expiration);
+        const expirationDuration =
+          expirationDate.getTime() - new Date().getTime();
+        if (expirationDuration > 0) {
+          this.autoLogoutOnExpiration(expirationDuration);
+        }
       } catch (error) {
         console.error('Failed to parse stored user', error);
         this.logout();

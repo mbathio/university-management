@@ -1,0 +1,97 @@
+/* filepath: c:\Users\HP\OneDrive\Desktop\university-management\frontend\src\app\modules\administration\document-management\document-form\document-form.component.scss */
+
+/* Conteneur principal */
+.document-form-container {
+  padding: 16px;
+
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    h1 {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  mat-card {
+    padding: 16px;
+
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+  }
+}
+
+/* Champs du formulaire */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .full-width {
+    width: 100%;
+  }
+}
+
+/* Section de téléchargement de fichier */
+.file-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .file-upload-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #424242;
+
+    mat-icon {
+      font-size: 20px;
+    }
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  .selected-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #424242;
+
+    button {
+      padding: 0;
+      height: 24px;
+      width: 24px;
+    }
+  }
+}
+
+/* Actions du formulaire */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+
+  button {
+    min-width: 100px;
+  }
+
+  mat-spinner {
+    margin-right: 8px;
+  }
+}
