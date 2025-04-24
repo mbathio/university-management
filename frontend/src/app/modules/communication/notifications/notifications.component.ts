@@ -46,4 +46,29 @@ export class NotificationsComponent implements OnInit {
         },
       });
   }
+
+  downloadDocument(documentId: string): void {
+    this.documentService.downloadDocument(documentId).subscribe({
+      next: (response) => {
+        // Gérer le téléchargement du fichier
+        const url = window.URL.createObjectURL(response);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `document-${documentId}.pdf`; // Nom par défaut, pourrait être amélioré
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      },
+      error: () => {
+        this.snackBar.open(
+          'Erreur lors du téléchargement du document',
+          'Fermer',
+          {
+            duration: 3000,
+          },
+        );
+      },
+    });
+  }
 }

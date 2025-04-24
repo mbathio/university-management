@@ -3,7 +3,7 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { DocumentService } from '../services/document.service';
+import { DocumentService } from '../../../core/services/document.service';
 import { Document, DocumentType } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/user.model';
@@ -129,7 +129,7 @@ export class ReportListComponent implements OnInit, AfterViewInit {
   }
 
   downloadReport(id: number): void {
-    this.documentService.downloadDocument(id).subscribe({
+    this.documentService.downloadDocument(id.toString()).subscribe({
       next: (blob) => {
         // Trouver le document dans la liste pour obtenir son titre
         const doc = this.dataSource.data.find((d) => d.id === id);

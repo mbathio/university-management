@@ -3,8 +3,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { DocumentService } from '../services/document.service';
+import { DocumentService } from '../../../core/services/document.service';
 import { DocumentType } from '../../../core/models/user.model';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-report-form',
@@ -25,6 +26,7 @@ export class ReportFormComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private documentService: DocumentService,
+    private authService: AuthService,
     private snackBar: MatSnackBar,
   ) {}
 
@@ -148,31 +150,37 @@ export class ReportFormComponent implements OnInit {
 
     if (this.isEditMode && this.reportId) {
       // Mode édition
-      this.documentService
-        .updateDocument(this.reportId, formData, this.selectedFile)
-        .subscribe({
-          next: () => {
-            this.snackBar.open('Rapport mis à jour avec succès', 'Fermer', {
+      this.documentService.updateDocument(this.reportId, formData).subscribe({
+        next: () => {
+          this.snackBar.open('Rapport mis à jour avec succès', 'Fermer', {
+            duration: 3000,
+          });
+          this.router.navigate(['/communication/reports']);
+        },
+        error: () => {
+          this.snackBar.open(
+            'Erreur lors de la mise à jour du rapport',
+            'Fermer',
+            {
               duration: 3000,
-            });
-            this.router.navigate(['/communication/reports']);
-          },
-          error: () => {
-            this.snackBar.open(
-              'Erreur lors de la mise à jour du rapport',
-              'Fermer',
-              {
-                duration: 3000,
-              },
-            );
-            this.loading = false;
-          },
-        });
+            },
+          );
+          this.loading = false;
+        },
+      });
     } else {
       // Mode création
-      this.documentService
-        .createDocument(formData, this.selectedFile)
-        .subscribe({
+      this.authService.currentUser?.subscribe((user) => {
+        const currentUserId = user?.id;
+        if (!currentUserId) {
+          this.snackBar.open('Utilisateur non authentifié', 'Fermer', {
+            duration: 3000,
+          });
+          this.loading = false;
+          return;
+        }
+
+        this.documentService.createDocument(formData, currentUserId).subscribe({
           next: () => {
             this.snackBar.open('Rapport créé avec succès', 'Fermer', {
               duration: 3000,
@@ -190,6 +198,7 @@ export class ReportFormComponent implements OnInit {
             this.loading = false;
           },
         });
+      });
     }
   }
 }
