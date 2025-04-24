@@ -6,7 +6,14 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/user.model';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatCardContent } from '@angular/material/card';
+import { MatCardTitle } from '@angular/material/card';
+import { MatCardSubtitle } from '@angular/material/card';
+import { MatCardActions } from '@angular/material/card';
+import { MatCardHeader } from '@angular/material/card';     
 interface AdminSection {
   title: string;
   description: string;
@@ -49,6 +56,7 @@ export class AdministrationDashboardComponent {
       roles: [Role.ADMIN, Role.ADMINISTRATION],
     },
   ];
+hasRestrictedSections: any;
 
   constructor(
     private authService: AuthService,

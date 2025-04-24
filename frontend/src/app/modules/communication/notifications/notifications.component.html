@@ -40,7 +40,7 @@
             announcement.createdAt | date: "dd/MM/yyyy"
           }}</span>
           <span *ngIf="announcement.createdBy">
-            • {{ announcement.createdBy?.username }}
+            • {{ announcement.createdBy.username }}
           </span>
         </mat-card-subtitle>
       </mat-card-header>

@@ -13,12 +13,14 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Formation, Role } from '../../../core/models/user.model';
 import { FormationService } from '../services/formation.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Router } from '@angular/router';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { NgModule } from '@angular/core';
 
 @Component({
   selector: 'app-formation-list',
@@ -38,10 +40,18 @@ import { of } from 'rxjs';
     MatFormFieldModule,
     MatInputModule,
     MatTooltipModule,
+    MatProgressSpinnerModule,
   ],
 })
 export class FormationListComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['name', 'type', 'level', 'startDate', 'endDate', 'actions'];
+  displayedColumns: string[] = [
+    'name',
+    'type',
+    'level',
+    'startDate',
+    'endDate',
+    'actions',
+  ];
   dataSource = new MatTableDataSource<Formation>();
   isLoading = true;
   error = '';
@@ -53,7 +63,7 @@ export class FormationListComponent implements OnInit, AfterViewInit {
     private formationService: FormationService,
     private authService: AuthService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -80,7 +90,7 @@ export class FormationListComponent implements OnInit, AfterViewInit {
         }),
         finalize(() => {
           this.isLoading = false;
-        })
+        }),
       )
       .subscribe((formations) => {
         this.dataSource.data = formations;
@@ -123,3 +133,15 @@ export class FormationListComponent implements OnInit, AfterViewInit {
     return this.authService.hasRole([Role.ADMIN]);
   }
 }
+
+@NgModule({
+  declarations: [
+    // Component declarations
+  ],
+  imports: [
+    CommonModule,
+    MatProgressSpinnerModule,
+    // Other imports
+  ],
+})
+export class FormationsModule {}

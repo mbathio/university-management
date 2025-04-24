@@ -6,6 +6,7 @@ export enum Role {
   FORMATION_MANAGER = 'FORMATION_MANAGER',
   ADMINISTRATION = 'ADMINISTRATION',
   STAFF = 'STAFF',
+  TUTOR = 'TUTOR',
 }
 
 export enum DocumentType {
@@ -60,6 +61,8 @@ export interface Formation {
 }
 
 export interface Student {
+  username: string;
+  role: Role;
   id: number;
   studentId: string;
   firstName: string;
