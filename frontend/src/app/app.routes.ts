@@ -3,6 +3,19 @@ import { Routes } from '@angular/router';
 import { PageNotFoundComponent } from './core/components/page-not-found/page-not-found.component';
 import { authGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/user.model';
+import { LoginComponent } from './modules/auth/login/login.component';
+import { RegisterComponent } from './modules/auth/register/register.component';
+
+const authRoutes: Routes = [
+  {
+    path: 'login',
+    component: LoginComponent,
+  },
+  {
+    path: 'register',
+    component: RegisterComponent,
+  },
+];
 
 export const routes: Routes = [
   {
@@ -11,11 +24,8 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
-    path: 'login',
-    loadComponent: () =>
-      import('./modules/auth/login/login.component').then(
-        (m) => m.LoginComponent,
-      ),
+    path: 'auth',
+    children: authRoutes,
   },
   {
     path: 'dashboard',
@@ -35,11 +45,11 @@ export const routes: Routes = [
     data: { roles: [Role.ADMIN, Role.ADMINISTRATION] },
   },
   {
-    path: 'communication',
-    loadComponent: () =>
-      import(
-        './modules/communication/document-list/document-list.component'
-      ).then((m) => m.DocumentListComponent),
+    path: 'documents', // Changed from 'communication' to 'documents' for consistency with API
+    loadChildren: () =>
+      import('./modules/communication/communication.routes').then(
+        (mod) => mod.default,
+      ),
     canActivate: [authGuard],
   },
   {
@@ -52,19 +62,15 @@ export const routes: Routes = [
   },
   {
     path: 'students',
-    loadComponent: () =>
-      import('./modules/students/student-list/student-list.component').then(
-        (m) => m.StudentListComponent,
-      ),
+    loadChildren: () =>
+      // Changed to loadChildren for consistency
+      import('./modules/students/student.routes').then((mod) => mod.default),
     canActivate: [authGuard],
   },
-  // Dans app.routes.ts
   {
     path: 'insertion',
     loadChildren: () =>
-      import('./modules/insertion/insertion.module').then(
-        (m) => m.InsertionModule,
-      ),
+      import('./modules/insertion/insertion.routes').then((mod) => mod.routes),
     canActivate: [authGuard],
     data: { roles: [Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION] },
   },

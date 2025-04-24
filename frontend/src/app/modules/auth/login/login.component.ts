@@ -1,4 +1,4 @@
-// src/app/modules/auth/login/login.component.ts
+// src/app/features/auth/login/login.component.ts
 import { Component, OnInit } from '@angular/core';
 import {
   FormBuilder,
@@ -6,89 +6,64 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { first } from 'rxjs/operators';
-import { AuthService } from '../../../core/auth/auth.service';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-  ],
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class LoginComponent implements OnInit {
-  loginForm!: FormGroup;
-  loading = false;
-  submitted = false;
-  error = '';
-  hidePassword = true;
-  returnUrl = '/dashboard';
+  loginForm: FormGroup;
+  errorMessage = ''; // Add this property
+  isLoading = false; // Add this property
 
   constructor(
     private formBuilder: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
     private authService: AuthService,
+    private router: Router,
   ) {
-    // redirect to home if already logged in
-    if (this.authService.currentUserValue) {
+    this.loginForm = this.formBuilder.group({
+      username: ['', [Validators.required]],
+      password: ['', [Validators.required]],
+    });
+  }
+
+  ngOnInit(): void {
+    if (this.authService.isLoggedIn()) {
       this.router.navigate(['/']);
     }
   }
 
-  ngOnInit(): void {
-    this.loginForm = this.formBuilder.group({
-      username: ['', [Validators.required]],
-      password: ['', Validators.required],
-    });
-
-    // get return url from route parameters or default to '/'
-    this.returnUrl =
-      this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-  }
-
-  get f() {
-    return this.loginForm.controls;
-  }
-
   onSubmit(): void {
-    this.submitted = true;
-
-    // stop here if form is invalid
     if (this.loginForm.invalid) {
       return;
     }
 
-    this.loading = true;
-    this.authService
-      .login(this.f['username'].value, this.f['password'].value)
-      .pipe(first())
-      .subscribe({
-        next: () => {
-          this.router.navigate([this.returnUrl]);
-        },
-        error: (error) => {
-          this.error = error;
-          this.loading = false;
-        },
-      });
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    const { username, password } = this.loginForm.value;
+
+    this.authService.login(username, password).subscribe({
+      next: () => {
+        this.router.navigate(['/']);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        if (error.status === 401) {
+          this.errorMessage = 'Invalid username or password';
+        } else {
+          this.errorMessage = 'An error occurred. Please try again later.';
+        }
+      },
+      complete: () => {
+        this.isLoading = false;
+      },
+    });
   }
 }

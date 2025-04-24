@@ -1,17 +1,18 @@
+// src/app/app.component.ts
 import { Component, OnInit } from '@angular/core';
 import {
   Router,
   NavigationEnd,
   RouterModule,
-  Event as NavigationEvent,
   RouterOutlet,
+  Event as NavigationEvent,
 } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from './core/auth/auth.service';
 import { Observable } from 'rxjs';
-import { User } from './core/models/user.model';
+import { User, Role } from './core/models/user.model';
 import { CommonModule } from '@angular/common';
-import { Role } from './core/models/user.model';
+import { MatIconModule } from '@angular/material/icon';
 
 interface NavItem {
   label: string;
@@ -39,19 +40,14 @@ interface NavItem {
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav">
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/dashboard">Dashboard</a>
+            <li class="nav-item" *ngFor="let item of navItems">
+              <a class="nav-link" [routerLink]="item.route">
+                <span class="material-icon">{{ item.icon }}</span>
+                {{ item.label }}
+              </a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/students">Étudiants</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/formations">Formations</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/administration"
-                >Administration</a
-              >
+            <li class="nav-item" *ngIf="currentUser$ | async">
+              <a class="nav-link" href="#" (click)="logout()">Déconnexion</a>
             </li>
           </ul>
         </div>
@@ -64,7 +60,7 @@ interface NavItem {
   `,
   styleUrls: ['./app.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet],
+  imports: [CommonModule, RouterModule, RouterOutlet, MatIconModule],
 })
 export class AppComponent implements OnInit {
   title = 'Université Cheikh Hamidou Kane';
@@ -138,5 +134,10 @@ export class AppComponent implements OnInit {
         roles: [Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION],
       },
     ].filter((item) => !item.roles || this.authService.hasRole(item.roles));
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

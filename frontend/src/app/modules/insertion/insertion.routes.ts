@@ -14,6 +14,8 @@ const routes: Routes = [
   { path: 'statistics', component: StatisticsComponent },
 ];
 
+export { routes };
+
 @NgModule({
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule],
