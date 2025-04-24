@@ -127,9 +127,9 @@
             type="submit"
             [disabled]="documentForm.invalid || loading"
           >
-            <mat-icon *ngIf="loading">
+            <ng-container *ngIf="loading">
               <mat-spinner diameter="20"></mat-spinner>
-            </mat-icon>
+            </ng-container>
             <span *ngIf="!loading">{{
               isEditMode ? "Mettre à jour" : "Créer"
             }}</span>

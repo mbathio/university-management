@@ -1,21 +1,20 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-
 <div class="document-detail-container">
   <mat-card class="document-card">
     <mat-card-header>
       <mat-card-title>
         <ng-container *ngIf="!loading">
-          <h1 *ngIf="document; else notFound">{{ document.title || '' }}</h1>
+          <h1 *ngIf="document; else notFound">{{ document.title || "" }}</h1>
         </ng-container>
         <ng-template #notFound>
           <h1>Document non trouvé</h1>
         </ng-template>
       </mat-card-title>
       <mat-card-subtitle *ngIf="document">
-        <span class="document-type">{{ document.type }}</span> • 
-        <span class="document-date">{{ document.createdAt | date:'dd/MM/yyyy' }}</span> • 
+        <span class="document-type">{{ document.type }}</span> •
+        <span class="document-date">{{
+          document.createdAt | date: "dd/MM/yyyy"
+        }}</span>
+        •
         <span class="document-visibility">{{ document.visibilityLevel }}</span>
       </mat-card-subtitle>
     </mat-card-header>
@@ -38,13 +37,17 @@ import { MatCardModule } from '@angular/material/card';
         <div class="document-content">
           <div class="document-section">
             <h3>Contenu</h3>
-            <p>{{ document.content || '' }}</p>
+            <p>{{ document.content || "" }}</p>
           </div>
 
           <!-- Section pour le fichier attaché -->
-          <div class="document-section" *ngIf="document.fileUrl">
+          <div class="document-section" *ngIf="document.filePath">
             <h3>Fichier attaché</h3>
-            <button mat-raised-button color="primary" (click)="downloadDocument()">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="downloadDocument()"
+            >
               <mat-icon>file_download</mat-icon>
               Télécharger le fichier
             </button>
@@ -53,10 +56,11 @@ import { MatCardModule } from '@angular/material/card';
           <!-- Métadonnées du document -->
           <div class="document-metadata">
             <p *ngIf="document.createdBy">
-              <strong>Créé par :</strong> {{ document.createdBy.firstName }} {{ document.createdBy.lastName }}
+              <strong>Créé par :</strong> {{ document.createdBy.username }}
             </p>
             <p *ngIf="document.updatedAt">
-              <strong>Dernière mise à jour :</strong> {{ document.updatedAt | date:'dd/MM/yyyy HH:mm' }}
+              <strong>Dernière mise à jour :</strong>
+              {{ document.updatedAt | date: "dd/MM/yyyy HH:mm" }}
             </p>
           </div>
         </div>
@@ -65,19 +69,38 @@ import { MatCardModule } from '@angular/material/card';
 
     <!-- Actions disponibles -->
     <mat-card-actions *ngIf="document && !loading" align="end">
-      <button mat-button (click)="downloadDocument()" matTooltip="Télécharger">
+      <button
+        mat-button
+        *ngIf="document.filePath"
+        (click)="downloadDocument()"
+        matTooltip="Télécharger"
+      >
         <mat-icon>file_download</mat-icon> Télécharger
       </button>
 
-      <button mat-button *ngIf="canEdit()" [routerLink]="['/communication/edit', document.id]" matTooltip="Modifier">
+      <button
+        mat-button
+        *ngIf="canEdit()"
+        [routerLink]="['/communication/edit', document.id]"
+        matTooltip="Modifier"
+      >
         <mat-icon>edit</mat-icon> Modifier
       </button>
 
-      <button mat-button *ngIf="canDelete()" (click)="deleteDocument()" matTooltip="Supprimer">
+      <button
+        mat-button
+        *ngIf="canDelete()"
+        (click)="deleteDocument()"
+        matTooltip="Supprimer"
+      >
         <mat-icon>delete</mat-icon> Supprimer
       </button>
 
-      <button mat-button [routerLink]="['/communication']" matTooltip="Retour à la liste">
+      <button
+        mat-button
+        [routerLink]="['/communication']"
+        matTooltip="Retour à la liste"
+      >
         <mat-icon>arrow_back</mat-icon> Retour
       </button>
     </mat-card-actions>

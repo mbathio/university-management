@@ -1,15 +1,46 @@
 // src/app/modules/communication/document-form/document-form.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { CommonModule } from '@angular/common';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DocumentService } from '../services/document.service';
-import { DocumentType } from '../../../core/models/user.model';
+import {
+  DocumentType,
+  VisibilityLevel,
+} from '../../../core/models/document.model';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-document-form',
   templateUrl: './document-form.component.html',
   styleUrls: ['./document-form.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+  ],
 })
 export class DocumentFormComponent implements OnInit {
   documentForm!: FormGroup;
@@ -19,13 +50,14 @@ export class DocumentFormComponent implements OnInit {
   selectedFile: File | null = null;
 
   documentTypes = Object.values(DocumentType);
-  visibilityLevels = ['PUBLIC', 'RESTRICTED', 'PRIVATE'];
+  visibilityLevels = Object.values(VisibilityLevel);
 
   constructor(
     private formBuilder: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private documentService: DocumentService,
+    private authService: AuthService,
     private snackBar: MatSnackBar,
   ) {}
 
@@ -136,12 +168,28 @@ export class DocumentFormComponent implements OnInit {
     }
 
     this.loading = true;
-    const formData = this.documentForm.value;
+    const formData = new FormData();
+    const documentData = this.documentForm.value;
+
+    // Ajouter le document comme JSON blob
+    formData.append(
+      'document',
+      new Blob([JSON.stringify(documentData)], { type: 'application/json' }),
+    );
+
+    // Ajouter le fichier si présent
+    if (this.selectedFile) {
+      formData.append('file', this.selectedFile, this.selectedFile.name);
+    }
 
     if (this.isEditMode && this.documentId) {
       // Mode édition
       this.documentService
-        .updateDocument(this.documentId, formData, this.selectedFile)
+        .updateDocument(
+          this.documentId,
+          documentData,
+          this.selectedFile ?? undefined,
+        )
         .subscribe({
           next: () => {
             this.snackBar.open('Document mis à jour avec succès', 'Fermer', {
@@ -162,8 +210,17 @@ export class DocumentFormComponent implements OnInit {
         });
     } else {
       // Mode création
+      const userId = this.authService.currentUserValue?.id;
+      if (!userId) {
+        this.snackBar.open('Utilisateur non authentifié', 'Fermer', {
+          duration: 3000,
+        });
+        this.loading = false;
+        return;
+      }
+
       this.documentService
-        .createDocument(formData, this.selectedFile)
+        .createDocument(documentData, this.selectedFile ?? undefined)
         .subscribe({
           next: () => {
             this.snackBar.open('Document créé avec succès', 'Fermer', {

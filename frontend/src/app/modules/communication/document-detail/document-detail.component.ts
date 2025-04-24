@@ -1,10 +1,5 @@
 // src/app/modules/communication/document-detail/document-detail.component.ts
-import {
-  Component,
-  OnInit,
-  CUSTOM_ELEMENTS_SCHEMA,
-  NgModule,
-} from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 
@@ -19,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 // Service and Model Imports
 import { DocumentService } from '../services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Document } from '../../../core/models/user.model';
+import { Document } from '../../../core/models/document.model';
 import { Role } from '../../../core/models/user.model';
 
 @Component({
@@ -133,8 +128,8 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   downloadDocument(): void {
-    if (!this.document) {
-      this.snackBar.open('Aucun document à télécharger.', 'Fermer', {
+    if (!this.document || !this.document.filePath) {
+      this.snackBar.open('Aucun fichier à télécharger.', 'Fermer', {
         duration: 3000,
       });
       return;
@@ -163,6 +158,5 @@ export class DocumentDetailComponent implements OnInit {
     this.error = message;
     this.loading = false;
     this.snackBar.open(this.error, 'Fermer', { duration: 3000 });
-    this.router.navigate(['/communication']);
   }
 }
