@@ -2,13 +2,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import {
-  InsertionService,
-  InsertionStatus,
-} from '../services/insertion.service';
+import { InsertionService } from '../services/insertion.service';
 import { FormationService } from '../../formations/services/formation.service';
 import { catchError, finalize } from 'rxjs/operators';
-import { forkJoin, of } from 'rxjs';
+import { of } from 'rxjs';
 
 // Import Angular Material Modules
 import { MatCardModule } from '@angular/material/card';
@@ -45,7 +42,7 @@ export class StatisticsComponent implements OnInit {
   loading = true;
   error = '';
   years: number[] = [];
-  formations: any[] = [];
+  formations: { id: number; name: string }[] = [];
 
   // Statistics data
   statusStats: StatData[] = [];
@@ -91,7 +88,7 @@ export class StatisticsComponent implements OnInit {
     this.formationService
       .getAllFormations()
       .pipe(
-        catchError((error) => {
+        catchError(() => {
           this.snackBar.open(
             'Erreur lors du chargement des formations',
             'Fermer',
@@ -119,10 +116,13 @@ export class StatisticsComponent implements OnInit {
     let statsObservable = this.insertionService.getInsertionStatistics();
 
     if (year && formationId) {
-      // Filter by both year and formation
+      // Si l'année et l'ID de formation sont définis, récupérer les statistiques par formation
       statsObservable = this.insertionService
-        .getInsertionStatisticsByYearAndFormation(year, formationId)
-        .pipe(catchError(() => this.insertionService.getInsertionStatistics()));
+        .getInsertionStatisticsByFormation(formationId)
+        .pipe(
+          // En cas d'erreur, récupérer toutes les statistiques comme solution de secours
+          catchError(() => this.insertionService.getInsertionStatistics()),
+        );
     } else if (year) {
       // Filter by year only
       statsObservable =
@@ -135,7 +135,7 @@ export class StatisticsComponent implements OnInit {
 
     statsObservable
       .pipe(
-        catchError((error) => {
+        catchError(() => {
           this.error = 'Erreur lors du chargement des statistiques';
           this.snackBar.open(this.error, 'Fermer', {
             duration: 3000,
@@ -156,11 +156,18 @@ export class StatisticsComponent implements OnInit {
       )
       .subscribe((stats) => {
         // If backend returns these stats
-        this.statusStats = stats.statusStats || this.generateMockStatusStats();
-        this.contractTypeStats = stats.contractTypeStats || [];
-        this.industryStats = stats.industryStats || [];
-        this.salaryRangeStats = stats.salaryRangeStats || [];
-        this.hiringRatePerFormation = stats.hiringRatePerFormation || [];
+        this.statusStats =
+          'statusStats' in stats
+            ? stats.statusStats
+            : this.generateMockStatusStats();
+        this.contractTypeStats =
+          'contractTypeStats' in stats ? stats.contractTypeStats : [];
+        this.industryStats =
+          'industryStats' in stats ? stats.industryStats : [];
+        this.salaryRangeStats =
+          'salaryRangeStats' in stats ? stats.salaryRangeStats : [];
+        this.hiringRatePerFormation =
+          'hiringRatePerFormation' in stats ? stats.hiringRatePerFormation : [];
       });
   }
 
