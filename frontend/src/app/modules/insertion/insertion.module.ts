@@ -1,3 +1,4 @@
+// 2. insertion.module.ts (correction)
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -10,19 +11,19 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { InsertionRoutingModule } from './insertion-routing.module';
+import { InsertionRoutingModule } from './insertion.routes';
 import { InsertionListComponent } from './insertion-list/insertion-list.component';
 import { InsertionDetailComponent } from './insertion-detail/insertion-detail.component';
 import { InsertionFormComponent } from './insertion-form/insertion-form.component';
+import { StatisticsComponent } from './statistics/statistics.component';
 import { InsertionService } from './services/insertion.service';
 
 @NgModule({
-  declarations: [
-    InsertionListComponent,
-    InsertionDetailComponent,
-    InsertionFormComponent,
-  ],
+  declarations: [],
   imports: [
     CommonModule,
     FormsModule,
@@ -36,8 +37,15 @@ import { InsertionService } from './services/insertion.service';
     MatTooltipModule,
     MatCardModule,
     MatInputModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatSnackBarModule,
+    MatSnackBarModule,
     InsertionRoutingModule,
+    StatisticsComponent,
+    InsertionListComponent,
+    InsertionDetailComponent,
+    InsertionFormComponent,
   ],
-  providers: [InsertionService],
 })
 export class InsertionModule {}

@@ -52,6 +52,8 @@ const routes: Routes = [
     FormationFormComponent,
     TrainerListComponent,
     CommonModule,
+    MatTableModule,
+    MatPaginatorModule,
     RouterModule.forChild(routes),
     ReactiveFormsModule,
     ReactiveFormsModule,

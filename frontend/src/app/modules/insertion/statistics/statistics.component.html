@@ -1,0 +1,56 @@
+<div class="statistics-container">
+  <form [formGroup]="filterForm" class="filter-form" *ngIf="filterForm">
+    <div class="form-group">
+      <label for="year">Année</label>
+      <select id="year" formControlName="year">
+        <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="formationId">Formation</label>
+      <select id="formationId" formControlName="formationId">
+        <option *ngFor="let formation of formations" [value]="formation.id">
+          {{ formation.name }}
+        </option>
+      </select>
+    </div>
+    <button type="button" (click)="resetFilters()">Réinitialiser</button>
+  </form>
+
+  <div *ngIf="loading" class="loading">Chargement...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <div *ngIf="!loading && !error" class="statistics">
+    <h3>Statistiques par statut</h3>
+    <div class="stat-item" *ngFor="let stat of statusStats">
+      <span [style.color]="getStatusColor(stat.name)">{{ stat.name }}</span>
+      <span>{{ stat.value }}</span>
+    </div>
+
+    <h3>Statistiques par type de contrat</h3>
+    <div class="stat-item" *ngFor="let stat of contractTypeStats">
+      <span>{{ stat.name }}</span>
+      <span>{{ stat.value }}</span>
+    </div>
+
+    <h3>Statistiques par secteur</h3>
+    <div class="stat-item" *ngFor="let stat of industryStats">
+      <span>{{ stat.name }}</span>
+      <span>{{ stat.value }}</span>
+    </div>
+
+    <h3>Statistiques par tranche de salaire</h3>
+    <div class="stat-item" *ngFor="let stat of salaryRangeStats">
+      <span>{{ stat.name }}</span>
+      <span>{{ stat.value }}</span>
+    </div>
+
+    <h3>Taux d'embauche par formation</h3>
+    <div class="stat-item" *ngFor="let stat of hiringRatePerFormation">
+      <span>{{ stat.name }}</span>
+      <span>{{ stat.value }}</span>
+    </div>
+  </div>
+
+  <button type="button" (click)="exportToPDF()">Exporter en PDF</button>
+</div>

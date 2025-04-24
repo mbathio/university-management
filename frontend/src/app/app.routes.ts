@@ -58,12 +58,13 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
+  // Dans app.routes.ts
   {
     path: 'insertion',
-    loadComponent: () =>
-      import(
-        './modules/insertion/insertion-list/insertion-list.component'
-      ).then((m) => m.InsertionListComponent),
+    loadChildren: () =>
+      import('./modules/insertion/insertion.module').then(
+        (m) => m.InsertionModule,
+      ),
     canActivate: [authGuard],
     data: { roles: [Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION] },
   },

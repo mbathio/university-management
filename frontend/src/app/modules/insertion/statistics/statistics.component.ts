@@ -1,6 +1,7 @@
 // src/app/modules/insertion/statistics/statistics.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import {
   InsertionService,
   InsertionStatus,
@@ -18,6 +19,8 @@ interface StatData {
   selector: 'app-statistics',
   templateUrl: './statistics.component.html',
   styleUrls: ['./statistics.component.scss'],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class StatisticsComponent implements OnInit {
   filterForm!: FormGroup;

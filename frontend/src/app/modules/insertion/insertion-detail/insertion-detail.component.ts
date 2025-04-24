@@ -1,5 +1,6 @@
+// src/app/modules/insertion/insertion-detail/insertion-detail.component.ts
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   InsertionService,
@@ -11,6 +12,7 @@ import { Role } from '../../../core/models/user.model';
 import { StudentService } from '../../students/services/student.service';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
+import { CommonModule } from '@angular/common';
 
 // Import Angular Material Components
 import { MatCardModule } from '@angular/material/card';
@@ -22,8 +24,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   selector: 'app-insertion-detail',
   templateUrl: './insertion-detail.component.html',
   styleUrls: ['./insertion-detail.component.scss'],
-  // Add imports for standalone components (in Angular 14+ with standalone components)
+  standalone: true,
   imports: [
+    CommonModule,
+    RouterModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -45,7 +49,6 @@ export class InsertionDetailComponent implements OnInit {
     private snackBar: MatSnackBar,
   ) {}
 
-  // Le reste du code reste inchangé
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
