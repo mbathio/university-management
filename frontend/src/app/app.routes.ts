@@ -45,7 +45,7 @@ export const routes: Routes = [
     data: { roles: [Role.ADMIN, Role.ADMINISTRATION] },
   },
   {
-    path: 'documents',
+    path: 'communication',
     loadChildren: () =>
       import('./modules/communication/communication.routes').then(
         (mod) => mod.default,
@@ -63,7 +63,6 @@ export const routes: Routes = [
   {
     path: 'students',
     loadChildren: () =>
-      // Changed to loadChildren for consistency
       import('./modules/students/student.routes').then((mod) => mod.default),
     canActivate: [authGuard],
   },

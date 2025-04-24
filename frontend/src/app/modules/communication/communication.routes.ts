@@ -7,7 +7,7 @@ import { NotificationsComponent } from './notifications/notifications.component'
 import { ReportListComponent } from './report-list/report-list.component';
 import { ReportFormComponent } from './report-form/report-form.component';
 
-const routes: Routes = [
+export const communicationRoutes: Routes = [
   { path: '', component: DocumentListComponent },
   { path: 'add', component: DocumentFormComponent },
   { path: 'edit/:id', component: DocumentFormComponent },
@@ -18,4 +18,4 @@ const routes: Routes = [
   { path: 'reports/edit/:id', component: ReportFormComponent },
 ];
 
-export default routes;
+export default communicationRoutes;
