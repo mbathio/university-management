@@ -61,6 +61,7 @@ export class DocumentDetailComponent implements OnInit {
     }
   }
 
+  // In document-detail.component.ts
   loadDocument(id: number): void {
     this.loading = true;
     this.documentService.getDocumentById(id).subscribe({
@@ -114,7 +115,7 @@ export class DocumentDetailComponent implements OnInit {
           this.snackBar.open('Document supprimé avec succès.', 'Fermer', {
             duration: 3000,
           });
-          this.router.navigate(['/communication']);
+          this.router.navigate(['/documents']); // Updated path
         },
         error: () => {
           this.snackBar.open(

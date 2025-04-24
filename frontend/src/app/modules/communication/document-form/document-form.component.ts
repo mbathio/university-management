@@ -95,7 +95,7 @@ export class DocumentFormComponent implements OnInit {
         });
         this.loading = false;
       },
-      error: (error) => {
+      error: () => {
         this.snackBar.open('Erreur lors du chargement du document', 'Fermer', {
           duration: 3000,
         });
@@ -105,8 +105,9 @@ export class DocumentFormComponent implements OnInit {
     });
   }
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
 
     // Vérifier si un fichier a été sélectionné
     if (file) {
@@ -120,7 +121,9 @@ export class DocumentFormComponent implements OnInit {
           },
         );
         // Réinitialiser l'input file
-        event.target.value = '';
+        if (input) {
+          input.value = '';
+        }
         this.selectedFile = null;
         return;
       }
@@ -148,7 +151,9 @@ export class DocumentFormComponent implements OnInit {
           duration: 3000,
         });
         // Réinitialiser l'input file
-        event.target.value = '';
+        if (event.target) {
+          (event.target as HTMLInputElement).value = '';
+        }
         this.selectedFile = null;
         return;
       }
@@ -197,7 +202,7 @@ export class DocumentFormComponent implements OnInit {
             });
             this.router.navigate(['/communication']);
           },
-          error: (error) => {
+          error: () => {
             this.snackBar.open(
               'Erreur lors de la mise à jour du document',
               'Fermer',
@@ -228,7 +233,7 @@ export class DocumentFormComponent implements OnInit {
             });
             this.router.navigate(['/communication']);
           },
-          error: (error) => {
+          error: () => {
             this.snackBar.open(
               'Erreur lors de la création du document',
               'Fermer',

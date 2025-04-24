@@ -92,7 +92,7 @@ export class DocumentListComponent implements OnInit, AfterViewInit {
         this.dataSource.data = documents;
         this.loading = false;
       },
-      error: (error) => {
+      error: () => {
         this.error = 'Erreur lors du chargement des documents';
         this.loading = false;
         this.snackBar.open(
@@ -153,7 +153,7 @@ export class DocumentListComponent implements OnInit, AfterViewInit {
             verticalPosition: 'bottom',
           });
         },
-        error: (error) => {
+        error: () => {
           this.snackBar.open(
             'Erreur lors de la suppression du document',
             'Fermer',
@@ -184,7 +184,7 @@ export class DocumentListComponent implements OnInit, AfterViewInit {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       },
-      error: (error) => {
+      error: () => {
         this.snackBar.open(
           'Erreur lors du téléchargement du document',
           'Fermer',

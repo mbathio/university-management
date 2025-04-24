@@ -2,7 +2,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { PageNotFoundComponent } from './core/components/page-not-found/page-not-found.component';
-import { AuthGuard } from './core/guards/auth.guard';
+import { authGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/user.model';
 
 const routes: Routes = [
@@ -22,7 +22,7 @@ const routes: Routes = [
       import('./modules/dashboard/dashboard.module').then(
         (m) => m.DashboardModule,
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'administration',
@@ -30,7 +30,7 @@ const routes: Routes = [
       import('./modules/administration/administration.module').then(
         (m) => m.AdministrationModule,
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
     data: { roles: [Role.ADMIN, Role.ADMINISTRATION] },
   },
   {
@@ -39,7 +39,7 @@ const routes: Routes = [
       import('./modules/communication/communication.module').then(
         (m) => m.CommunicationModule,
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'formations',
@@ -47,7 +47,7 @@ const routes: Routes = [
       import('./modules/formations/formations.module').then(
         (m) => m.FormationsModule,
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
 
   {
@@ -56,7 +56,7 @@ const routes: Routes = [
       import('./modules/students/students.module').then(
         (m) => m.StudentsModule,
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'insertion',
@@ -64,7 +64,7 @@ const routes: Routes = [
       import('./modules/insertion/insertion.module').then(
         (m) => m.InsertionModule,
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
     data: { roles: [Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION] },
   },
   {

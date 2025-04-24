@@ -45,7 +45,7 @@ export const routes: Routes = [
     data: { roles: [Role.ADMIN, Role.ADMINISTRATION] },
   },
   {
-    path: 'documents', // Changed from 'communication' to 'documents' for consistency with API
+    path: 'documents',
     loadChildren: () =>
       import('./modules/communication/communication.routes').then(
         (mod) => mod.default,
