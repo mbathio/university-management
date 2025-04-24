@@ -2,40 +2,124 @@
   <h1 class="admin-dashboard-title">Tableau de bord d'administration</h1>
 
   <div class="admin-sections-grid">
+    <!-- Section Gestion Documentaire -->
     <mat-card
       class="admin-section-card"
-      *ngFor="let section of adminSections"
-      [style.border-left]="'4px solid ' + (section?.color || '#ccc')"
-      (click)="isAllowed(section) ? router.navigate([section.route]) : null"
-      [class.disabled]="!isAllowed(section)"
+      [style.border-left]="'4px solid #4CAF50'"
+      (click)="router.navigate(['/administration/documents'])"
     >
       <mat-card-content>
         <div
           class="admin-section-icon-container"
-          [style.background-color]="(section?.color || '#ccc') + '22'"
+          [style.background-color]="'#4CAF5022'"
         >
-          <mat-icon
-            class="admin-section-icon"
-            [style.color]="section?.color || '#ccc'"
+          <mat-icon class="admin-section-icon" [style.color]="'#4CAF50'"
+            >description</mat-icon
           >
-            {{ section?.icon || "info" }}
-          </mat-icon>
         </div>
         <div class="admin-section-content">
-          <h2 class="admin-section-title">{{ section?.title || "Section" }}</h2>
+          <h2 class="admin-section-title">Gestion Documentaire</h2>
           <p class="admin-section-description">
-            {{ section?.description || "Description non disponible" }}
+            Courriers, notes de service, circulaires
           </p>
         </div>
-        <mat-icon class="admin-section-arrow">arrow_forward</mat-icon>
       </mat-card-content>
     </mat-card>
-  </div>
 
-  <div class="admin-restricted-message" *ngIf="hasRestrictedSections">
-    <mat-icon>info</mat-icon>
-    <span
-      >Certaines sections nécessitent des autorisations supplémentaires.</span
+    <!-- Section Gestion Budgétaire -->
+    <mat-card
+      class="admin-section-card"
+      [style.border-left]="'4px solid #2196F3'"
+      (click)="router.navigate(['/administration/budget'])"
     >
+      <mat-card-content>
+        <div
+          class="admin-section-icon-container"
+          [style.background-color]="'#2196F322'"
+        >
+          <mat-icon class="admin-section-icon" [style.color]="'#2196F3'"
+            >account_balance</mat-icon
+          >
+        </div>
+        <div class="admin-section-content">
+          <h2 class="admin-section-title">Gestion Budgétaire</h2>
+          <p class="admin-section-description">
+            Projet de budget, budget réalisé
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section Gestion des Utilisateurs -->
+    <mat-card
+      class="admin-section-card"
+      [style.border-left]="'4px solid #FF9800'"
+      (click)="router.navigate(['/administration/users'])"
+    >
+      <mat-card-content>
+        <div
+          class="admin-section-icon-container"
+          [style.background-color]="'#FF980022'"
+        >
+          <mat-icon class="admin-section-icon" [style.color]="'#FF9800'"
+            >people</mat-icon
+          >
+        </div>
+        <div class="admin-section-content">
+          <h2 class="admin-section-title">Gestion des Utilisateurs</h2>
+          <p class="admin-section-description">
+            Ajouter, modifier ou supprimer des utilisateurs
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section Statistiques -->
+    <mat-card
+      class="admin-section-card"
+      [style.border-left]="'4px solid #9C27B0'"
+      (click)="router.navigate(['/administration/statistics'])"
+    >
+      <mat-card-content>
+        <div
+          class="admin-section-icon-container"
+          [style.background-color]="'#9C27B022'"
+        >
+          <mat-icon class="admin-section-icon" [style.color]="'#9C27B0'"
+            >bar_chart</mat-icon
+          >
+        </div>
+        <div class="admin-section-content">
+          <h2 class="admin-section-title">Statistiques</h2>
+          <p class="admin-section-description">
+            Suivre les performances et les indicateurs clés
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Section Notifications -->
+    <mat-card
+      class="admin-section-card"
+      [style.border-left]="'4px solid #F44336'"
+      (click)="router.navigate(['/administration/notifications'])"
+    >
+      <mat-card-content>
+        <div
+          class="admin-section-icon-container"
+          [style.background-color]="'#F4433622'"
+        >
+          <mat-icon class="admin-section-icon" [style.color]="'#F44336'"
+            >notifications</mat-icon
+          >
+        </div>
+        <div class="admin-section-content">
+          <h2 class="admin-section-title">Notifications</h2>
+          <p class="admin-section-description">
+            Gérer les alertes et les messages importants
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>
