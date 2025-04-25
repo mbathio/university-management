@@ -1,64 +1,82 @@
 <!-- src/app/modules/communication/notifications/notifications.component.html -->
 <div class="notifications-container">
-  <div class="notifications-header">
-    <h1>Annonces et notifications</h1>
-    <button
-      mat-raised-button
-      color="primary"
-      [routerLink]="['/communication/add']"
-      *ngIf="true"
-    >
-      <mat-icon>add</mat-icon>
-      Créer une annonce
-    </button>
-  </div>
-
-  <div class="loading-spinner" *ngIf="loading">
-    <mat-spinner diameter="40"></mat-spinner>
-  </div>
-
-  <div class="error-message" *ngIf="error">
-    {{ error }}
-  </div>
-
-  <div class="announcements-list" *ngIf="!loading && !error">
-    <mat-card *ngIf="announcements.length === 0" class="no-announcements">
-      <mat-card-content>
-        <mat-icon>announcement</mat-icon>
-        <p>Aucune annonce disponible</p>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card
-      *ngFor="let announcement of announcements"
-      class="announcement-card"
-    >
-      <mat-card-header>
-        <mat-card-title>{{ announcement.title }}</mat-card-title>
-        <mat-card-subtitle>
-          <span class="announcement-date">{{
-            announcement.createdAt | date: "dd/MM/yyyy"
-          }}</span>
-          <span *ngIf="announcement.createdBy">
-            • {{ announcement.createdBy.username }}
-          </span>
-        </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>{{ announcement.content }}</p>
-      </mat-card-content>
-      <mat-card-actions align="end">
-        <a mat-button [routerLink]="['/communication', announcement.id]"
-          >Voir plus</a
-        >
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Notifications</mat-card-title>
+      <div class="header-actions">
         <button
           mat-button
-          *ngIf="announcement.filePath"
-          (click)="downloadDocument(announcement.id)"
+          color="primary"
+          (click)="markAllAsRead()"
+          [disabled]="isMarkAllAsReadDisabled()"
         >
-          <mat-icon>file_download</mat-icon> Télécharger
+          <mat-icon>done_all</mat-icon>
+          Tout marquer comme lu
         </button>
-      </mat-card-actions>
-    </mat-card>
-  </div>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Loader -->
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <!-- Error message -->
+      <div *ngIf="error" class="error-message">
+        <mat-icon color="warn">error</mat-icon>
+        <p>{{ error }}</p>
+      </div>
+
+      <!-- No notifications message -->
+      <div
+        *ngIf="!loading && !error && notifications.length === 0"
+        class="empty-state"
+      >
+        <mat-icon>notifications_off</mat-icon>
+        <p>Aucune notification</p>
+      </div>
+
+      <!-- Notifications list -->
+      <mat-list *ngIf="!loading && !error && notifications.length > 0">
+        <mat-list-item
+          *ngFor="let notification of notifications"
+          [ngClass]="{
+            'notification-read': notification.read,
+            'notification-unread': !notification.read,
+          }"
+          [routerLink]="getNotificationRoute(notification)"
+          (click)="markAsRead(notification.id)"
+        >
+          <div matListItemIcon>
+            <mat-icon
+              [matBadge]="notification.read ? '' : ''"
+              matBadgeColor="accent"
+              matBadgeSize="small"
+              [matBadgeHidden]="notification.read"
+            >
+              {{ getNotificationIcon(notification.type) }}
+            </mat-icon>
+          </div>
+
+          <div matListItemTitle>{{ notification.title }}</div>
+          <div matListItemLine>{{ notification.message }}</div>
+          <div matListItemMeta>
+            {{ notification.createdAt | date: "dd/MM/yyyy HH:mm" }}
+          </div>
+
+          <div matListItemMeta>
+            <button
+              mat-icon-button
+              (click)="
+                $event.stopPropagation(); deleteNotification(notification.id)
+              "
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
 </div>

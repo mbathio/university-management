@@ -1,20 +1,19 @@
 // src/app/modules/communication/document-detail/document-detail.component.ts
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-
-// Material Imports
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-// Service and Model Imports
-import { DocumentService } from '../services/document.service';
+import { DocumentService } from '../../../core/services/document.service';
+import { Document, DocumentType } from '../../../core/models/document.model';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Document } from '../../../core/models/document.model';
 import { Role } from '../../../core/models/user.model';
 
 @Component({
@@ -28,17 +27,19 @@ import { Role } from '../../../core/models/user.model';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule,
+    MatDividerModule,
+    MatChipsModule,
     MatSnackBarModule,
+    MatProgressSpinnerModule,
     MatTooltipModule,
   ],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class DocumentDetailComponent implements OnInit {
   document: Document | null = null;
   loading = true;
   error = '';
-  currentUsername = '';
+  documentId = 0;
+  DocumentType = DocumentType;
 
   constructor(
     private route: ActivatedRoute,
@@ -46,31 +47,76 @@ export class DocumentDetailComponent implements OnInit {
     private documentService: DocumentService,
     private authService: AuthService,
     private snackBar: MatSnackBar,
-  ) {
-    if (this.authService.currentUserValue) {
-      this.currentUsername = this.authService.currentUserValue.username;
-    }
-  }
+  ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadDocument(+id);
+    const idParam = this.route.snapshot.paramMap.get('id');
+    if (idParam) {
+      this.documentId = +idParam;
+      this.loadDocument();
     } else {
-      this.handleError('ID de document invalide.');
+      this.error = 'ID de document non valide';
+      this.loading = false;
     }
   }
 
-  // In document-detail.component.ts
-  loadDocument(id: number): void {
+  loadDocument(): void {
     this.loading = true;
-    this.documentService.getDocumentById(id).subscribe({
-      next: (document) => {
-        this.document = document;
+    this.documentService.getDocumentById(this.documentId).subscribe({
+      next: (doc) => {
+        this.document = doc;
         this.loading = false;
       },
+      error: (err) => {
+        this.error = 'Erreur lors du chargement du document';
+        this.loading = false;
+        this.snackBar.open(
+          'Erreur: Impossible de charger le document',
+          'Fermer',
+          {
+            duration: 3000,
+          },
+        );
+        console.error('Error loading document:', err);
+      },
+    });
+  }
+
+  downloadDocument(): void {
+    if (!this.document || !this.document.filePath) {
+      this.snackBar.open(
+        "Aucun fichier n'est associé à ce document",
+        'Fermer',
+        {
+          duration: 3000,
+        },
+      );
+      return;
+    }
+
+    this.documentService.downloadDocument(this.documentId).subscribe({
+      next: (blob) => {
+        const fileName = this.document?.title
+          ? `${this.document.title}.pdf`
+          : `document-${this.documentId}.pdf`;
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      },
       error: () => {
-        this.handleError('Erreur lors du chargement du document.');
+        this.snackBar.open(
+          'Erreur lors du téléchargement du document',
+          'Fermer',
+          {
+            duration: 3000,
+          },
+        );
       },
     });
   }
@@ -78,72 +124,71 @@ export class DocumentDetailComponent implements OnInit {
   canEdit(): boolean {
     if (!this.document) return false;
 
-    if (this.authService.hasRole([Role.ADMIN, Role.ADMINISTRATION])) {
-      return true;
-    }
-
-    return (
-      this.document.createdBy !== undefined &&
-      this.document.createdBy.username === this.currentUsername
-    );
-  }
-
-  canDelete(): boolean {
-    if (!this.document) return false;
-
     if (this.authService.hasRole([Role.ADMIN])) {
       return true;
     }
 
-    return (
-      !!this.document.createdBy &&
-      this.document.createdBy.username === this.currentUsername
-    );
+    // Check if current user is document creator
+    const currentUser = this.authService.currentUserValue;
+    return this.document.createdBy?.username === currentUser?.username;
+  }
+
+  canDelete(): boolean {
+    return this.canEdit();
+  }
+
+  editDocument(): void {
+    this.router.navigate(['/communication/edit', this.documentId]);
   }
 
   deleteDocument(): void {
-    if (!this.document) {
-      this.snackBar.open('Aucun document à supprimer.', 'Fermer', {
-        duration: 3000,
-      });
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
       return;
     }
 
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
-      this.documentService.deleteDocument(this.document.id).subscribe({
-        next: () => {
-          this.snackBar.open('Document supprimé avec succès.', 'Fermer', {
+    this.documentService.deleteDocument(this.documentId).subscribe({
+      next: () => {
+        this.snackBar.open('Document supprimé avec succès', 'Fermer', {
+          duration: 3000,
+        });
+        this.router.navigate(['/communication']);
+      },
+      error: () => {
+        this.snackBar.open(
+          'Erreur lors de la suppression du document',
+          'Fermer',
+          {
             duration: 3000,
-          });
-          this.router.navigate(['/documents']); // Updated path
-        },
-        error: () => {
-          this.snackBar.open(
-            'Erreur lors de la suppression du document.',
-            'Fermer',
-            { duration: 3000 },
-          );
-        },
-      });
-    }
-  }
-
-  downloadDocument(): void {
-    if (!this.document || !this.document.filePath) {
-      this.snackBar.open('Aucun fichier à télécharger.', 'Fermer', {
-        duration: 3000,
-      });
-      return;
-    }
-
-    this.documentService.downloadDocument(this.document.id).subscribe({
-      // Existing code...
+          },
+        );
+      },
     });
   }
 
-  private handleError(message: string): void {
-    this.error = message;
-    this.loading = false;
-    this.snackBar.open(this.error, 'Fermer', { duration: 3000 });
+  getDocumentTypeLabel(type: DocumentType): string {
+    switch (type) {
+      case DocumentType.MEETING_REPORT:
+        return 'Compte-rendu de réunion';
+      case DocumentType.SEMINAR_REPORT:
+        return 'Compte-rendu de séminaire';
+      case DocumentType.WEBINAR_REPORT:
+        return 'Compte-rendu de webinaire';
+      case DocumentType.UNIVERSITY_COUNCIL:
+        return "Conseil d'Université";
+      case DocumentType.NOTE_SERVICE:
+        return 'Note de service';
+      case DocumentType.CIRCULAR:
+        return 'Circulaire';
+      case DocumentType.ADMINISTRATIVE_NOTE:
+        return 'Note administrative';
+      case DocumentType.OTHER:
+        return 'Autre';
+      default:
+        return type;
+    }
+  }
+
+  goBack(): void {
+    this.router.navigate(['/communication']);
   }
 }

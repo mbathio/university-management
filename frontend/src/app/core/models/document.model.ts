@@ -1,28 +1,36 @@
-// src/app/core/models/document.model.ts - Updated version
+// src/app/core/models/document.model.ts
 export enum DocumentType {
-  ADMINISTRATIVE = 'ADMINISTRATIVE',
-  ACADEMIC = 'ACADEMIC',
-  REPORT = 'REPORT',
-  ANNOUNCEMENT = 'ANNOUNCEMENT',
-  COURSE_MATERIAL = 'COURSE_MATERIAL',
-  OTHER = 'OTHER',
-  INVOICE = 'INVOICE',
+  MEETING_REPORT = 'COMPTE_RENDU_REUNION',
+  SEMINAR_REPORT = 'COMPTE_RENDU_SEMINAIRE',
+  WEBINAR_REPORT = 'COMPTE_RENDU_WEBINAIRE',
+  UNIVERSITY_COUNCIL = 'CONSEIL_UNIVERSITE',
+  NOTE_SERVICE = 'NOTE_SERVICE',
+  CIRCULAR = 'CIRCULAIRE',
+  ADMINISTRATIVE_NOTE = 'NOTE_ADMINISTRATIVE',
+  OTHER = 'AUTRE',
 }
 
 export enum VisibilityLevel {
   PUBLIC = 'PUBLIC',
-  RESTRICTED = 'RESTRICTED',
-  PRIVATE = 'PRIVATE',
+  ADMINISTRATION = 'ADMINISTRATION',
+  TEACHERS = 'ENSEIGNANTS',
+  STUDENTS = 'ETUDIANTS',
+  RESTRICTED = 'RESTREINT',
 }
 
 export interface Document {
   id: number;
   title: string;
-  content?: string;
+  content: string;
   type: DocumentType;
   visibilityLevel: VisibilityLevel;
   filePath?: string;
   createdAt: Date;
   updatedAt?: Date;
-  createdBy?: { id: number; name: string; email: string }; // Specify a user type
+  createdBy: {
+    id: number;
+    username: string;
+    fullName: string;
+  };
+  tags?: string[];
 }

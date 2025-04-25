@@ -1,108 +1,112 @@
+<!-- src/app/modules/communication/document-detail/document-detail.component.html -->
 <div class="document-detail-container">
-  <mat-card class="document-card">
-    <mat-card-header>
-      <mat-card-title>
-        <ng-container *ngIf="!loading">
-          <h1 *ngIf="document; else notFound">{{ document.title || "" }}</h1>
-        </ng-container>
-        <ng-template #notFound>
-          <h1>Document non trouvé</h1>
-        </ng-template>
-      </mat-card-title>
-      <mat-card-subtitle *ngIf="document">
-        <span class="document-type">{{ document.type }}</span> •
-        <span class="document-date">{{
-          document.createdAt | date: "dd/MM/yyyy"
-        }}</span>
-        •
-        <span class="document-visibility">{{ document.visibilityLevel }}</span>
-      </mat-card-subtitle>
-    </mat-card-header>
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="loading-spinner-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
 
-    <mat-card-content>
-      <!-- Affichage du spinner pendant le chargement -->
-      <ng-container *ngIf="loading">
-        <div class="loading-spinner">
-          <mat-spinner diameter="40"></mat-spinner>
+  <!-- Error message -->
+  <div *ngIf="error" class="error-message">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="goBack()">
+      Retour à la liste
+    </button>
+  </div>
+
+  <!-- Document details -->
+  <div *ngIf="!loading && !error && document">
+    <mat-card class="document-card">
+      <mat-card-header>
+        <div mat-card-avatar class="document-header-image">
+          <mat-icon [ngClass]="'doc-icon-' + document.type.toLowerCase()"
+            >description</mat-icon
+          >
         </div>
-      </ng-container>
+        <mat-card-title>{{ document.title }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ getDocumentTypeLabel(document.type) }} |
+          <span class="document-date"
+            >Créé le {{ document.createdAt | date: "dd/MM/yyyy" }}</span
+          >
+        </mat-card-subtitle>
+      </mat-card-header>
 
-      <!-- Affichage des erreurs -->
-      <ng-container *ngIf="error && !loading">
-        <div class="error-message">{{ error }}</div>
-      </ng-container>
-
-      <!-- Affichage des détails du document -->
-      <ng-container *ngIf="document && !loading">
-        <div class="document-content">
-          <div class="document-section">
-            <h3>Contenu</h3>
-            <p>{{ document.content || "" }}</p>
+      <mat-card-content>
+        <div class="document-metadata">
+          <div class="metadata-item">
+            <span class="metadata-label">Auteur:</span>
+            <span class="metadata-value">{{
+              document.createdBy.fullName || "Non spécifié"
+            }}</span>
           </div>
-
-          <!-- Section pour le fichier attaché -->
-          <div class="document-section" *ngIf="document.filePath">
-            <h3>Fichier attaché</h3>
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="downloadDocument()"
+          <div class="metadata-item">
+            <span class="metadata-label">Niveau de visibilité:</span>
+            <span
+              class="metadata-value visibility-badge {{
+                document.visibilityLevel.toLowerCase()
+              }}"
             >
-              <mat-icon>file_download</mat-icon>
-              Télécharger le fichier
-            </button>
+              {{ document.visibilityLevel }}
+            </span>
           </div>
-
-          <!-- Métadonnées du document -->
-          <div class="document-metadata">
-            <p *ngIf="document.createdBy">
-              <strong>Créé par :</strong> {{ document.createdBy.username }}
-            </p>
-            <p *ngIf="document.updatedAt">
-              <strong>Dernière mise à jour :</strong>
-              {{ document.updatedAt | date: "dd/MM/yyyy HH:mm" }}
-            </p>
+          <div class="metadata-item" *ngIf="document.updatedAt">
+            <span class="metadata-label">Dernière modification:</span>
+            <span class="metadata-value">{{
+              document.updatedAt | date: "dd/MM/yyyy HH:mm"
+            }}</span>
           </div>
         </div>
-      </ng-container>
-    </mat-card-content>
 
-    <!-- Actions disponibles -->
-    <mat-card-actions *ngIf="document && !loading" align="end">
-      <button
-        mat-button
-        *ngIf="document.filePath"
-        (click)="downloadDocument()"
-        matTooltip="Télécharger"
-      >
-        <mat-icon>file_download</mat-icon> Télécharger
-      </button>
+        <mat-divider class="content-divider"></mat-divider>
 
-      <button
-        mat-button
-        *ngIf="canEdit()"
-        [routerLink]="['/communication/edit', document.id]"
-        matTooltip="Modifier"
-      >
-        <mat-icon>edit</mat-icon> Modifier
-      </button>
+        <div class="document-content">
+          <p>{{ document.content }}</p>
+        </div>
 
-      <button
-        mat-button
-        *ngIf="canDelete()"
-        (click)="deleteDocument()"
-        matTooltip="Supprimer"
-      >
-        <mat-icon>delete</mat-icon> Supprimer
-      </button>
+        <div
+          *ngIf="document.tags && document.tags.length > 0"
+          class="document-tags"
+        >
+          <h3>Tags:</h3>
+          <mat-chip-set>
+            <mat-chip *ngFor="let tag of document.tags">{{ tag }}</mat-chip>
+          </mat-chip-set>
+        </div>
 
-      <button
-        mat-button
-        [routerLink]="['/communication']"
-        matTooltip="Retour à la liste"
-      >
-        <mat-icon>arrow_back</mat-icon> Retour
-      </button>
-    </mat-card-actions>
-  </mat-card>
+        <div *ngIf="document.filePath" class="document-file">
+          <h3>Fichier joint:</h3>
+          <button mat-button color="primary" (click)="downloadDocument()">
+            <mat-icon>file_download</mat-icon>
+            Télécharger le fichier
+          </button>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-button (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Retour
+        </button>
+        <button
+          mat-button
+          color="primary"
+          *ngIf="canEdit()"
+          (click)="editDocument()"
+        >
+          <mat-icon>edit</mat-icon>
+          Modifier
+        </button>
+        <button
+          mat-button
+          color="warn"
+          *ngIf="canDelete()"
+          (click)="deleteDocument()"
+        >
+          <mat-icon>delete</mat-icon>
+          Supprimer
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
 </div>

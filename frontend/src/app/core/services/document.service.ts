@@ -1,13 +1,9 @@
-// src/app/core/services/document.service.ts - Corrected
+// src/app/core/services/document.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Document } from '../models/document.model';
 import { environment } from '../../../environments/environment';
-import {
-  Document,
-  DocumentType,
-  VisibilityLevel,
-} from '../models/document.model';
 
 @Injectable({
   providedIn: 'root',
@@ -25,13 +21,11 @@ export class DocumentService {
     return this.http.get<Document>(`${this.apiUrl}/${id}`);
   }
 
-  getDocumentsByType(type: DocumentType): Observable<Document[]> {
+  getDocumentsByType(type: string): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/type/${type}`);
   }
 
-  getDocumentsByVisibilityLevel(
-    level: VisibilityLevel,
-  ): Observable<Document[]> {
+  getDocumentsByVisibilityLevel(level: string): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/visibility/${level}`);
   }
 
@@ -47,12 +41,15 @@ export class DocumentService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  downloadDocument(filePath: string): Observable<Blob> {
-    return this.http.get(
-      `${environment.apiUrl}/api/documents/files/${filePath}`,
-      {
-        responseType: 'blob',
-      },
-    );
+  downloadDocument(id: number): Observable<Blob> {
+    // Assuming the document has a filePath property
+    return this.http.get(`${this.apiUrl}/files/${id}`, {
+      responseType: 'blob',
+    });
+  }
+
+  searchDocuments(term: string): Observable<Document[]> {
+    const params = new HttpParams().set('search', term);
+    return this.http.get<Document[]>(`${this.apiUrl}/search`, { params });
   }
 }
