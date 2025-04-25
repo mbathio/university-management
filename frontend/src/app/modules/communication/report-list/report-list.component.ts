@@ -105,7 +105,7 @@ export class ReportListComponent implements OnInit, AfterViewInit {
     if (
       document &&
       document.createdBy &&
-      document.createdBy.username === this.currentUsername
+      document.createdBy.email === this.currentUsername
     ) {
       return true;
     }
@@ -122,7 +122,7 @@ export class ReportListComponent implements OnInit, AfterViewInit {
     if (
       document &&
       document.createdBy &&
-      document.createdBy.username === this.currentUsername
+      document.createdBy.email === this.currentUsername
     ) {
       return true;
     }

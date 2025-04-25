@@ -1,22 +1,35 @@
 // src/app/modules/communication/communication.routes.ts
 import { Routes } from '@angular/router';
-import { DocumentListComponent } from './document-list/document-list.component';
-import { DocumentDetailComponent } from './document-detail/document-detail.component';
-import { DocumentFormComponent } from './document-form/document-form.component';
-import { NotificationsComponent } from './notifications/notifications.component';
 import { ReportListComponent } from './report-list/report-list.component';
-import { ReportFormComponent } from './report-form/report-form.component';
+import { DocumentFormComponent } from './document-form/document-form.component';
 
-const communicationRoutes: Routes = [
-  { path: '', redirectTo: 'documents', pathMatch: 'full' },
-  { path: 'documents', component: DocumentListComponent },
-  { path: 'documents/add', component: DocumentFormComponent },
-  { path: 'documents/edit/:id', component: DocumentFormComponent },
-  { path: 'detail/:id', component: DocumentDetailComponent },
-  { path: 'notifications', component: NotificationsComponent },
-  { path: 'reports', component: ReportListComponent },
-  { path: 'reports/add', component: ReportFormComponent },
-  { path: 'reports/edit/:id', component: ReportFormComponent },
+const routes: Routes = [
+  {
+    path: '',
+    component: ReportListComponent,
+  },
+  {
+    path: 'reports/add',
+    component: DocumentFormComponent,
+  },
+  {
+    path: 'reports/edit/:id',
+    component: DocumentFormComponent,
+  },
+  {
+    path: 'report-list',
+    component: ReportListComponent,
+  },
+  {
+    path: 'report-list/add',
+    component: DocumentFormComponent,
+  },
+  {
+    path: 'detail/:id',
+    // Assuming there's a document detail component
+    // Replace this with the actual component if it exists
+    component: ReportListComponent,
+  },
 ];
 
-export default communicationRoutes;
+export default routes;

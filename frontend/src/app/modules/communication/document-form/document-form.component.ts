@@ -1,4 +1,4 @@
-// src/app/modules/administration/document-management/document-form/document-form.component.ts
+// src/app/modules/communication/document-form/document-form.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -8,14 +8,14 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { DocumentService } from '../../../../core/services/document.service';
+import { DocumentService } from '../../../core/services/document.service';
 import {
   Document,
   DocumentType,
   VisibilityLevel,
-} from '../../../../core/models/document.model';
+} from '../../../core/models/document.model';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { AuthService } from '../../../../core/auth/auth.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -115,7 +115,8 @@ export class DocumentFormComponent implements OnInit {
           duration: 3000,
         });
         this.loading = false;
-        this.router.navigate(['/administration/documents']);
+        // Fixed navigation path for communication module
+        this.router.navigate(['/communication']);
       },
     });
   }
@@ -160,7 +161,8 @@ export class DocumentFormComponent implements OnInit {
           this.snackBar.open('Document mis à jour avec succès', 'Fermer', {
             duration: 3000,
           });
-          this.router.navigate(['/administration/documents']);
+          // Fixed navigation path for communication module
+          this.router.navigate(['/communication']);
           this.loading = false;
         },
         error: (error) => {
@@ -179,7 +181,8 @@ export class DocumentFormComponent implements OnInit {
           this.snackBar.open('Document créé avec succès', 'Fermer', {
             duration: 3000,
           });
-          this.router.navigate(['/administration/documents']);
+          // Fixed navigation path for communication module
+          this.router.navigate(['/communication']);
           this.loading = false;
         },
         error: (error) => {
@@ -196,6 +199,7 @@ export class DocumentFormComponent implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['/administration/documents']);
+    // Fixed navigation path for communication module
+    this.router.navigate(['/communication']);
   }
 }

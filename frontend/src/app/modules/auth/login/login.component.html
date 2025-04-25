@@ -1,7 +1,7 @@
 <!-- src/app/features/auth/login/login.component.html -->
 <div class="login-container">
   <div class="login-card">
-    <h2>Log In</h2>
+    <h2>Connexion</h2>
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="username">Username</label>
@@ -66,11 +66,11 @@
           role="status"
           aria-hidden="true"
         ></span>
-        Log In
+        Connexion
       </button>
 
       <div class="register-link">
-        Don't have an account? <a routerLink="/register">Register</a>
+        Don't have an account? <a routerLink="/auth/register">S'inscrire</a>
       </div>
     </form>
   </div>
