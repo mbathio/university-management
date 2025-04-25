@@ -20,7 +20,9 @@ import { Role } from '../../../core/models/user.model';
 })
 export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
-  roles = Object.values(Role);
+  roles = {
+    STUDENT: 'Student',
+  };
   errorMessage = '';
   isLoading = false;
 
@@ -46,6 +48,8 @@ export class RegisterComponent implements OnInit {
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/dashboard']);
     }
+    // Désactiver le champ de sélection du rôle
+    this.registerForm.get('role')?.disable();
   }
 
   passwordMatchValidator(formGroup: FormGroup) {
