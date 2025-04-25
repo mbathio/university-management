@@ -9,13 +9,14 @@ import {
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/auth/auth.service';
+import { RouterModule } from '@angular/router'; // Add RouterModule here
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
