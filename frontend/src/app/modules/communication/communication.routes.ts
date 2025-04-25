@@ -7,7 +7,7 @@ import { NotificationsComponent } from './notifications/notifications.component'
 import { ReportListComponent } from './report-list/report-list.component';
 import { ReportFormComponent } from './report-form/report-form.component';
 
-export const communicationRoutes: Routes = [
+const communicationRoutes: Routes = [
   { path: '', redirectTo: 'documents', pathMatch: 'full' },
   { path: 'documents', component: DocumentListComponent },
   { path: 'documents/add', component: DocumentFormComponent },

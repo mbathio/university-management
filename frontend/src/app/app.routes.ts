@@ -1,21 +1,10 @@
-// src/app/app.routes.ts
+// src/app/app.routes.ts - updated version
 import { Routes } from '@angular/router';
 import { PageNotFoundComponent } from './core/components/page-not-found/page-not-found.component';
 import { authGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/user.model';
 import { LoginComponent } from './modules/auth/login/login.component';
 import { RegisterComponent } from './modules/auth/register/register.component';
-
-const authRoutes: Routes = [
-  {
-    path: 'login',
-    component: LoginComponent,
-  },
-  {
-    path: 'register',
-    component: RegisterComponent,
-  },
-];
 
 export const routes: Routes = [
   {
@@ -24,15 +13,17 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
-    path: 'auth',
-    children: authRoutes,
+    path: 'login',
+    component: LoginComponent,
+  },
+  {
+    path: 'register',
+    component: RegisterComponent,
   },
   {
     path: 'dashboard',
-    loadComponent: () =>
-      import(
-        './modules/administration/administration-dashboard/administration-dashboard.component'
-      ).then((m) => m.AdministrationDashboardComponent),
+    loadChildren: () =>
+      import('./modules/dashboard/dashboard.routes').then((mod) => mod.default),
     canActivate: [authGuard],
   },
   {

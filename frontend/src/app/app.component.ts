@@ -1,12 +1,6 @@
-// src/app/app.component.ts
+// src/app/app.component.ts - updated version
 import { Component, OnInit } from '@angular/core';
-import {
-  Router,
-  NavigationEnd,
-  RouterModule,
-  RouterOutlet,
-  Event as NavigationEvent,
-} from '@angular/router';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from './core/auth/auth.service';
 import { Observable } from 'rxjs';
@@ -23,44 +17,10 @@ interface NavItem {
 
 @Component({
   selector: 'app-root',
-  template: `
-    <div class="container mt-4">
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">UCHK</a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-toggle="collapse"
-          data-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav">
-            <li class="nav-item" *ngFor="let item of navItems">
-              <a class="nav-link" [routerLink]="item.route">
-                <span class="material-icon">{{ item.icon }}</span>
-                {{ item.label }}
-              </a>
-            </li>
-            <li class="nav-item" *ngIf="currentUser$ | async">
-              <a class="nav-link" href="#" (click)="logout()">Déconnexion</a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-
-      <div class="content mt-4">
-        <router-outlet></router-outlet>
-      </div>
-    </div>
-  `,
+  templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet, MatIconModule],
+  imports: [CommonModule, RouterModule, MatIconModule],
 })
 export class AppComponent implements OnInit {
   title = 'Université Cheikh Hamidou Kane';
@@ -81,12 +41,7 @@ export class AppComponent implements OnInit {
 
     // Check if current route is login page
     this.router.events
-      .pipe(
-        filter(
-          (event: NavigationEvent): event is NavigationEnd =>
-            event instanceof NavigationEnd,
-        ),
-      )
+      .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         this.isLoginPage =
           event.url.includes('/login') || event.url.includes('/auth');
@@ -138,6 +93,7 @@ export class AppComponent implements OnInit {
   }
 
   logout(): void {
+    console.log('User logged out');
     this.authService.logout();
     this.router.navigate(['/login']);
   }
