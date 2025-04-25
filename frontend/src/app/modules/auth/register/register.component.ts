@@ -73,9 +73,8 @@ export class RegisterComponent implements OnInit {
 
     this.authService.register(userData).subscribe({
       next: () => {
-        this.router.navigate(['/login'], {
-          queryParams: { registered: 'true' },
-        });
+        // L'utilisateur est maintenant connecté, on le redirige vers le dashboard
+        this.router.navigate(['/dashboard']);
       },
       error: (error) => {
         this.isLoading = false;

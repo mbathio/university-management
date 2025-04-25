@@ -50,7 +50,7 @@ export class AuthService {
 
   login(username: string, password: string): Observable<User> {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/api/auth/login`, {
+      .post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, {
         username,
         password,
       })
@@ -58,21 +58,28 @@ export class AuthService {
         map((response) => {
           // Store token and user in localStorage
           localStorage.setItem(this.tokenKey, response.token);
-          localStorage.setItem(this.userKey, JSON.stringify(response.user));
+          const user = {
+            username: response.username,
+            email: response.email,
+            role: response.role,
+          } as User;
+          localStorage.setItem(this.userKey, JSON.stringify(user));
 
           // Update currentUserSubject
-          this.currentUserSubject.next(response.user);
-          return response.user;
+          this.currentUserSubject.next(user);
+          return user;
         }),
       );
   }
 
+  // Mise à jour de la méthode register dans auth.service.ts
   register(userData: {
     username: string;
     email: string;
     password: string;
-  }): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(
+    role: Role;
+  }): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(
       `${environment.apiUrl}/api/auth/register`,
       userData,
     );
@@ -116,4 +123,11 @@ export class AuthService {
         catchError(() => of(false)),
       );
   }
+}
+
+export interface LoginResponse {
+  token: string;
+  username: string;
+  email: string;
+  role: Role;
 }

@@ -69,17 +69,21 @@ export class InsertionService {
     return this.http.get<Insertion[]>(`${this.apiUrl}/by-year/${year}`);
   }
 
-  getInsertionStatistics(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/statistics`);
+  getInsertionStatistics(): Observable<{ total: number; byStatus: Record<InsertionStatus, number> }> {
+    return this.http.get<{ total: number; byStatus: Record<InsertionStatus, number> }>(`${this.apiUrl}/statistics`);
   }
 
-  getInsertionStatisticsByFormation(formationId: number): Observable<any> {
-    return this.http.get<any>(
+  getInsertionStatisticsByFormation(formationId: number): Observable<{ total: number; byStatus: Record<InsertionStatus, number> }> {
+    return this.http.get<{ total: number; byStatus: Record<InsertionStatus, number> }>(
       `${this.apiUrl}/statistics/by-formation/${formationId}`,
     );
   }
 
-  getInsertionStatisticsByYear(year: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/statistics/by-year/${year}`);
+  getInsertionStatisticsByYear(year: number): Observable<{ total: number; byStatus: Record<InsertionStatus, number> }> {
+    return this.http.get<{ total: number; byStatus: Record<InsertionStatus, number> }>(`${this.apiUrl}/statistics/by-year/${year}`);
+  }
+
+  getInsertionStatisticsByYearAndFormation(year: number, formationId: number): Observable<{ total: number; byStatus: Record<InsertionStatus, number> }> {
+    return this.http.get<{ total: number; byStatus: Record<InsertionStatus, number> }>(`${this.apiUrl}/statistics/by-year/${year}/formation/${formationId}`);
   }
 }

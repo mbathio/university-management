@@ -1,17 +1,17 @@
 // frontend/src/app/modules/auth/auth.module.ts
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { LoginComponent } from './login/login.component';
-
-const authRoutes: Routes = [
-  {
-    path: '',
-    component: LoginComponent,
-  },
-];
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+//import { LoginComponent } from './login/login.component';
+// import { RegisterComponent } from './register/register.component';
+import routes from './auth.routes';
 
 @NgModule({
-  imports: [RouterModule.forChild(authRoutes)],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule.forChild(routes)],
+  declarations: [
+    // Ne pas déclarer les composants standalone ici
+  ],
   exports: [RouterModule],
 })
 export class AuthModule {}

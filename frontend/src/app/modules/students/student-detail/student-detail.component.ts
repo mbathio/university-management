@@ -93,7 +93,7 @@ export class StudentDetailComponent implements OnInit {
     this.studentService
       .getStudentById(id)
       .pipe(
-        catchError((error) => {
+        catchError(() => {
           this.error =
             "Erreur lors du chargement des informations de l'étudiant";
           this.snackBar.open(this.error, 'Fermer', {
@@ -137,7 +137,7 @@ export class StudentDetailComponent implements OnInit {
     this.studentService
       .getStudentByStudentId(currentUser.username)
       .pipe(
-        catchError((error) => {
+        catchError(() => {
           this.error = 'Erreur lors du chargement de votre profil';
           this.snackBar.open(this.error, 'Fermer', {
             duration: 3000,
@@ -196,7 +196,7 @@ export class StudentDetailComponent implements OnInit {
       this.studentService
         .deleteStudent(this.student.id)
         .pipe(
-          catchError((error) => {
+          catchError(() => {
             this.snackBar.open(
               "Erreur lors de la suppression de l'étudiant",
               'Fermer',
