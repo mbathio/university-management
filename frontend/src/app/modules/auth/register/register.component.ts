@@ -1,4 +1,4 @@
-// src/app/features/auth/register/register.component.ts
+// src/app/modules/auth/register/register.component.ts
 import { Component, OnInit } from '@angular/core';
 import {
   FormBuilder,
@@ -6,10 +6,9 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/user.model';
 
 @Component({
@@ -17,7 +16,7 @@ import { Role } from '../../../core/models/user.model';
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
 })
 export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
@@ -27,7 +26,7 @@ export class RegisterComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private http: HttpClient,
+    private authService: AuthService,
     private router: Router,
   ) {
     this.registerForm = this.formBuilder.group(
@@ -43,7 +42,10 @@ export class RegisterComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('RegisterComponent initialized');
+    // If already logged in, redirect to dashboard
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/dashboard']);
+    }
   }
 
   passwordMatchValidator(formGroup: FormGroup) {
@@ -69,7 +71,7 @@ export class RegisterComponent implements OnInit {
     const { username, email, password, role } = this.registerForm.value;
     const userData = { username, email, password, role };
 
-    this.http.post(`${environment.apiUrl}/auth/register`, userData).subscribe({
+    this.authService.register(userData).subscribe({
       next: () => {
         this.router.navigate(['/login'], {
           queryParams: { registered: 'true' },

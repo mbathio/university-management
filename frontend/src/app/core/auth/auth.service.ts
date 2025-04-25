@@ -1,143 +1,119 @@
+// src/app/core/auth/auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { User, LoginRequest, LoginResponse, Role } from '../models/user.model';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { User, Role } from '../models/user.model';
 import { Router } from '@angular/router';
+
+interface AuthResponse {
+  token: string;
+  user: User;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private currentUserSubject: BehaviorSubject<User | null>;
-  public currentUser: Observable<User | null>;
-  private apiUrl = `${environment.apiUrl}/auth`;
-  private tokenExpirationTimer: any;
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private tokenKey = 'auth_token';
+  private userKey = 'current_user';
 
   constructor(
     private http: HttpClient,
     private router: Router,
-  ) {
-    const storedUser = localStorage.getItem('currentUser');
-    this.currentUserSubject = new BehaviorSubject<User | null>(
-      storedUser ? JSON.parse(storedUser) : null,
-    );
-    this.currentUser = this.currentUserSubject.asObservable();
+  ) {}
+
+  get currentUser(): Observable<User | null> {
+    return this.currentUserSubject.asObservable();
   }
 
-  public get currentUserValue(): User | null {
+  get currentUserValue(): User | null {
     return this.currentUserSubject.value;
   }
 
-  login(username: string, password: string): Observable<LoginResponse> {
-    const loginRequest: LoginRequest = { username, password };
+  autoLogin(): void {
+    const token = localStorage.getItem(this.tokenKey);
+    const userJson = localStorage.getItem(this.userKey);
+
+    if (token && userJson) {
+      try {
+        const user: User = JSON.parse(userJson);
+        this.currentUserSubject.next(user);
+      } catch (error) {
+        console.error('Error parsing stored user', error);
+        this.logout();
+      }
+    }
+  }
+
+  login(username: string, password: string): Observable<User> {
     return this.http
-      .post<LoginResponse>(`${this.apiUrl}/login`, loginRequest)
+      .post<AuthResponse>(`${environment.apiUrl}/api/auth/login`, {
+        username,
+        password,
+      })
       .pipe(
         map((response) => {
-          // Store user details and jwt token in local storage to keep user logged in
-          const user: User = {
-            id: 0, // We don't have the ID in the response
-            username: response.username,
-            email: response.email,
-            role: response.role,
-          };
+          // Store token and user in localStorage
+          localStorage.setItem(this.tokenKey, response.token);
+          localStorage.setItem(this.userKey, JSON.stringify(response.user));
 
-          // Store token with expiration (assuming JWT has standard exp claim)
-          this.storeUserData(user, response.token);
-
-          this.currentUserSubject.next(user);
-          return response;
+          // Update currentUserSubject
+          this.currentUserSubject.next(response.user);
+          return response.user;
         }),
       );
   }
 
+  register(userData: {
+    username: string;
+    email: string;
+    password: string;
+  }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${environment.apiUrl}/api/auth/register`,
+      userData,
+    );
+  }
+
   logout(): void {
-    // Clear local storage
-    localStorage.removeItem('token');
-    localStorage.removeItem('tokenExpiration');
-    localStorage.removeItem('currentUser');
+    // Clear localStorage
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
 
-    // Clear any timeout
-    if (this.tokenExpirationTimer) {
-      clearTimeout(this.tokenExpirationTimer);
-    }
-
-    // Reset the current user subject
+    // Reset current user
     this.currentUserSubject.next(null);
 
     // Navigate to login page
     this.router.navigate(['/login']);
   }
 
-  hasRole(requiredRoles: Role[]): boolean {
-    const currentUser = this.currentUserValue;
-    return (
-      !!currentUser && requiredRoles.some((role) => role === currentUser.role)
-    );
-  }
-
   isLoggedIn(): boolean {
-    return !!this.getToken() && !!this.currentUserValue;
+    return !!localStorage.getItem(this.tokenKey);
   }
 
   getToken(): string | null {
-    const expiration = localStorage.getItem('tokenExpiration');
-    const token = localStorage.getItem('token');
-
-    if (!expiration || !token) {
-      return null;
-    }
-
-    // Check if token is expired
-    if (new Date(expiration) <= new Date()) {
-      this.logout();
-      return null;
-    }
-
-    return token;
+    return localStorage.getItem(this.tokenKey);
   }
 
-  private storeUserData(user: User, token: string): void {
-    // Set token expiration to 1 hour from now (adjust based on your JWT config)
-    const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
-
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    localStorage.setItem('token', token);
-    localStorage.setItem('tokenExpiration', expirationDate.toISOString());
-
-    // Auto logout when token expires
-    this.autoLogoutOnExpiration(3600 * 1000);
+  hasRole(roles: Role[]): boolean {
+    const user = this.currentUserValue;
+    return user !== null && roles.includes(user.role);
   }
 
-  private autoLogoutOnExpiration(expirationDuration: number): void {
-    this.tokenExpirationTimer = setTimeout(() => {
-      this.logout();
-    }, expirationDuration);
-  }
-
-  autoLogin(): void {
-    const token = this.getToken(); // This already checks expiration
-    const storedUser = localStorage.getItem('currentUser');
-    const expiration = localStorage.getItem('tokenExpiration');
-
-    if (token && storedUser && expiration) {
-      try {
-        const user: User = JSON.parse(storedUser);
-        this.currentUserSubject.next(user);
-
-        // Set timer for auto logout
-        const expirationDate = new Date(expiration);
-        const expirationDuration =
-          expirationDate.getTime() - new Date().getTime();
-        if (expirationDuration > 0) {
-          this.autoLogoutOnExpiration(expirationDuration);
-        }
-      } catch (error) {
-        console.error('Failed to parse stored user', error);
-        this.logout();
-      }
+  validateToken(): Observable<boolean> {
+    const token = this.getToken();
+    if (!token) {
+      return of(false);
     }
+
+    return this.http
+      .post<{ valid: boolean }>(`${environment.apiUrl}/api/auth/validate`, {})
+      .pipe(
+        map((response) => response.valid),
+        catchError(() => of(false)),
+      );
   }
 }
