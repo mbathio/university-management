@@ -7,8 +7,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { DocumentService } from '../../../core/services/document.service';
-import { Document, DocumentType } from '../../../core/models/document.model'; // Correct path
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { Document, DocumentType } from '../../../core/models/document.model';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,6 +16,30 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
+// Add a simple confirm dialog component if it doesn't exist
+@Component({
+  selector: 'app-confirm-dialog',
+  template: `
+    <h2 mat-dialog-title>{{ data.title }}</h2>
+    <mat-dialog-content>{{ data.message }}</mat-dialog-content>
+    <mat-dialog-actions>
+      <button mat-button mat-dialog-close>Non</button>
+      <button mat-button [mat-dialog-close]="true" color="warn">Oui</button>
+    </mat-dialog-actions>
+  `,
+  standalone: true,
+  imports: [MatDialogModule, MatButtonModule],
+})
+export class ConfirmDialogComponent {
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: { title: string; message: string },
+  ) {}
+}
+
+import { Inject } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-document-management',
@@ -36,6 +59,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatProgressSpinnerModule,
     MatDialogModule,
     MatSnackBarModule,
+    MatTooltipModule,
   ],
 })
 export class DocumentManagementComponent implements OnInit, AfterViewInit {
@@ -108,7 +132,11 @@ export class DocumentManagementComponent implements OnInit, AfterViewInit {
     this.router.navigate(['/administration/documents/edit', document.id]);
   }
 
-  deleteDocument(document: Document): void {
+  deleteDocument(document: Document, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '350px',
       data: {

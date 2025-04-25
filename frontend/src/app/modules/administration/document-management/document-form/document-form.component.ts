@@ -7,9 +7,13 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DocumentService } from '../../../../core/services/document.service';
-import { Document, DocumentType } from '../../../../core/models/user.model';
+import {
+  Document,
+  DocumentType,
+  VisibilityLevel,
+} from '../../../../core/models/document.model';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,8 +22,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { NgModule } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
 @Component({
   selector: 'app-document-form',
   templateUrl: './document-form.component.html',
@@ -36,6 +41,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatIconModule,
+    MatTooltipModule,
+    RouterModule,
   ],
 })
 export class DocumentFormComponent implements OnInit {
@@ -44,16 +51,19 @@ export class DocumentFormComponent implements OnInit {
   documentId?: number;
   loading = false;
   selectedFile: File | null = null;
-  documentFilePath: string | null = null; // Add this property to resolve the error
+  documentFilePath: string | null = null;
   document: Document | null = null;
   documentTypes = Object.values(DocumentType);
-  visibilityLevels = ['PUBLIC', 'ADMINISTRATION', 'STAFF', 'STUDENTS'];
+  visibilityLevels = Object.values(VisibilityLevel);
+
   clearExistingFile(): void {
-    this.documentFilePath = null; // Clear the existing file path
+    this.documentFilePath = null;
   }
+
   clearSelectedFile(): void {
     this.selectedFile = null;
   }
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -79,7 +89,7 @@ export class DocumentFormComponent implements OnInit {
       title: ['', [Validators.required, Validators.maxLength(100)]],
       content: [''],
       type: ['', Validators.required],
-      visibilityLevel: ['PUBLIC', Validators.required],
+      visibilityLevel: [VisibilityLevel.PUBLIC, Validators.required],
       file: [''],
     });
   }
@@ -88,6 +98,9 @@ export class DocumentFormComponent implements OnInit {
     this.loading = true;
     this.documentService.getDocumentById(id).subscribe({
       next: (document) => {
+        this.document = document;
+        this.documentFilePath = document.filePath || null;
+
         this.documentForm.patchValue({
           title: document.title,
           content: document.content,
@@ -125,7 +138,7 @@ export class DocumentFormComponent implements OnInit {
     this.loading = true;
     const formData = new FormData();
 
-    const document: Partial<Document> = {
+    const documentData: Partial<Document> = {
       title: this.documentForm.value.title,
       content: this.documentForm.value.content,
       type: this.documentForm.value.type,
@@ -134,7 +147,7 @@ export class DocumentFormComponent implements OnInit {
 
     formData.append(
       'document',
-      new Blob([JSON.stringify(document)], { type: 'application/json' }),
+      new Blob([JSON.stringify(documentData)], { type: 'application/json' }),
     );
 
     if (this.selectedFile) {
@@ -161,19 +174,7 @@ export class DocumentFormComponent implements OnInit {
         },
       });
     } else {
-      const currentUser = this.authService.currentUserValue;
-
-      if (!currentUser || !currentUser.id) {
-        this.snackBar.open(
-          'Vous devez être connecté pour effectuer cette action',
-          'Fermer',
-          { duration: 3000 },
-        );
-        this.loading = false;
-        return;
-      }
-
-      this.documentService.createDocument(formData, currentUser.id).subscribe({
+      this.documentService.createDocument(formData).subscribe({
         next: () => {
           this.snackBar.open('Document créé avec succès', 'Fermer', {
             duration: 3000,

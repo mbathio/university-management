@@ -1,15 +1,19 @@
-// src/app/core/services/document.service.ts
+// src/app/core/services/document.service.ts - Corrected
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Document, DocumentType } from '../../core/models/document.model'; // Correct path
+import {
+  Document,
+  DocumentType,
+  VisibilityLevel,
+} from '../models/document.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DocumentService {
-  private apiUrl = `${environment.apiUrl}/documents`; // Use apiUrl instead of apiBaseUrl
+  private apiUrl = `${environment.apiUrl}/api/documents`;
 
   constructor(private http: HttpClient) {}
 
@@ -25,12 +29,14 @@ export class DocumentService {
     return this.http.get<Document[]>(`${this.apiUrl}/type/${type}`);
   }
 
-  getDocumentsByVisibilityLevel(level: string): Observable<Document[]> {
+  getDocumentsByVisibilityLevel(
+    level: VisibilityLevel,
+  ): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/visibility/${level}`);
   }
 
-  createDocument(formData: FormData, userId: number): Observable<Document> {
-    return this.http.post<Document>(`${this.apiUrl}/${userId}`, formData);
+  createDocument(formData: FormData): Observable<Document> {
+    return this.http.post<Document>(this.apiUrl, formData);
   }
 
   updateDocument(id: number, formData: FormData): Observable<Document> {
@@ -42,8 +48,11 @@ export class DocumentService {
   }
 
   downloadDocument(filePath: string): Observable<Blob> {
-    return this.http.get(`${environment.apiUrl}/files/${filePath}`, {
-      responseType: 'blob',
-    });
+    return this.http.get(
+      `${environment.apiUrl}/api/documents/files/${filePath}`,
+      {
+        responseType: 'blob',
+      },
+    );
   }
 }

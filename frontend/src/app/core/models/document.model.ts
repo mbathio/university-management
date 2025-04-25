@@ -1,6 +1,4 @@
-// src/app/core/models/document.model.ts
-import { User } from './user.model';
-
+// src/app/core/models/document.model.ts - Updated version
 export enum DocumentType {
   ADMINISTRATIVE = 'ADMINISTRATIVE',
   ACADEMIC = 'ACADEMIC',
@@ -8,7 +6,7 @@ export enum DocumentType {
   ANNOUNCEMENT = 'ANNOUNCEMENT',
   COURSE_MATERIAL = 'COURSE_MATERIAL',
   OTHER = 'OTHER',
-  INVOICE = 'INVOICE'
+  INVOICE = 'INVOICE',
 }
 
 export enum VisibilityLevel {
@@ -26,5 +24,5 @@ export interface Document {
   filePath?: string;
   createdAt: Date;
   updatedAt?: Date;
-  createdBy?: User;
+  createdBy?: { id: number; name: string; email: string }; // Specify a user type
 }

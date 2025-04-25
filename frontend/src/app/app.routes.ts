@@ -3,8 +3,6 @@ import { Routes } from '@angular/router';
 import { PageNotFoundComponent } from './core/components/page-not-found/page-not-found.component';
 import { authGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/user.model';
-import { LoginComponent } from './modules/auth/login/login.component';
-import { RegisterComponent } from './modules/auth/register/register.component';
 
 export const routes: Routes = [
   {
@@ -14,11 +12,8 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    component: LoginComponent,
-  },
-  {
-    path: 'register',
-    component: RegisterComponent,
+    loadChildren: () =>
+      import('./modules/auth/auth.routes').then((mod) => mod.default),
   },
   {
     path: 'dashboard',
@@ -69,3 +64,5 @@ export const routes: Routes = [
     component: PageNotFoundComponent,
   },
 ];
+
+export default routes;

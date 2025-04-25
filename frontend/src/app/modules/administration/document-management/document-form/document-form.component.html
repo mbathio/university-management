@@ -66,10 +66,12 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Niveau de visibilité</mat-label>
             <mat-select formControlName="visibilityLevel">
-              <mat-option value="PUBLIC">Public</mat-option>
-              <mat-option value="INTERNAL">Interne</mat-option>
-              <mat-option value="RESTRICTED">Restreint</mat-option>
-              <mat-option value="CONFIDENTIAL">Confidentiel</mat-option>
+              <mat-option
+                *ngFor="let level of visibilityLevels"
+                [value]="level"
+              >
+                {{ level }}
+              </mat-option>
             </mat-select>
             <mat-error
               *ngIf="documentForm.get('visibilityLevel')?.hasError('required')"
