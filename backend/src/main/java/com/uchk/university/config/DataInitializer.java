@@ -22,6 +22,7 @@ public class DataInitializer {
     
     @Value("${ADMIN_PASSWORD:admin123}")
     private String adminPassword;
+
     
     @Value("${TEACHER_PASSWORD:teacher123}")
     private String teacherPassword;
