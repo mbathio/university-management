@@ -1,0 +1,44 @@
+/* src/app/modules/communication/circular-form/circular-form.component.scss */
+.circular-form-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 16px;
+}
+
+.form-field-container {
+  margin-bottom: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.file-upload-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.selected-file-name {
+  margin-left: 8px;
+  font-style: italic;
+}
+
+.file-info {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+mat-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}

@@ -1,5 +1,6 @@
 // src/app/modules/communication/communication.routes.ts
-import { Routes } from '@angular/router';
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth.guard';
 import { Role } from '../../core/models/user.model';
 
@@ -80,4 +81,8 @@ const routes: Routes = [
   },
 ];
 
-export default routes;
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class CommunicationRoutingModule { }

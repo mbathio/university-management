@@ -18,7 +18,6 @@ import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Document, DocumentType } from '../../../core/models/document.model';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { DocumentTypePipe } from '../pipes/document-type.pipe';
 import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
 
 @Component({
@@ -40,7 +39,6 @@ import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
     MatTooltipModule,
     MatDialogModule,
     MatSnackBarModule,
-    DocumentTypePipe,
     VisibilityLevelPipe
   ]
 })

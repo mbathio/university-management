@@ -1,0 +1,60 @@
+/* src/app/modules/communication/admin-form/admin-note-form.component.scss */
+.admin-note-form-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 16px;
+}
+
+.form-field-container {
+  margin-bottom: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.file-upload-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.file-upload-label {
+  font-weight: 500;
+  margin-right: 16px;
+}
+
+.selected-file-name {
+  margin-left: 16px;
+  font-style: italic;
+}
+
+.current-file {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 16px;
+}
+
+.file-info {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+mat-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}

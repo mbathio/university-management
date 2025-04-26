@@ -1,0 +1,141 @@
+<!-- src/app/modules/communication/circular-form/circular-form.component.html -->
+<div class="circular-form-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <h1>
+          {{
+            isEditMode ? "Modifier le document" : "Créer un nouveau document"
+          }}
+        </h1>
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="circularForm" (ngSubmit)="onSubmit()">
+        <div class="form-field-container">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Titre</mat-label>
+            <input
+              matInput
+              formControlName="title"
+              placeholder="Titre du document"
+              required
+            />
+            <mat-error *ngIf="circularForm.get('title')?.hasError('required')">
+              Le titre est requis
+            </mat-error>
+            <mat-error *ngIf="circularForm.get('title')?.hasError('maxlength')">
+              Le titre doit contenir au maximum 100 caractères
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-field-container">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Type de document</mat-label>
+            <mat-select formControlName="type" required>
+              <mat-option *ngFor="let type of documentTypes" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="circularForm.get('type')?.hasError('required')">
+              Le type de document est requis
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-field-container">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Niveau de visibilité</mat-label>
+            <mat-select formControlName="visibilityLevel" required>
+              <mat-option
+                *ngFor="let level of visibilityLevels"
+                [value]="level"
+              >
+                {{ level }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="circularForm.get('visibilityLevel')?.hasError('required')"
+            >
+              Le niveau de visibilité est requis
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-field-container">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contenu</mat-label>
+            <textarea
+              matInput
+              formControlName="content"
+              placeholder="Contenu du document"
+              rows="8"
+              required
+            ></textarea>
+            <mat-error
+              *ngIf="circularForm.get('content')?.hasError('required')"
+            >
+              Le contenu est requis
+            </mat-error>
+            <mat-error
+              *ngIf="circularForm.get('content')?.hasError('maxlength')"
+            >
+              Le contenu doit contenir au maximum 5000 caractères
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-field-container">
+          <div class="file-upload-container">
+            <button
+              type="button"
+              mat-raised-button
+              color="primary"
+              (click)="fileInput.click()"
+            >
+              <mat-icon>attach_file</mat-icon>
+              Sélectionner un fichier
+            </button>
+            <input
+              #fileInput
+              type="file"
+              style="display: none"
+              (change)="onFileSelected($event)"
+            />
+            <span *ngIf="selectedFile" class="selected-file-name">
+              {{ selectedFile.name }}
+            </span>
+          </div>
+          <div class="file-info">
+            Formats acceptés: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP,
+            JPG, JPEG, PNG, GIF
+            <br />Taille maximale: 10MB
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            mat-button
+            type="button"
+            [routerLink]="['/communication/circulars']"
+          >
+            Annuler
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="circularForm.invalid || loading"
+          >
+            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+            <span *ngIf="!loading">{{
+              isEditMode ? "Mettre à jour" : "Créer"
+            }}</span>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

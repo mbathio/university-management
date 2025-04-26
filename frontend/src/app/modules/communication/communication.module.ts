@@ -24,7 +24,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 
-import {  } from './communication.routes';
+import { CommunicationRoutingModule } from './communication.routes';
 import { DocumentListComponent } from './document-list/document-list.component';
 import { DocumentDetailComponent } from './document-detail/document-detail.component';
 import { ReportFormComponent } from './report-form/report-form.component';
@@ -40,11 +40,23 @@ import { CircularFormComponent } from './circular-form/circular-form.component';
 
 @NgModule({
   declarations: [
-    // Si les composants ne sont pas autonomes (standalone: true)
+    DocumentListComponent,
+    DocumentDetailComponent,
+    ReportFormComponent,
+    ReportListComponent,
+    NotificationsComponent,
+    DocumentTypePipe,
+    VisibilityLevelPipe,
+    CommunicationDashboardComponent,
+    AdminNotesComponent,
+    AdminNoteFormComponent,
+    CircularListComponent,
+    CircularFormComponent
   ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    CommunicationRoutingModule,
     MatButtonModule,
     MatCardModule,
     MatChipsModule,

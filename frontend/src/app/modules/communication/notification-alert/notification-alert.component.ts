@@ -55,7 +55,7 @@ export class NotificationAlertComponent implements OnInit, OnDestroy {
   }
 
   loadNotifications(): void {
-    this.notificationService.getUserNotifications().subscribe({
+    this.notificationService.getNotifications().subscribe({
       next: (notifications) => {
         this.recentNotifications = notifications
           .filter(n => !n.read)

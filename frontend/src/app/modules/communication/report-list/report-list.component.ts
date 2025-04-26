@@ -40,15 +40,26 @@ import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
     MatDialogModule,
     MatSnackBarModule,
     DocumentTypePipe,
-    VisibilityLevelPipe
-  ]
+    VisibilityLevelPipe,
+  ],
 })
 export class ReportListComponent implements OnInit {
-  displayedColumns: string[] = ['title', 'type', 'createdAt', 'visibilityLevel', 'actions'];
+  displayedColumns: string[] = [
+    'title',
+    'type',
+    'createdAt',
+    'visibilityLevel',
+    'actions',
+  ];
   dataSource = new MatTableDataSource<Document>([]);
   loading = false;
   error = '';
-  reportTypes = [DocumentType.MEETING_REPORT, DocumentType.SEMINAR_REPORT, DocumentType.WEBINAR_REPORT, DocumentType.UNIVERSITY_COUNCIL];
+  reportTypes = [
+    DocumentType.MEETING_REPORT,
+    DocumentType.SEMINAR_REPORT,
+    DocumentType.WEBINAR_REPORT,
+    DocumentType.UNIVERSITY_COUNCIL,
+  ];
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -57,7 +68,7 @@ export class ReportListComponent implements OnInit {
     private documentService: DocumentService,
     private authService: AuthService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -76,17 +87,18 @@ export class ReportListComponent implements OnInit {
     this.documentService.getAllDocuments().subscribe({
       next: (documents: Document[]) => {
         // Filter to only keep reports (not administrative documents)
-        const reports = documents.filter(doc => 
-          this.reportTypes.includes(doc.type as DocumentType)
+        const reports = documents.filter((doc) =>
+          this.reportTypes.includes(doc.type as DocumentType),
         );
         this.dataSource.data = reports;
         this.loading = false;
       },
       error: (err) => {
         console.error('Error loading reports:', err);
-        this.error = 'Erreur lors du chargement des rapports. Veuillez réessayer.';
+        this.error =
+          'Erreur lors du chargement des rapports. Veuillez réessayer.';
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -113,10 +125,14 @@ export class ReportListComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error downloading document:', err);
-        this.snackBar.open('Erreur lors du téléchargement du document', 'Fermer', {
-          duration: 3000
-        });
-      }
+        this.snackBar.open(
+          'Erreur lors du téléchargement du document',
+          'Fermer',
+          {
+            duration: 3000,
+          },
+        );
+      },
     });
   }
 
@@ -125,30 +141,36 @@ export class ReportListComponent implements OnInit {
       this.documentService.deleteDocument(id).subscribe({
         next: () => {
           this.snackBar.open('Document supprimé avec succès', 'Fermer', {
-            duration: 3000
+            duration: 3000,
           });
           this.loadReports();
         },
         error: (err) => {
           console.error('Error deleting document:', err);
-          this.snackBar.open('Erreur lors de la suppression du document', 'Fermer', {
-            duration: 3000
-          });
-        }
+          this.snackBar.open(
+            'Erreur lors de la suppression du document',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
+        },
       });
     }
   }
 
   canEdit(document: Document): boolean {
-  // Vérifier si l'utilisateur actuel est un administrateur ou le créateur du document
-  const currentUser = this.authService.currentUserValue;
-  return currentUser !== null && 
-         (currentUser.role.includes('ADMIN') || 
-         document.createdBy.id === currentUser.id);
-}
+    // Vérifier si l'utilisateur actuel est un administrateur ou le créateur du document
+    const currentUser = this.authService.currentUserValue;
+    return (
+      currentUser !== null &&
+      (currentUser.role.includes('ADMIN') ||
+        document.createdBy.id === currentUser.id)
+    );
+  }
 
   canDelete(document: Document): boolean {
-  // Convertir explicitement le résultat de canEdit en un booléen strict
-  return !!this.canEdit(document);
-}
+    // Convertir explicitement le résultat de canEdit en un booléen strict
+    return !!this.canEdit(document);
+  }
 }

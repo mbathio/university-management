@@ -2,105 +2,58 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { Notification } from '../models/notification.model';
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
+import { Notification, NotificationType } from './models/notification.model';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class NotificationService {
-  private apiUrl = `${environment.apiUrl}/api/notifications`;
-
-  // Mock data for development without backend
-  private mockNotifications: Notification[] = [
-    {
-      id: 1,
-      title: 'Nouveau compte rendu',
-      message:
-        'Un nouveau compte rendu de réunion a été ajouté: "Réunion du conseil"',
-      type: 'DOCUMENT_ADDED',
-      read: false,
-      createdAt: new Date('2025-04-22T15:30:00'),
-      userId: 1,
-      referenceId: 1,
-      referenceType: 'DOCUMENT',
-    },
-    {
-      id: 2,
-      title: 'Rappel: Réunion pédagogique',
-      message: 'La réunion pédagogique aura lieu demain à 14h00 en salle A201',
-      type: 'MEETING',
-      read: true,
-      createdAt: new Date('2025-04-21T09:15:00'),
-      userId: 1,
-      referenceId: 3,
-      referenceType: 'MEETING',
-    },
-    {
-      id: 3,
-      title: 'Nouvelle circulaire publiée',
-      message: 'Une nouvelle circulaire concernant les examens a été publiée',
-      type: 'DOCUMENT_ADDED',
-      read: false,
-      createdAt: new Date('2025-04-20T11:45:00'),
-      userId: 1,
-      referenceId: 2,
-      referenceType: 'DOCUMENT',
-    },
-  ];
+  private apiUrl = `${environment.apiUrl}/notifications`;
 
   constructor(private http: HttpClient) {}
 
-  getUserNotifications(): Observable<Notification[]> {
-    // For development without backend connection
-    if (!environment.production) {
-      return of(this.mockNotifications);
-    }
+  getNotifications(): Observable<Notification[]> {
+    return this.http.get<Notification[]>(this.apiUrl);
+  }
 
-    return this.http.get<Notification[]>(`${this.apiUrl}/user`);
+  getRecentNotifications(limit: number = 5): Observable<Notification[]> {
+    return this.http.get<Notification[]>(`${this.apiUrl}/recent?limit=${limit}`);
   }
 
   getUnreadCount(): Observable<number> {
-    // For development without backend connection
-    if (!environment.production) {
-      return of(this.mockNotifications.filter((n) => !n.read).length);
-    }
-
-    return this.http.get<number>(`${this.apiUrl}/unread-count`);
+    return this.http.get<number>(`${this.apiUrl}/unread/count`);
   }
 
   markAsRead(id: number): Observable<void> {
-    // For development without backend connection
-    if (!environment.production) {
-      const notification = this.mockNotifications.find((n) => n.id === id);
-      if (notification) {
-        notification.read = true;
-      }
-      return of(undefined);
-    }
-
     return this.http.patch<void>(`${this.apiUrl}/${id}/read`, {});
   }
 
   markAllAsRead(): Observable<void> {
-    // For development without backend connection
-    if (!environment.production) {
-      this.mockNotifications.forEach((n) => (n.read = true));
-      return of(undefined);
-    }
-
-    return this.http.patch<void>(`${this.apiUrl}/mark-all-read`, {});
+    return this.http.patch<void>(`${this.apiUrl}/read-all`, {});
   }
 
   deleteNotification(id: number): Observable<void> {
-    // For development without backend connection
-    if (!environment.production) {
-      this.mockNotifications = this.mockNotifications.filter(
-        (n) => n.id !== id,
-      );
-      return of(undefined);
-    }
-
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  createNotification(notification: Partial<Notification>): Observable<Notification> {
+    return this.http.post<Notification>(this.apiUrl, notification);
+  }
+
+  // Helper method to get appropriate icon for notification type
+  getNotificationIcon(type: string): string {
+    switch (type) {
+      case NotificationType.DOCUMENT_ADDED:
+        return 'description';
+      case NotificationType.ACCOUNT_UPDATE:
+        return 'person';
+      case NotificationType.SYSTEM:
+        return 'info';
+      case NotificationType.MEETING:
+        return 'event';
+      default:
+        return 'notifications';
+    }
   }
 }

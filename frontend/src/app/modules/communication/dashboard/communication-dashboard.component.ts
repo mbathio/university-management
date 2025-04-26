@@ -17,7 +17,6 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { Document, DocumentType } from '../../../core/models/document.model';
 import { Notification } from '../models/notification.model';
 import { DocumentTypePipe } from '../pipes/document-type.pipe';
-import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
 import { NotificationsComponent } from '../notifications/notifications.component';
 
 @Component({
@@ -37,7 +36,6 @@ import { NotificationsComponent } from '../notifications/notifications.component
     MatProgressSpinnerModule,
     MatBadgeModule,
     DocumentTypePipe,
-    VisibilityLevelPipe,
     NotificationsComponent
   ]
 })

@@ -1,21 +1,18 @@
 // src/app/core/models/document.model.ts
 export enum DocumentType {
-  MEETING_REPORT = 'COMPTE_RENDU_REUNION',
-  SEMINAR_REPORT = 'COMPTE_RENDU_SEMINAIRE',
-  WEBINAR_REPORT = 'COMPTE_RENDU_WEBINAIRE',
-  UNIVERSITY_COUNCIL = 'CONSEIL_UNIVERSITE',
+  ADMINISTRATIVE_NOTE = 'ADMINISTRATIVE_NOTE',
+  CIRCULAR = 'CIRCULAR',
   NOTE_SERVICE = 'NOTE_SERVICE',
-  CIRCULAR = 'CIRCULAIRE',
-  ADMINISTRATIVE_NOTE = 'NOTE_ADMINISTRATIVE',
-  OTHER = 'AUTRE',
+  REPORT = 'REPORT',
+  OTHER = 'OTHER',
 }
 
 export enum VisibilityLevel {
   PUBLIC = 'PUBLIC',
   ADMINISTRATION = 'ADMINISTRATION',
-  TEACHERS = 'ENSEIGNANTS',
-  STUDENTS = 'ETUDIANTS',
-  RESTRICTED = 'RESTREINT',
+  TEACHERS = 'TEACHERS',
+  STUDENTS = 'STUDENTS',
+  RESTRICTED = 'RESTRICTED',
 }
 
 export interface Document {
@@ -25,12 +22,17 @@ export interface Document {
   type: DocumentType;
   visibilityLevel: VisibilityLevel;
   filePath?: string;
+  reference?: string; // Added reference property
   createdAt: Date;
-  updatedAt?: Date;
   createdBy: {
     id: number;
     username: string;
-    fullName: string;
+    fullName?: string;
   };
-  tags?: string[];
+  updatedAt?: Date;
+  updatedBy?: {
+    id: number;
+    username: string;
+    fullName?: string;
+  };
 }

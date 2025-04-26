@@ -31,7 +31,7 @@
           <div matListItemLine>
             <span class="notification-metadata">
               {{ document.createdAt | date:'dd/MM/yyyy HH:mm' }} par 
-              {{ document.createdBy?.fullName || document.createdBy?.username }}
+              {{ document.createdBy.fullName || document.createdBy.username }}
             </span>
           </div>
         </mat-list-item>
