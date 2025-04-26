@@ -1,22 +1,24 @@
 // src/app/modules/communication/report-list/report-list.component.ts
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCardModule } from '@angular/material/card';
-import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
 import { DocumentService } from '../../../core/services/document.service';
 import { Document, DocumentType } from '../../../core/models/document.model';
-import { Role } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/auth/auth.service';
+import { DocumentTypePipe } from '../pipes/document-type.pipe';
+import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
 
 @Component({
   selector: 'app-report-list',
@@ -27,45 +29,65 @@ import { AuthService } from '../../../core/auth/auth.service';
     CommonModule,
     RouterModule,
     MatTableModule,
-    MatPaginatorModule,
     MatSortModule,
+    MatPaginatorModule,
+    MatFormFieldModule,
+    MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule,
-    MatCardModule,
-    MatInputModule,
     MatTooltipModule,
+    MatProgressSpinnerModule,
+    MatDialogModule,
     MatSnackBarModule,
-  ],
+    DocumentTypePipe,
+    VisibilityLevelPipe
+  ]
 })
-export class ReportListComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['title', 'createdAt', 'createdBy', 'actions'];
-  dataSource = new MatTableDataSource<Document>();
-  loading = true;
+export class ReportListComponent implements OnInit {
+  displayedColumns: string[] = ['title', 'type', 'createdAt', 'visibilityLevel', 'actions'];
+  dataSource = new MatTableDataSource<Document>([]);
+  loading = false;
   error = '';
-  currentUsername = '';
+  reportTypes = [DocumentType.MEETING_REPORT, DocumentType.SEMINAR_REPORT, DocumentType.WEBINAR_REPORT, DocumentType.UNIVERSITY_COUNCIL];
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private documentService: DocumentService,
     private authService: AuthService,
-    private snackBar: MatSnackBar,
-  ) {
-    // Get current user info
-    if (this.authService.currentUserValue) {
-      this.currentUsername = this.authService.currentUserValue.username;
-    }
-  }
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
     this.loadReports();
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
+  ngAfterViewInit() {
     this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
+  }
+
+  loadReports(): void {
+    this.loading = true;
+    this.error = '';
+
+    this.documentService.getAllDocuments().subscribe({
+      next: (documents: Document[]) => {
+        // Filter to only keep reports (not administrative documents)
+        const reports = documents.filter(doc => 
+          this.reportTypes.includes(doc.type as DocumentType)
+        );
+        this.dataSource.data = reports;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading reports:', err);
+        this.error = 'Erreur lors du chargement des rapports. Veuillez réessayer.';
+        this.loading = false;
+      }
+    });
   }
 
   applyFilter(event: Event): void {
@@ -77,117 +99,56 @@ export class ReportListComponent implements OnInit, AfterViewInit {
     }
   }
 
-  loadReports(): void {
-    this.loading = true;
-    this.error = '';
-
-    this.documentService.getDocumentsByType(DocumentType.REPORT).subscribe({
-      next: (documents) => {
-        this.dataSource.data = documents;
-        this.loading = false;
-      },
-      error: () => {
-        this.error = 'Erreur lors du chargement des rapports';
-        this.loading = false;
-        this.snackBar.open('Erreur lors du chargement des rapports', 'Fermer', {
-          duration: 3000,
-        });
-      },
-    });
-  }
-
-  canEdit(document: Document): boolean {
-    if (this.authService.hasRole([Role.ADMIN, Role.ADMINISTRATION])) {
-      return true;
-    }
-
-    // Si le document existe et l'utilisateur en est le créateur
-    if (
-      document &&
-      document.createdBy &&
-      document.createdBy.email === this.currentUsername
-    ) {
-      return true;
-    }
-
-    return false;
-  }
-
-  canDelete(document: Document): boolean {
-    if (this.authService.hasRole([Role.ADMIN])) {
-      return true;
-    }
-
-    // Si le document existe et l'utilisateur en est le créateur
-    if (
-      document &&
-      document.createdBy &&
-      document.createdBy.email === this.currentUsername
-    ) {
-      return true;
-    }
-
-    return false;
-  }
-
-  deleteReport(id: number): void {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce rapport ?')) {
-      this.documentService.deleteDocument(id).subscribe({
-        next: () => {
-          this.loadReports();
-          this.snackBar.open('Rapport supprimé avec succès', 'Fermer', {
-            duration: 3000,
-          });
-        },
-        error: () => {
-          this.snackBar.open(
-            'Erreur lors de la suppression du rapport',
-            'Fermer',
-            {
-              duration: 3000,
-            },
-          );
-        },
-      });
-    }
-  }
-
-  downloadReport(id: number): void {
-    // Find the document in the list to get its filename
-    const reportDocument = this.dataSource.data.find((doc) => doc.id === id);
-
-    if (!reportDocument || !reportDocument.filePath) {
-      this.snackBar.open('Aucun fichier associé à ce rapport', 'Fermer', {
-        duration: 3000,
-      });
-      return;
-    }
-
-    // Extract filename from filePath
-    const filename = reportDocument.filePath.split('/').pop() || `report-${id}`;
-
-    this.documentService.downloadDocument(filename).subscribe({
-      next: (blob) => {
+  downloadDocument(id: number): void {
+    this.documentService.downloadDocument(id).subscribe({
+      next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
-        const a = window.document.createElement('a');
+        const a = document.createElement('a');
         a.href = url;
-        a.download = reportDocument.title
-          ? `${reportDocument.title}.pdf`
-          : filename;
+        a.download = `document-${id}.pdf`; // You might want to get the actual filename
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       },
-      error: () => {
-        this.snackBar.open(
-          'Erreur lors du téléchargement du rapport',
-          'Fermer',
-          {
-            duration: 3000,
-          },
-        );
-      },
+      error: (err) => {
+        console.error('Error downloading document:', err);
+        this.snackBar.open('Erreur lors du téléchargement du document', 'Fermer', {
+          duration: 3000
+        });
+      }
     });
   }
+
+  deleteDocument(id: number): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
+      this.documentService.deleteDocument(id).subscribe({
+        next: () => {
+          this.snackBar.open('Document supprimé avec succès', 'Fermer', {
+            duration: 3000
+          });
+          this.loadReports();
+        },
+        error: (err) => {
+          console.error('Error deleting document:', err);
+          this.snackBar.open('Erreur lors de la suppression du document', 'Fermer', {
+            duration: 3000
+          });
+        }
+      });
+    }
+  }
+
+  canEdit(document: Document): boolean {
+  // Vérifier si l'utilisateur actuel est un administrateur ou le créateur du document
+  const currentUser = this.authService.currentUserValue;
+  return currentUser !== null && 
+         (currentUser.role.includes('ADMIN') || 
+         document.createdBy.id === currentUser.id);
+}
+
+  canDelete(document: Document): boolean {
+  // Convertir explicitement le résultat de canEdit en un booléen strict
+  return !!this.canEdit(document);
+}
 }

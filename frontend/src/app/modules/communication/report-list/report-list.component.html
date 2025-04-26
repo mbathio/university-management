@@ -1,126 +1,149 @@
 <!-- src/app/modules/communication/report-list/report-list.component.html -->
 <div class="report-list-container">
-  <div class="report-list-header">
-    <h1>Gestion des rapports</h1>
+  <div class="heading-container">
+    <h1>Comptes Rendus & Rapports</h1>
     <button
       mat-raised-button
       color="primary"
-      [routerLink]="['/communication/report-list/add']"
+      [routerLink]="['/communication/reports/add']"
     >
       <mat-icon>add</mat-icon>
       Nouveau rapport
     </button>
   </div>
 
-  <mat-card>
-    <mat-card-content>
-      <div class="report-filter">
-        <mat-form-field appearance="outline">
-          <mat-label>Rechercher</mat-label>
-          <input
-            matInput
-            (keyup)="applyFilter($event)"
-            placeholder="Titre, créateur, etc."
-            #input
-          />
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-      </div>
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Filtrer</mat-label>
+    <input
+      matInput
+      (keyup)="applyFilter($event)"
+      placeholder="Rechercher un rapport..."
+    />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
 
-      <div class="loading-spinner" *ngIf="loading">
-        <mat-spinner diameter="40"></mat-spinner>
-      </div>
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Chargement des rapports...</span>
+  </div>
 
-      <div class="error-message" *ngIf="error">
-        {{ error }}
-      </div>
+  <div class="error-container" *ngIf="error">
+    <mat-icon color="warn">error</mat-icon>
+    <span>{{ error }}</span>
+    <button mat-button color="primary" (click)="loadReports()">
+      Réessayer
+    </button>
+  </div>
 
-      <div class="mat-elevation-z8 table-container" *ngIf="!loading && !error">
-        <table mat-table [dataSource]="dataSource" matSort>
-          <!-- Title Column -->
-          <ng-container matColumnDef="title">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Titre</th>
-            <td mat-cell *matCellDef="let report">
-              <a
-                [routerLink]="['/communication/detail', report.id]"
-                class="report-link"
-              >
-                {{ report.title }}
-              </a>
-            </td>
-          </ng-container>
+  <div class="table-container" *ngIf="!loading && !error">
+    <table mat-table [dataSource]="dataSource" matSort class="reports-table">
+      <!-- Title Column -->
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Titre</th>
+        <td mat-cell *matCellDef="let document">
+          
+            [routerLink]="['/communication/detail', document.id]"
+            class="document-title"
+          >
+            {{ document.title }}
+          </a>
+        </td>
+      </ng-container>
 
-          <!-- Created At Column -->
-          <ng-container matColumnDef="createdAt">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>
-              Date de création
-            </th>
-            <td mat-cell *matCellDef="let report">
-              {{ report.createdAt | date: "dd/MM/yyyy" }}
-            </td>
-          </ng-container>
+      <!-- Type Column -->
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+        <td mat-cell *matCellDef="let document">
+          <span
+            class="document-type-badge"
+            [ngClass]="document.type.toLowerCase()"
+          >
+            {{ document.type | documentType }}
+          </span>
+        </td>
+      </ng-container>
 
-          <!-- Created By Column -->
-          <ng-container matColumnDef="createdBy">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Créé par</th>
-            <td mat-cell *matCellDef="let report">
-              {{ report.createdBy?.firstName }} {{ report.createdBy?.lastName }}
-            </td>
-          </ng-container>
+      <!-- Date Column -->
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Date de création
+        </th>
+        <td mat-cell *matCellDef="let document">
+          {{ document.createdAt | date: "dd/MM/yyyy" }}
+        </td>
+      </ng-container>
 
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let report">
-              <button
-                mat-icon-button
-                [routerLink]="['/communication/detail', report.id]"
-                matTooltip="Voir les détails"
-              >
-                <mat-icon>visibility</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                (click)="downloadReport(report.id)"
-                matTooltip="Télécharger"
-              >
-                <mat-icon>file_download</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                *ngIf="canEdit(report)"
-                [routerLink]="['/communication/reports/edit', report.id]"
-                matTooltip="Modifier"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                *ngIf="canDelete(report)"
-                (click)="deleteReport(report.id)"
-                matTooltip="Supprimer"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
+      <!-- Visibility Column -->
+      <ng-container matColumnDef="visibilityLevel">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Visibilité</th>
+        <td mat-cell *matCellDef="let document">
+          <span
+            class="visibility-badge"
+            [ngClass]="document.visibilityLevel.toLowerCase()"
+          >
+            {{ document.visibilityLevel | visibilityLevel }}
+          </span>
+        </td>
+      </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let document">
+          <div class="action-buttons">
+            <button
+              mat-icon-button
+              color="primary"
+              [routerLink]="['/communication/detail', document.id]"
+              matTooltip="Voir les détails"
+            >
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="accent"
+              (click)="downloadDocument(document.id)"
+              *ngIf="document.filePath"
+              matTooltip="Télécharger"
+            >
+              <mat-icon>download</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="primary"
+              [routerLink]="['/communication/reports/edit', document.id]"
+              *ngIf="canEdit(document)"
+              matTooltip="Modifier"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="deleteDocument(document.id)"
+              *ngIf="canDelete(document)"
+              matTooltip="Supprimer"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
 
-          <!-- Row shown when there is no matching data -->
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" colspan="4">
-              Aucun rapport trouvé pour "{{ input.value }}"
-            </td>
-          </tr>
-        </table>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
-        <mat-paginator
-          [pageSizeOptions]="[5, 10, 25, 100]"
-          showFirstLastButtons
-        ></mat-paginator>
-      </div>
-    </mat-card-content>
-  </mat-card>
+      <!-- Row shown when there is no matching data. -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="5">
+          Aucun rapport ne correspond à la recherche
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 25, 100]"
+      aria-label="Sélectionner le nombre de rapports par page"
+    ></mat-paginator>
+  </div>
 </div>
