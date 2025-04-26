@@ -4,10 +4,13 @@ import { DocumentType } from '../../../core/models/document.model';
 
 @Pipe({
   name: 'documentType',
-  standalone: true
 })
 export class DocumentTypePipe implements PipeTransform {
   transform(value: string | DocumentType): string {
+    if (typeof value === 'string') {
+      value = value.toUpperCase() as DocumentType;
+    }
+    
     switch (value) {
       case DocumentType.MEETING_REPORT:
         return 'Compte rendu de réunion';
@@ -19,14 +22,8 @@ export class DocumentTypePipe implements PipeTransform {
         return 'Conseil d\'université';
       case DocumentType.NOTE_SERVICE:
         return 'Note de service';
-      case DocumentType.CIRCULAR:
-        return 'Circulaire';
-      case DocumentType.ADMINISTRATIVE_NOTE:
-        return 'Note administrative';
-      case DocumentType.OTHER:
-        return 'Autre';
       default:
-        return value as string;
+        return value || 'Non spécifié';
     }
   }
 }

@@ -172,7 +172,8 @@ export class DocumentListComponent implements OnInit, AfterViewInit {
   }
 
   downloadDocument(id: number): void {
-    this.documentService.downloadDocument(id).subscribe({
+    this.documentService.downloadDocument(id.toString()).subscribe({
+  
       next: (blob) => {
         // Trouver le document dans la liste pour obtenir son titre
         const doc = this.dataSource.data.find((d) => d.id === id);

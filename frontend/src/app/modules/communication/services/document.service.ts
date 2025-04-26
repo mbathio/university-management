@@ -42,8 +42,9 @@ export class DocumentService {
     return this.http.get<Document[]>(`${this.apiUrl}/visibility/${level}`);
   }
 
-  createDocument(formData: FormData): Observable<Document> {
-    return this.http.post<Document>(this.apiUrl, formData);
+  createDocument(formData: FormData, userId: number): Observable<Document> {
+    // Include userId in the request URL
+    return this.http.post<Document>(`${this.apiUrl}?userId=${userId}`, formData);
   }
 
   updateDocument(id: number, formData: FormData): Observable<Document> {

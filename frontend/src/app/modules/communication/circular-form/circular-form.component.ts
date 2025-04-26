@@ -14,6 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { DocumentService } from '../../../core/services/document.service';
 import { Document, DocumentType, VisibilityLevel } from '../../../core/models/document.model';
+import { AuthService } from '../../../core/auth/auth.service'; // Import AuthService
 
 @Component({
   selector: 'app-circular-form',
@@ -54,7 +55,8 @@ export class CircularFormComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private documentService: DocumentService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService // Inject AuthService
   ) {}
 
   ngOnInit(): void {
@@ -159,6 +161,13 @@ export class CircularFormComponent implements OnInit {
         }
       });
     } else {
+      // Obtain the ID of the currently logged-in user
+      const currentUser = this.authService.currentUserValue;
+      const userId = currentUser?.id;
+      
+      // Append userId to formData, using an empty string if no user is found
+      formData.append('userId', userId?.toString() || '');
+      
       this.documentService.createDocument(formData).subscribe({
         next: () => {
           this.snackBar.open('Document créé avec succès', 'Fermer', {
@@ -168,7 +177,7 @@ export class CircularFormComponent implements OnInit {
           this.loading = false;
         },
         error: (error) => {
-          console.error('Erreur lors de la création', error);
+          console.error('Erreur lors de la création du document', error);
           this.snackBar.open('Erreur lors de la création du document', 'Fermer', {
             duration: 3000
           });

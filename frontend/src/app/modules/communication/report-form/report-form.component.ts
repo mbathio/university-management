@@ -176,10 +176,10 @@ export class ReportFormComponent implements OnInit {
       tags: tags
     };
 
-    formData.append(
-      'document',
-      new Blob([JSON.stringify(documentData)], { type: 'application/json' })
-    );
+    const currentUser = this.authService.currentUserValue;
+    const userId = currentUser?.id;
+    
+    formData.append('userId', userId?.toString() || '');
 
     if (this.selectedFile) {
       formData.append('file', this.selectedFile);
