@@ -1,0 +1,48 @@
+<!-- src/app/modules/communication/notification-alert/notification-alert.component.html -->
+<div class="notification-alert">
+    <button mat-icon-button [matMenuTriggerFor]="notificationMenu" aria-label="Notifications">
+      <mat-icon [matBadge]="unreadCount" [matBadgeHidden]="unreadCount === 0" matBadgeColor="accent">notifications</mat-icon>
+    </button>
+  
+    <mat-menu #notificationMenu="matMenu" class="notification-menu" xPosition="before">
+      <div class="notification-header">
+        <h3>Notifications</h3>
+        <button mat-button color="primary" (click)="markAllAsRead()" [disabled]="unreadCount === 0">
+          Tout marquer comme lu
+        </button>
+      </div>
+  
+      <mat-divider></mat-divider>
+  
+      <div class="notification-list">
+        <ng-container *ngIf="recentNotifications.length > 0">
+          <div *ngFor="let notification of recentNotifications" class="notification-item">
+            <div class="notification-icon">
+              <mat-icon>{{ getNotificationIcon(notification.type) }}</mat-icon>
+            </div>
+            <div class="notification-content">
+              <div class="notification-title">{{ notification.title }}</div>
+              <div class="notification-message">{{ notification.message }}</div>
+              <div class="notification-date">{{ notification.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+            <button mat-icon-button (click)="markAsRead(notification.id)" class="mark-read-button">
+              <mat-icon>done</mat-icon>
+            </button>
+          </div>
+        </ng-container>
+  
+        <div *ngIf="recentNotifications.length === 0" class="no-notifications">
+          <mat-icon>notifications_off</mat-icon>
+          <span>Aucune notification non lue</span>
+        </div>
+      </div>
+  
+      <mat-divider></mat-divider>
+  
+      <div class="notification-footer">
+        <button mat-button [routerLink]="['/communication/notifications']">
+          Voir toutes les notifications
+        </button>
+      </div>
+    </mat-menu>
+  </div>

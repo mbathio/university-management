@@ -1,75 +1,86 @@
 // src/app/modules/communication/communication.module.ts
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
-
-// Material Modules
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule } from '@angular/material/sort';
-import { MatInputModule } from '@angular/material/input';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSortModule } from '@angular/material/sort';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
 
-// Standalone Components
+import { CommunicationRoutingModule } from './communication.routes';
 import { DocumentListComponent } from './document-list/document-list.component';
 import { DocumentDetailComponent } from './document-detail/document-detail.component';
-import { DocumentFormComponent } from './document-form/document-form.component';
-import { NotificationsComponent } from './notifications/notifications.component';
-import { ReportListComponent } from './report-list/report-list.component';
 import { ReportFormComponent } from './report-form/report-form.component';
-
-import communicationRoutes from './communication.routes';
+import { ReportListComponent } from './report-list/report-list.component';
+import { NotificationsComponent } from './notifications/notifications.component';
+import { DocumentTypePipe } from './pipes/document-type.pipe';
+import { VisibilityLevelPipe } from './pipes/visibility-level.pipe';
+import { CommunicationDashboardComponent } from './dashboard/communication-dashboard.component';
+import { AdminNotesComponent } from './admin-notes/admin-notes.component';
+import { AdminNoteFormComponent } from './admin-notes/admin-note-form.component';
+import { CircularListComponent } from './circular-list/circular-list.component';
+import { CircularFormComponent } from './circular-form/circular-form.component';
 
 @NgModule({
   declarations: [
-    // other components
+    // Si les composants ne sont pas autonomes (standalone: true)
   ],
   imports: [
     CommonModule,
-    RouterModule.forChild(communicationRoutes),
     ReactiveFormsModule,
-
-    // Standalone Components
-    DocumentListComponent,
-    DocumentDetailComponent,
-    DocumentFormComponent,
-    NotificationsComponent,
-    ReportListComponent,
-    ReportFormComponent,
-
-    // Material Modules
-    MatCardModule,
+    CommunicationRoutingModule,
     MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatInputModule,
+    MatCardModule,
+    MatChipsModule,
+    MatDialogModule,
+    MatDividerModule,
     MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatListModule,
+    MatPaginatorModule,
+    MatProgressSpinnerModule,
     MatSelectModule,
+    MatSnackBarModule,
+    MatSortModule,
+    MatTableModule,
+    MatTabsModule,
+    MatToolbarModule,
+    MatTooltipModule,
+    MatBadgeModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatExpansionModule,
-    MatChipsModule,
-    MatTabsModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-  ],
+    
+    // Importer les composants standalone
+    DocumentListComponent,
+    DocumentDetailComponent,
+    ReportFormComponent,
+    ReportListComponent,
+    NotificationsComponent,
+    DocumentTypePipe,
+    VisibilityLevelPipe,
+    CommunicationDashboardComponent,
+    AdminNotesComponent,
+    AdminNoteFormComponent,
+    CircularListComponent,
+    CircularFormComponent
+  ]
 })
-export class CommunicationModule {}
+export class CommunicationModule { }

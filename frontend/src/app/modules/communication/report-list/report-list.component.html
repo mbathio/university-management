@@ -41,7 +41,7 @@
       <ng-container matColumnDef="title">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Titre</th>
         <td mat-cell *matCellDef="let document">
-          
+          <a
             [routerLink]="['/communication/detail', document.id]"
             class="document-title"
           >

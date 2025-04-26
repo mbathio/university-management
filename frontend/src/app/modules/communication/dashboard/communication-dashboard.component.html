@@ -1,0 +1,181 @@
+<!-- src/app/modules/communication/dashboard/communication-dashboard.component.html -->
+<div class="dashboard-container">
+    <div class="dashboard-header">
+      <h1>Tableau de Bord des Communications</h1>
+      <div class="dashboard-actions">
+        <button mat-raised-button color="primary" [routerLink]="['/communication/reports/add']">
+          <mat-icon>add</mat-icon>
+          Nouveau rapport
+        </button>
+        <button mat-raised-button color="accent" [routerLink]="['/communication/admin-notes/add']" *ngIf="canManageAdminDocuments()">
+          <mat-icon>note_add</mat-icon>
+          Nouvelle note
+        </button>
+      </div>
+    </div>
+  
+    <div class="loading-container" *ngIf="loading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Chargement des données...</span>
+    </div>
+  
+    <div class="error-container" *ngIf="error">
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-button color="primary" (click)="loadDashboardData()">
+        Réessayer
+      </button>
+    </div>
+  
+    <div class="dashboard-content" *ngIf="!loading && !error">
+      <!-- Notifications -->
+      <mat-card class="dashboard-card notifications-card">
+        <mat-card-header>
+          <mat-card-title>
+            <div class="card-title-with-icon">
+              <mat-icon matBadge="{{unreadNotificationsCount}}" [matBadgeHidden]="unreadNotificationsCount === 0" matBadgeColor="accent">notifications</mat-icon>
+              <span>Notifications</span>
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <app-notifications></app-notifications>
+        </mat-card-content>
+      </mat-card>
+  
+      <!-- Récents documents -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-card-title>
+            <div class="card-title-with-icon">
+              <mat-icon>description</mat-icon>
+              <span>Documents récents</span>
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list role="list">
+            <mat-list-item *ngFor="let document of recentDocuments" role="listitem" class="document-list-item">
+              <mat-icon matListItemIcon>{{ getDocumentIcon(document) }}</mat-icon>
+              <div matListItemTitle>
+                <a [routerLink]="['/communication/detail', document.id]">{{ document.title }}</a>
+              </div>
+              <div matListItemLine>
+                <span class="document-metadata">
+                  {{ document.type | documentType }} • {{ document.createdAt | date:'dd/MM/yyyy' }}
+                </span>
+              </div>
+            </mat-list-item>
+            <mat-list-item *ngIf="recentDocuments.length === 0">
+              <span>Aucun document récent</span>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="primary" [routerLink]="['/communication/documents']">
+            Voir tous les documents
+          </button>
+        </mat-card-actions>
+      </mat-card>
+  
+      <!-- Rapports récents -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-card-title>
+            <div class="card-title-with-icon">
+              <mat-icon>summarize</mat-icon>
+              <span>Rapports & Comptes Rendus</span>
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list role="list">
+            <mat-list-item *ngFor="let report of recentReports" role="listitem" class="document-list-item">
+              <mat-icon matListItemIcon>{{ getDocumentIcon(report) }}</mat-icon>
+              <div matListItemTitle>
+                <a [routerLink]="['/communication/detail', report.id]">{{ report.title }}</a>
+              </div>
+              <div matListItemLine>
+                <span class="document-metadata">
+                  {{ report.type | documentType }} • {{ report.createdAt | date:'dd/MM/yyyy' }}
+                </span>
+              </div>
+            </mat-list-item>
+            <mat-list-item *ngIf="recentReports.length === 0">
+              <span>Aucun rapport récent</span>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="primary" [routerLink]="['/communication/reports']">
+            Voir tous les rapports
+          </button>
+        </mat-card-actions>
+      </mat-card>
+  
+      <!-- Circulaires et Notes administratives -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-card-title>
+            <div class="card-title-with-icon">
+              <mat-icon>note</mat-icon>
+              <span>Circulaires & Notes</span>
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list role="list">
+            <mat-list-item *ngFor="let circular of recentCirculars" role="listitem" class="document-list-item">
+              <mat-icon matListItemIcon>{{ getDocumentIcon(circular) }}</mat-icon>
+              <div matListItemTitle>
+                <a [routerLink]="['/communication/detail', circular.id]">{{ circular.title }}</a>
+              </div>
+              <div matListItemLine>
+                <span class="document-metadata">
+                  {{ circular.type | documentType }} • {{ circular.createdAt | date:'dd/MM/yyyy' }}
+                </span>
+              </div>
+            </mat-list-item>
+            <mat-list-item *ngIf="recentCirculars.length === 0">
+              <span>Aucune circulaire ou note récente</span>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="primary" [routerLink]="['/communication/admin-notes']">
+            Voir toutes les circulaires et notes
+          </button>
+        </mat-card-actions>
+      </mat-card>
+  
+      <!-- Mes documents -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-card-title>
+            <div class="card-title-with-icon">
+              <mat-icon>folder_shared</mat-icon>
+              <span>Mes Documents</span>
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list role="list">
+            <mat-list-item *ngFor="let document of myDocuments" role="listitem" class="document-list-item">
+              <mat-icon matListItemIcon>{{ getDocumentIcon(document) }}</mat-icon>
+              <div matListItemTitle>
+                <a [routerLink]="['/communication/detail', document.id]">{{ document.title }}</a>
+              </div>
+              <div matListItemLine>
+                <span class="document-metadata">
+                  {{ document.type | documentType }} • {{ document.createdAt | date:'dd/MM/yyyy' }}
+                </span>
+              </div>
+            </mat-list-item>
+            <mat-list-item *ngIf="myDocuments.length === 0">
+              <span>Vous n'avez pas encore créé de documents</span>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
