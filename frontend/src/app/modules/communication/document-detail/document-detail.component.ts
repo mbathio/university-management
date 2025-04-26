@@ -5,16 +5,17 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { DocumentService } from '../../../core/services/document.service';
-import { Document, DocumentType } from '../../../core/models/document.model';
+import { Document } from '../../../core/models/document.model';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/user.model';
+import { DocumentTypePipe } from '../pipes/document-type.pipe';
+import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
 
 @Component({
   selector: 'app-document-detail',
@@ -27,19 +28,19 @@ import { Role } from '../../../core/models/user.model';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatDividerModule,
     MatChipsModule,
-    MatSnackBarModule,
+    MatDividerModule,
     MatProgressSpinnerModule,
-    MatTooltipModule,
+    MatSnackBarModule,
+    DocumentTypePipe,
+    VisibilityLevelPipe,
   ],
 })
 export class DocumentDetailComponent implements OnInit {
   document: Document | null = null;
   loading = true;
   error = '';
-  documentId = 0;
-  DocumentType = DocumentType;
+  currentUsername = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -47,58 +48,88 @@ export class DocumentDetailComponent implements OnInit {
     private documentService: DocumentService,
     private authService: AuthService,
     private snackBar: MatSnackBar,
-  ) {}
+  ) {
+    // Get current user info
+    const currentUser = this.authService.currentUserValue;
+    if (currentUser) {
+      this.currentUsername = currentUser.username;
+    }
+  }
 
   ngOnInit(): void {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam) {
-      this.documentId = +idParam;
-      this.loadDocument();
+    const idParam = this.route.snapshot.params['id'];
+    if (idParam && !isNaN(+idParam)) {
+      this.loadDocument(+idParam);
     } else {
-      this.error = 'ID de document non valide';
+      this.error = 'ID de document invalide';
       this.loading = false;
     }
   }
 
-  loadDocument(): void {
+  loadDocument(id: number): void {
     this.loading = true;
-    this.documentService.getDocumentById(this.documentId).subscribe({
-      next: (doc) => {
-        this.document = doc;
+    this.error = '';
+
+    this.documentService.getDocumentById(id).subscribe({
+      next: (document) => {
+        this.document = document;
         this.loading = false;
       },
       error: (err) => {
         this.error = 'Erreur lors du chargement du document';
         this.loading = false;
-        this.snackBar.open(
-          'Erreur: Impossible de charger le document',
-          'Fermer',
-          {
-            duration: 3000,
-          },
-        );
-        console.error('Error loading document:', err);
+        console.error('Erreur lors du chargement du document:', err);
+        this.snackBar.open('Erreur lors du chargement du document', 'Fermer', {
+          duration: 3000,
+        });
       },
     });
   }
 
-  downloadDocument(): void {
-    if (!this.document || !this.document.filePath) {
-      this.snackBar.open(
-        "Aucun fichier n'est associé à ce document",
-        'Fermer',
-        {
-          duration: 3000,
-        },
-      );
-      return;
+  canEdit(): boolean {
+    if (!this.document) return false;
+
+    if (this.authService.hasRole([Role.ADMIN, Role.ADMINISTRATION])) {
+      return true;
     }
 
-    this.documentService.downloadDocument(this.documentId).subscribe({
+    // Si l'utilisateur est le créateur du document
+    if (
+      this.document.createdBy &&
+      this.document.createdBy.username === this.currentUsername
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  canDelete(): boolean {
+    if (!this.document) return false;
+
+    if (this.authService.hasRole([Role.ADMIN])) {
+      return true;
+    }
+
+    // Si l'utilisateur est le créateur du document
+    if (
+      this.document.createdBy &&
+      this.document.createdBy.username === this.currentUsername
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  downloadDocument(): void {
+    if (!this.document || !this.document.id) return;
+
+    this.documentService.downloadDocument(this.document.id).subscribe({
       next: (blob) => {
-        const fileName = this.document?.title
+        const fileName = this.document
           ? `${this.document.title}.pdf`
-          : `document-${this.documentId}.pdf`;
+          : 'document.pdf';
 
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -109,7 +140,8 @@ export class DocumentDetailComponent implements OnInit {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       },
-      error: () => {
+      error: (err) => {
+        console.error('Erreur lors du téléchargement du document:', err);
         this.snackBar.open(
           'Erreur lors du téléchargement du document',
           'Fermer',
@@ -121,74 +153,28 @@ export class DocumentDetailComponent implements OnInit {
     });
   }
 
-  canEdit(): boolean {
-    if (!this.document) return false;
-
-    if (this.authService.hasRole([Role.ADMIN])) {
-      return true;
-    }
-
-    // Check if current user is document creator
-    const currentUser = this.authService.currentUserValue;
-    return this.document.createdBy?.username === currentUser?.username;
-  }
-
-  canDelete(): boolean {
-    return this.canEdit();
-  }
-
-  editDocument(): void {
-    this.router.navigate(['/communication/edit', this.documentId]);
-  }
-
   deleteDocument(): void {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
-      return;
-    }
+    if (!this.document || !this.document.id) return;
 
-    this.documentService.deleteDocument(this.documentId).subscribe({
-      next: () => {
-        this.snackBar.open('Document supprimé avec succès', 'Fermer', {
-          duration: 3000,
-        });
-        this.router.navigate(['/communication']);
-      },
-      error: () => {
-        this.snackBar.open(
-          'Erreur lors de la suppression du document',
-          'Fermer',
-          {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
+      this.documentService.deleteDocument(this.document.id).subscribe({
+        next: () => {
+          this.snackBar.open('Document supprimé avec succès', 'Fermer', {
             duration: 3000,
-          },
-        );
-      },
-    });
-  }
-
-  getDocumentTypeLabel(type: DocumentType): string {
-    switch (type) {
-      case DocumentType.MEETING_REPORT:
-        return 'Compte-rendu de réunion';
-      case DocumentType.SEMINAR_REPORT:
-        return 'Compte-rendu de séminaire';
-      case DocumentType.WEBINAR_REPORT:
-        return 'Compte-rendu de webinaire';
-      case DocumentType.UNIVERSITY_COUNCIL:
-        return "Conseil d'Université";
-      case DocumentType.NOTE_SERVICE:
-        return 'Note de service';
-      case DocumentType.CIRCULAR:
-        return 'Circulaire';
-      case DocumentType.ADMINISTRATIVE_NOTE:
-        return 'Note administrative';
-      case DocumentType.OTHER:
-        return 'Autre';
-      default:
-        return type;
+          });
+          this.router.navigate(['/communication']);
+        },
+        error: (err) => {
+          console.error('Erreur lors de la suppression du document:', err);
+          this.snackBar.open(
+            'Erreur lors de la suppression du document',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
+        },
+      });
     }
-  }
-
-  goBack(): void {
-    this.router.navigate(['/communication']);
   }
 }

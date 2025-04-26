@@ -1,49 +1,49 @@
+<!-- src/app/modules/communication/document-list/document-list.component.html -->
 <div class="document-list-container">
-  <div class="document-list-header">
-    <h1>Documents</h1>
+  <div class="heading-container">
+    <h1>Documents & Communications</h1>
     <button
       mat-raised-button
       color="primary"
-      [routerLink]="['/communication/add']"
+      [routerLink]="['/communication/reports/add']"
     >
       <mat-icon>add</mat-icon>
-      Nouveau Document
+      Nouveau document
     </button>
   </div>
 
-  <div class="document-filter">
-    <mat-form-field appearance="outline">
-      <mat-label>Rechercher un document</mat-label>
-      <input
-        matInput
-        (keyup)="applyFilter($event)"
-        placeholder="Titre, type, etc."
-      />
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
-  </div>
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Filtrer</mat-label>
+    <input
+      matInput
+      (keyup)="applyFilter($event)"
+      placeholder="Rechercher un document..."
+    />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
 
-  <!-- Affichage du spinner pendant le chargement -->
-  <div *ngIf="loading" class="loading-spinner">
+  <div class="loading-container" *ngIf="loading">
     <mat-spinner diameter="40"></mat-spinner>
+    <span>Chargement des documents...</span>
   </div>
 
-  <!-- Affichage des erreurs -->
-  <div *ngIf="error" class="error-message">
+  <div class="error-container" *ngIf="error">
     <mat-icon color="warn">error</mat-icon>
-    {{ error }}
+    <span>{{ error }}</span>
+    <button mat-button color="primary" (click)="loadDocuments()">
+      Réessayer
+    </button>
   </div>
 
-  <!-- Table des documents -->
   <div class="table-container" *ngIf="!loading && !error">
-    <table mat-table [dataSource]="dataSource" matSort>
+    <table mat-table [dataSource]="dataSource" matSort class="documents-table">
       <!-- Title Column -->
       <ng-container matColumnDef="title">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Titre</th>
         <td mat-cell *matCellDef="let document">
           <a
             [routerLink]="['/communication/detail', document.id]"
-            class="document-link"
+            class="document-title"
           >
             {{ document.title }}
           </a>
@@ -54,30 +54,35 @@
       <ng-container matColumnDef="type">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
         <td mat-cell *matCellDef="let document">
-          <span class="document-type-badge {{ document.type.toLowerCase() }}">{{
-            document.type
-          }}</span>
+          <span
+            class="document-type-badge"
+            [ngClass]="document.type.toLowerCase()"
+          >
+            {{ document.type | documentType }}
+          </span>
         </td>
       </ng-container>
 
-      <!-- Created Date Column -->
+      <!-- Date Column -->
       <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Date de création
+        </th>
         <td mat-cell *matCellDef="let document">
           {{ document.createdAt | date: "dd/MM/yyyy" }}
         </td>
       </ng-container>
 
-      <!-- Visibility Level Column -->
+      <!-- Visibility Column -->
       <ng-container matColumnDef="visibilityLevel">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Visibilité</th>
         <td mat-cell *matCellDef="let document">
           <span
-            class="visibility-badge {{
-              document.visibilityLevel.toLowerCase()
-            }}"
-            >{{ document.visibilityLevel }}</span
+            class="visibility-badge"
+            [ngClass]="document.visibilityLevel.toLowerCase()"
           >
+            {{ document.visibilityLevel | visibilityLevel }}
+          </span>
         </td>
       </ng-container>
 
@@ -85,41 +90,43 @@
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>Actions</th>
         <td mat-cell *matCellDef="let document">
-          <button
-            mat-icon-button
-            color="primary"
-            [routerLink]="['/communication/detail', document.id]"
-            matTooltip="Voir détails"
-          >
-            <mat-icon>visibility</mat-icon>
-          </button>
-          <button
-            mat-icon-button
-            color="accent"
-            *ngIf="canEdit(document)"
-            [routerLink]="['/communication/edit', document.id]"
-            matTooltip="Modifier"
-          >
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button
-            mat-icon-button
-            color="warn"
-            *ngIf="canDelete(document)"
-            (click)="deleteDocument(document.id)"
-            matTooltip="Supprimer"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-          <button
-            mat-icon-button
-            color="primary"
-            (click)="downloadDocument(document.id)"
-            matTooltip="Télécharger"
-            *ngIf="document.filePath"
-          >
-            <mat-icon>file_download</mat-icon>
-          </button>
+          <div class="action-buttons">
+            <button
+              mat-icon-button
+              color="primary"
+              [routerLink]="['/communication/detail', document.id]"
+              matTooltip="Voir les détails"
+            >
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="accent"
+              (click)="downloadDocument(document.id)"
+              *ngIf="document.filePath"
+              matTooltip="Télécharger"
+            >
+              <mat-icon>download</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="primary"
+              [routerLink]="['/communication/reports/edit', document.id]"
+              *ngIf="canEdit(document)"
+              matTooltip="Modifier"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="deleteDocument(document.id)"
+              *ngIf="canDelete(document)"
+              matTooltip="Supprimer"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         </td>
       </ng-container>
 
@@ -129,18 +136,14 @@
       <!-- Row shown when there is no matching data. -->
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell" colspan="5">
-          <div class="no-data-message">
-            <mat-icon>search_off</mat-icon>
-            <p>Aucun document correspondant trouvé</p>
-          </div>
+          Aucun document ne correspond à la recherche
         </td>
       </tr>
     </table>
 
     <mat-paginator
       [pageSizeOptions]="[5, 10, 25, 100]"
-      [pageSize]="10"
-      showFirstLastButtons
+      aria-label="Sélectionner le nombre de documents par page"
     ></mat-paginator>
   </div>
 </div>

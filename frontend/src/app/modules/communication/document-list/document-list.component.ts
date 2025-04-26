@@ -17,7 +17,8 @@ import { DocumentService } from '../services/document.service';
 import { Document } from '../../../core/models/document.model';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/user.model';
-
+import { DocumentTypePipe } from '../pipes/document-type.pipe';
+import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
 @Component({
   selector: 'app-document-list',
   templateUrl: './document-list.component.html',
@@ -29,9 +30,11 @@ import { Role } from '../../../core/models/user.model';
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
+    VisibilityLevelPipe,
     MatSnackBarModule,
     MatFormFieldModule,
     MatInputModule,
+    DocumentTypePipe,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,

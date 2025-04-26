@@ -2,81 +2,56 @@
 <div class="notifications-container">
   <mat-card>
     <mat-card-header>
-      <mat-card-title>Notifications</mat-card-title>
-      <div class="header-actions">
-        <button
-          mat-button
-          color="primary"
-          (click)="markAllAsRead()"
-          [disabled]="isMarkAllAsReadDisabled()"
-        >
-          <mat-icon>done_all</mat-icon>
-          Tout marquer comme lu
-        </button>
-      </div>
+      <mat-card-title>
+        <div class="title-container">
+          <span>Notifications récentes</span>
+          <mat-icon matBadge="{{ recentDocuments.length }}" matBadgeColor="accent">notifications</mat-icon>
+        </div>
+      </mat-card-title>
     </mat-card-header>
 
     <mat-card-content>
-      <!-- Loader -->
-      <div *ngIf="loading" class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
+      <div class="loading-container" *ngIf="loading">
+        <mat-spinner diameter="30"></mat-spinner>
+        <span>Chargement des notifications...</span>
       </div>
 
-      <!-- Error message -->
-      <div *ngIf="error" class="error-message">
+      <div class="error-container" *ngIf="error">
         <mat-icon color="warn">error</mat-icon>
-        <p>{{ error }}</p>
+        <span>{{ error }}</span>
+        <button mat-button color="primary" (click)="loadRecentDocuments()">Réessayer</button>
       </div>
 
-      <!-- No notifications message -->
-      <div
-        *ngIf="!loading && !error && notifications.length === 0"
-        class="empty-state"
-      >
-        <mat-icon>notifications_off</mat-icon>
-        <p>Aucune notification</p>
-      </div>
-
-      <!-- Notifications list -->
-      <mat-list *ngIf="!loading && !error && notifications.length > 0">
-        <mat-list-item
-          *ngFor="let notification of notifications"
-          [ngClass]="{
-            'notification-read': notification.read,
-            'notification-unread': !notification.read,
-          }"
-          [routerLink]="getNotificationRoute(notification)"
-          (click)="markAsRead(notification.id)"
-        >
-          <div matListItemIcon>
-            <mat-icon
-              [matBadge]="notification.read ? '' : ''"
-              matBadgeColor="accent"
-              matBadgeSize="small"
-              [matBadgeHidden]="notification.read"
-            >
-              {{ getNotificationIcon(notification.type) }}
-            </mat-icon>
+      <mat-list *ngIf="!loading && !error">
+        <mat-list-item *ngFor="let document of recentDocuments" class="notification-item">
+          <mat-icon matListItemIcon>{{ getNotificationIcon(document) }}</mat-icon>
+          <div matListItemTitle>
+            <a [routerLink]="['/communication/detail', document.id]">{{ document.title }}</a>
           </div>
-
-          <div matListItemTitle>{{ notification.title }}</div>
-          <div matListItemLine>{{ notification.message }}</div>
-          <div matListItemMeta>
-            {{ notification.createdAt | date: "dd/MM/yyyy HH:mm" }}
-          </div>
-
-          <div matListItemMeta>
-            <button
-              mat-icon-button
-              (click)="
-                $event.stopPropagation(); deleteNotification(notification.id)
-              "
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
+          <div matListItemLine>
+            <span class="notification-metadata">
+              {{ document.createdAt | date:'dd/MM/yyyy HH:mm' }} par 
+              {{ document.createdBy?.fullName || document.createdBy?.username }}
+            </span>
           </div>
         </mat-list-item>
+
+        <div *ngIf="recentDocuments.length === 0" class="no-notifications">
+          <mat-icon>notifications_off</mat-icon>
+          <span>Aucune notification récente</span>
+        </div>
       </mat-list>
     </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-button color="primary" (click)="markAllAsRead()" *ngIf="recentDocuments.length > 0">
+        <mat-icon>done_all</mat-icon>
+        Tout marquer comme lu
+      </button>
+      <button mat-button [routerLink]="['/communication']">
+        <mat-icon>visibility</mat-icon>
+        Voir tous les documents
+      </button>
+    </mat-card-actions>
   </mat-card>
 </div>

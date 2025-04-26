@@ -1,15 +1,15 @@
-// src/app/modules/communication/notifications/notifications.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { RouterModule } from '@angular/router';
-import { NotificationService } from '../services/notification.service';
-import { Notification } from '../models/notification.model';
+
+import { DocumentService } from '../../../core/services/document.service';
+import { Document, DocumentType } from '../../../core/models/document.model';
 
 @Component({
   selector: 'app-notifications',
@@ -18,113 +18,71 @@ import { Notification } from '../models/notification.model';
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
+    MatCardModule,
     MatListModule,
     MatIconModule,
-    MatCardModule,
-    MatBadgeModule,
     MatButtonModule,
-    MatProgressSpinnerModule,
-    RouterModule,
-  ],
+    MatBadgeModule,
+    MatProgressSpinnerModule
+  ]
 })
 export class NotificationsComponent implements OnInit {
-  notifications: Notification[] = [];
+  recentDocuments: Document[] = [];
   loading = true;
-  error: string | null = null;
+  error = '';
 
-  constructor(private notificationService: NotificationService) {}
+  constructor(private documentService: DocumentService) {}
 
   ngOnInit(): void {
-    this.loadNotifications();
+    this.loadRecentDocuments();
   }
 
-  loadNotifications(): void {
+  loadRecentDocuments(): void {
     this.loading = true;
-    this.notificationService.getUserNotifications().subscribe({
-      next: (notifications: Notification[]): void => {
-        this.notifications = notifications;
+    this.error = '';
+
+    // Utilisation du service existant pour récupérer tous les documents
+    // Dans un cas réel, vous voudriez avoir un endpoint spécifique pour les notifications récentes
+    this.documentService.getAllDocuments().subscribe({
+      next: (documents) => {
+        // Trier par date de création, plus récent en premier
+        this.recentDocuments = documents
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5); // Ne garder que les 5 plus récents
         this.loading = false;
       },
-      error: (err: unknown): void => {
+      error: (err) => {
         this.error = 'Erreur lors du chargement des notifications';
         this.loading = false;
-        console.error('Error loading notifications:', err);
-      },
+        console.error('Erreur lors du chargement des notifications:', err);
+      }
     });
   }
 
-  markAsRead(id: number): void {
-    this.notificationService.markAsRead(id).subscribe({
-      next: (): void => {
-        // Update local notification
-        const notification: Notification | undefined = this.notifications.find(
-          (n: Notification): boolean => n.id === id,
-        );
-        if (notification) {
-          notification.read = true;
-        }
-      },
-      error: (err: unknown): void => {
-        console.error('Error marking notification as read:', err);
-      },
-    });
+  getNotificationIcon(document: Document): string {
+    // Retourne une icône appropriée en fonction du type de document
+    switch (document.type) {
+      case DocumentType.MEETING_REPORT:
+        return 'groups';
+      case DocumentType.SEMINAR_REPORT:
+      case DocumentType.WEBINAR_REPORT:
+        return 'event';
+      case DocumentType.UNIVERSITY_COUNCIL:
+        return 'school';
+      case DocumentType.NOTE_SERVICE:
+      case DocumentType.ADMINISTRATIVE_NOTE:
+        return 'note';
+      case DocumentType.CIRCULAR:
+        return 'announcement';
+      default:
+        return 'description';
+    }
   }
 
   markAllAsRead(): void {
-    this.notificationService.markAllAsRead().subscribe({
-      next: (): void => {
-        // Update all local notifications
-        this.notifications.forEach((n: Notification): void => {
-          n.read = true;
-        });
-      },
-      error: (err: unknown): void => {
-        console.error('Error marking all notifications as read:', err);
-      },
-    });
-  }
-
-  deleteNotification(id: number): void {
-    this.notificationService.deleteNotification(id).subscribe({
-      next: (): void => {
-        // Remove notification from local array
-        this.notifications = this.notifications.filter(
-          (n: Notification) => n.id !== id,
-        );
-      },
-      error: (err: unknown): void => {
-        console.error('Error deleting notification:', err);
-      },
-    });
-  }
-
-  getNotificationIcon(type: string): string {
-    switch (type) {
-      case 'DOCUMENT_ADDED':
-        return 'description';
-      case 'ACCOUNT_UPDATE':
-        return 'person';
-      case 'SYSTEM':
-        return 'notifications';
-      case 'MEETING':
-        return 'event';
-      default:
-        return 'notifications';
-    }
-  }
-
-  isMarkAllAsReadDisabled(): boolean {
-    return this.notifications.length === 0 || this.notifications.every(n => n.read);
-  }
-
-  getNotificationRoute(notification: Notification): string[] {
-    // Define routes based on notification type and reference
-    if (notification.type === 'DOCUMENT_ADDED' && notification.referenceId) {
-      return ['/communication/detail', notification.referenceId.toString()];
-    } else if (notification.type === 'MEETING' && notification.referenceId) {
-      return ['/communication/meetings', notification.referenceId.toString()];
-    } else {
-      return ['/communication'];
-    }
+    // Cette méthode serait implémentée avec un vrai système de notifications
+    // Pour l'instant, c'est juste un placeholder
+    console.log('Marquer toutes les notifications comme lues');
   }
 }
