@@ -6,10 +6,7 @@
       mat-raised-button
       color="primary"
       [routerLink]="['/communication/circulars/add']"
-      *ngIf="
-        authService.currentUserValue?.role.includes('ADMIN') ||
-        authService.currentUserValue?.role.includes('ADMINISTRATION')
-      "
+      *ngIf="isAdminOrAdministration()"
     >
       <mat-icon>add</mat-icon>
       Nouveau document

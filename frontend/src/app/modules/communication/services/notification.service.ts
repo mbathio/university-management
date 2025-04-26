@@ -1,12 +1,12 @@
 // src/app/modules/communication/services/notification.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { Notification, NotificationType } from './models/notification.model';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { Notification, NotificationType } from '../models/notification.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private apiUrl = `${environment.apiUrl}/notifications`;
@@ -17,8 +17,10 @@ export class NotificationService {
     return this.http.get<Notification[]>(this.apiUrl);
   }
 
-  getRecentNotifications(limit: number = 5): Observable<Notification[]> {
-    return this.http.get<Notification[]>(`${this.apiUrl}/recent?limit=${limit}`);
+  getRecentNotifications(limit = 5): Observable<Notification[]> {
+    return this.http.get<Notification[]>(
+      `${this.apiUrl}/recent?limit=${limit}`,
+    );
   }
 
   getUnreadCount(): Observable<number> {
@@ -37,7 +39,9 @@ export class NotificationService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  createNotification(notification: Partial<Notification>): Observable<Notification> {
+  createNotification(
+    notification: Partial<Notification>,
+  ): Observable<Notification> {
     return this.http.post<Notification>(this.apiUrl, notification);
   }
 

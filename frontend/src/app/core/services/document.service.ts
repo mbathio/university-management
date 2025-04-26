@@ -9,6 +9,9 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export class DocumentService {
+  getReportsByType(adminTypes: import("../models/document.model").DocumentType[]) {
+      throw new Error('Method not implemented.');
+  }
   private apiUrl = `${environment.apiUrl}/api/documents`;
 
   constructor(private http: HttpClient) {}

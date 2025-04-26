@@ -62,6 +62,12 @@ export class CircularListComponent implements OnInit {
     private snackBar: MatSnackBar
   ) {}
 
+  isAdminOrAdministration(): boolean {
+    const currentUser = this.authService.currentUserValue;
+    return currentUser?.role.includes('ADMIN') || 
+           currentUser?.role.includes('ADMINISTRATION');
+  }
+
   ngOnInit(): void {
     this.loadCirculars();
   }
