@@ -28,6 +28,11 @@ export class DocumentService {
   getDocumentsByType(type: DocumentType): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/type/${type}`);
   }
+  getDocumentsByTypes(types: DocumentType[]): Observable<Document[]> {
+    return this.http.get<Document[]>(`${this.apiUrl}/types`, { 
+      params: { types: types.join(',') } 
+    });
+  }
 
   getDocumentsByCreator(userId: number): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/creator/${userId}`);

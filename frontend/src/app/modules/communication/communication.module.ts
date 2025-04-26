@@ -24,7 +24,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 
-import { CommunicationRoutingModule } from './communication.routes';
+import {  } from './communication.routes';
 import { DocumentListComponent } from './document-list/document-list.component';
 import { DocumentDetailComponent } from './document-detail/document-detail.component';
 import { ReportFormComponent } from './report-form/report-form.component';
@@ -34,7 +34,7 @@ import { DocumentTypePipe } from './pipes/document-type.pipe';
 import { VisibilityLevelPipe } from './pipes/visibility-level.pipe';
 import { CommunicationDashboardComponent } from './dashboard/communication-dashboard.component';
 import { AdminNotesComponent } from './admin-notes/admin-notes.component';
-import { AdminNoteFormComponent } from './admin-notes/admin-note-form.component';
+import { AdminNoteFormComponent } from './admin-form/admin-note-form.component';
 import { CircularListComponent } from './circular-list/circular-list.component';
 import { CircularFormComponent } from './circular-form/circular-form.component';
 
@@ -45,7 +45,6 @@ import { CircularFormComponent } from './circular-form/circular-form.component';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    CommunicationRoutingModule,
     MatButtonModule,
     MatCardModule,
     MatChipsModule,

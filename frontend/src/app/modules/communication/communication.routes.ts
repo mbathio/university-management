@@ -1,6 +1,7 @@
-// src/app/modules/communication/communication-routing.module.ts
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+// src/app/modules/communication/communication.routes.ts
+import { Routes } from '@angular/router';
+import { authGuard } from '../../core/guards/auth.guard';
+import { Role } from '../../core/models/user.model';
 
 import { DocumentListComponent } from './document-list/document-list.component';
 import { DocumentDetailComponent } from './document-detail/document-detail.component';
@@ -9,9 +10,9 @@ import { ReportListComponent } from './report-list/report-list.component';
 import { NotificationsComponent } from './notifications/notifications.component';
 import { CommunicationDashboardComponent } from './dashboard/communication-dashboard.component';
 import { AdminNotesComponent } from './admin-notes/admin-notes.component';
-import { AdminNoteFormComponent } from './admin-notes/admin-note-form.component';
-import { AuthGuard } from '../../core/auth/auth.guard';
-import { RoleGuard } from '../../core/auth/role.guard';
+import { AdminNoteFormComponent } from './admin-form/admin-note-form.component';
+import { CircularListComponent } from './circular-list/circular-list.component';
+import { CircularFormComponent } from './circular-form/circular-form.component';
 
 const routes: Routes = [
   {
@@ -33,40 +34,50 @@ const routes: Routes = [
   {
     path: 'reports/add',
     component: ReportFormComponent,
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'reports/edit/:id',
     component: ReportFormComponent,
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'admin-notes',
     component: AdminNotesComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['ADMIN', 'MANAGER'] },
+    canActivate: [authGuard],
+    data: { roles: [Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION] },
   },
   {
     path: 'admin-notes/add',
     component: AdminNoteFormComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['ADMIN', 'MANAGER'] },
+    canActivate: [authGuard],
+    data: { roles: [Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION] },
   },
   {
     path: 'admin-notes/edit/:id',
     component: AdminNoteFormComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['ADMIN', 'MANAGER'] },
+    canActivate: [authGuard],
+  },
+  {
+    path: 'circulars',
+    component: CircularListComponent,
+  },
+  {
+    path: 'circulars/add',
+    component: CircularFormComponent,
+    canActivate: [authGuard],
+    data: { roles: [Role.ADMIN, Role.ADMINISTRATION] },
+  },
+  {
+    path: 'circulars/edit/:id',
+    component: CircularFormComponent,
+    canActivate: [authGuard],
   },
   {
     path: 'notifications',
     component: NotificationsComponent,
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
 ];
 
-@NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-})
-export class CommunicationRoutingModule {}
+export default routes;

@@ -1,0 +1,208 @@
+// src/app/modules/communication/admin-notes/admin-note-form.component.ts
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+
+import { DocumentService } from '../../../core/services/document.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { Document, DocumentType, VisibilityLevel } from '../../../core/models/document.model';
+import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
+
+@Component({
+  selector: 'app-admin-note-form',
+  templateUrl: './admin-note-form.component.html',
+  styleUrls: ['./admin-note-form.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+    MatSelectModule,
+    MatSnackBarModule,
+    VisibilityLevelPipe
+  ]
+})
+export class AdminNoteFormComponent implements OnInit {
+  noteForm!: FormGroup;
+  isEditMode = false;
+  documentId?: number;
+  loading = false;
+  selectedFile: File | null = null;
+  currentFilePath: string = '';
+  visibilityLevels = [
+    VisibilityLevel.PUBLIC,
+    VisibilityLevel.ADMINISTRATION,
+    VisibilityLevel.TEACHERS,
+    VisibilityLevel.STUDENTS,
+    VisibilityLevel.RESTRICTED
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    private route: ActivatedRoute,
+    private router: Router,
+    private documentService: DocumentService,
+    private authService: AuthService,
+    private snackBar: MatSnackBar
+  ) {
+    this.createForm();
+  }
+
+  ngOnInit(): void {
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.isEditMode = true;
+        this.documentId = +params['id'];
+        this.loadDocument(this.documentId);
+      }
+    });
+  }
+
+  createForm(): void {
+    this.noteForm = this.fb.group({
+      title: ['', [Validators.required, Validators.maxLength(100)]],
+      reference: [''],
+      content: ['', [Validators.maxLength(5000)]],
+      visibilityLevel: [VisibilityLevel.ADMINISTRATION, [Validators.required]]
+    });
+  }
+
+  loadDocument(id: number): void {
+    this.loading = true;
+    this.documentService.getDocumentById(id).subscribe({
+      next: (document) => {
+        // Vérifier si l'utilisateur a le droit de modifier ce document
+        const currentUser = this.authService.currentUserValue;
+        if (!currentUser || 
+            (!currentUser.role.includes('ADMIN') && 
+             document.createdBy.id !== currentUser.id)) {
+          this.snackBar.open('Vous n\'êtes pas autorisé à modifier ce document', 'Fermer', {
+            duration: 3000,
+          });
+          this.router.navigate(['/communication/admin-notes']);
+          return;
+        }
+
+        // Remplir le formulaire avec les données existantes
+        this.noteForm.patchValue({
+          title: document.title,
+          content: document.content,
+          visibilityLevel: document.visibilityLevel,
+          reference: document.reference || ''
+        });
+
+        if (document.filePath) {
+          this.currentFilePath = document.filePath;
+        }
+
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement du document:', err);
+        this.snackBar.open('Erreur lors du chargement du document', 'Fermer', {
+          duration: 3000,
+        });
+        this.loading = false;
+        this.router.navigate(['/communication/admin-notes']);
+      }
+    });
+  }
+
+  onFileSelected(event: Event): void {
+    const element = event.target as HTMLInputElement;
+    if (element.files && element.files.length > 0) {
+      this.selectedFile = element.files[0];
+    }
+  }
+
+  onSubmit(): void {
+    if (this.noteForm.invalid) return;
+
+    this.loading = true;
+    const formData = new FormData();
+    
+    // Préparer les données du document
+    const documentData: Partial<Document> = {
+      title: this.noteForm.value.title,
+      content: this.noteForm.value.content,
+      type: DocumentType.ADMINISTRATIVE_NOTE,
+      visibilityLevel: this.noteForm.value.visibilityLevel,
+      reference: this.noteForm.value.reference
+    };
+
+    if (this.isEditMode && this.documentId) {
+      // Mise à jour du document existant
+      const documentBlob = new Blob([JSON.stringify(documentData)], { type: 'application/json' });
+      formData.append('document', documentBlob);
+      
+      if (this.selectedFile) {
+        formData.append('file', this.selectedFile);
+      }
+
+      this.documentService.updateDocument(this.documentId, formData).subscribe({
+        next: () => {
+          this.snackBar.open('Note administrative mise à jour avec succès', 'Fermer', {
+            duration: 3000,
+          });
+          this.router.navigate(['/communication/admin-notes']);
+        },
+        error: (err) => {
+          console.error('Erreur lors de la mise à jour de la note administrative:', err);
+          this.snackBar.open('Erreur lors de la mise à jour de la note administrative', 'Fermer', {
+            duration: 3000,
+          });
+          this.loading = false;
+        }
+      });
+    } else {
+      // Création d'un nouveau document
+      const currentUser = this.authService.currentUserValue;
+      if (!currentUser) {
+        this.snackBar.open('Vous devez être connecté pour créer une note administrative', 'Fermer', {
+          duration: 3000,
+        });
+        this.loading = false;
+        return;
+      }
+
+      const documentBlob = new Blob([JSON.stringify(documentData)], { type: 'application/json' });
+      formData.append('document', documentBlob);
+      formData.append('userId', currentUser.id.toString());
+      
+      if (this.selectedFile) {
+        formData.append('file', this.selectedFile);
+      }
+
+      this.documentService.createDocument(formData).subscribe({
+        next: () => {
+          this.snackBar.open('Note administrative créée avec succès', 'Fermer', {
+            duration: 3000,
+          });
+          this.router.navigate(['/communication/admin-notes']);
+        },
+        error: (err) => {
+          console.error('Erreur lors de la création de la note administrative:', err);
+          this.snackBar.open('Erreur lors de la création de la note administrative', 'Fermer', {
+            duration: 3000,
+          });
+          this.loading = false;
+        }
+      });
+    }
+  }
+}
