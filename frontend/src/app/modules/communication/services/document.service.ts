@@ -1,6 +1,6 @@
-// src/app/core/services/document.service.ts
+// src/app/modules/communication/services/document.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Document, DocumentType } from '../../../core/models/document.model';
 import { environment } from '../../../../environments/environment';
@@ -9,13 +9,9 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class DocumentService {
-  private apiUrl = `${environment.apiUrl}/documents`;
+  private apiUrl = `${environment.apiUrl}/api/documents`;
 
   constructor(private http: HttpClient) {}
-
-  init(): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/init`, {});
-  }
 
   getDocumentById(id: number): Observable<Document> {
     return this.http.get<Document>(`${this.apiUrl}/${id}`);
@@ -28,10 +24,14 @@ export class DocumentService {
   getDocumentsByType(type: DocumentType): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/type/${type}`);
   }
+  
   getDocumentsByTypes(types: DocumentType[]): Observable<Document[]> {
-    return this.http.get<Document[]>(`${this.apiUrl}/types`, { 
-      params: { types: types.join(',') } 
+    // Utiliser HttpParams pour construire correctement les paramètres
+    let params = new HttpParams();
+    types.forEach(type => {
+      params = params.append('types', type);
     });
+    return this.http.get<Document[]>(`${this.apiUrl}/types`, { params });
   }
 
   getDocumentsByCreator(userId: number): Observable<Document[]> {
@@ -54,15 +54,19 @@ export class DocumentService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  downloadDocument(id: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${id}/download`, { 
+  downloadDocument(filename: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/files/${filename}`, { 
       responseType: 'blob' 
     });
   }
 
-  isDocumentCreator(documentId: number, username: string): Observable<boolean> {
-    return this.http.get<boolean>(
-      `${this.apiUrl}/${documentId}/isCreator/${username}`,
-    );
+  searchDocuments(term: string): Observable<Document[]> {
+    const params = new HttpParams().set('search', term);
+    return this.http.get<Document[]>(`${this.apiUrl}/search`, { params });
+  }
+  
+  // Méthode pour obtenir les rapports par type
+  getReportsByType(types: DocumentType[]): Observable<Document[]> {
+    return this.getDocumentsByTypes(types);
   }
 }

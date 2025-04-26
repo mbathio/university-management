@@ -1,5 +1,6 @@
-// src/app/modules/communication/communication.routes.ts
-import { Routes } from '@angular/router';
+// src/app/modules/communication/communication-routing.module.ts
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth.guard';
 import { Role } from '../../core/models/user.model';
 
@@ -14,7 +15,7 @@ import { AdminNoteFormComponent } from './admin-form/admin-note-form.component';
 import { CircularListComponent } from './circular-list/circular-list.component';
 import { CircularFormComponent } from './circular-form/circular-form.component';
 
-export const routes: Routes = [
+const routes: Routes = [
   {
     path: '',
     component: CommunicationDashboardComponent,
@@ -80,4 +81,8 @@ export const routes: Routes = [
   },
 ];
 
-export default routes;
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class CommunicationRoutingModule { }

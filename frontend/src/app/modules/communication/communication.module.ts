@@ -24,7 +24,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 
-import { CommunicationRoutingModule } from './communication.routes';
+import { CommunicationRoutingModule } from './communication-routing.module';
 import { DocumentListComponent } from './document-list/document-list.component';
 import { DocumentDetailComponent } from './document-detail/document-detail.component';
 import { ReportFormComponent } from './report-form/report-form.component';
@@ -77,21 +77,7 @@ import { CircularFormComponent } from './circular-form/circular-form.component';
     MatTooltipModule,
     MatBadgeModule,
     MatDatepickerModule,
-    MatNativeDateModule,
-    
-    // Importer les composants standalone
-    DocumentListComponent,
-    DocumentDetailComponent,
-    ReportFormComponent,
-    ReportListComponent,
-    NotificationsComponent,
-    DocumentTypePipe,
-    VisibilityLevelPipe,
-    CommunicationDashboardComponent,
-    AdminNotesComponent,
-    AdminNoteFormComponent,
-    CircularListComponent,
-    CircularFormComponent
+    MatNativeDateModule
   ]
 })
 export class CommunicationModule { }
