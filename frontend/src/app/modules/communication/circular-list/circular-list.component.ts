@@ -1,5 +1,5 @@
 // src/app/modules/communication/circular-list/circular-list.component.ts
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -14,6 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { forkJoin } from 'rxjs';
 
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -46,7 +47,7 @@ import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
     VisibilityLevelPipe
   ]
 })
-export class CircularListComponent implements OnInit {
+export class CircularListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['title', 'type', 'createdAt', 'visibilityLevel', 'actions'];
   dataSource = new MatTableDataSource<Document>([]);
   loading = false;
@@ -64,8 +65,9 @@ export class CircularListComponent implements OnInit {
 
   isAdminOrAdministration(): boolean {
     const currentUser = this.authService.currentUserValue;
-    return currentUser?.role.includes('ADMIN') || 
-           currentUser?.role.includes('ADMINISTRATION');
+    return currentUser?.role ? 
+      (currentUser.role.includes('ADMIN') || currentUser.role.includes('ADMINISTRATION')) : 
+      false;
   }
 
   ngOnInit(): void {
@@ -88,20 +90,22 @@ export class CircularListComponent implements OnInit {
       DocumentType.ADMINISTRATIVE_NOTE
     ];
 
-   this.documentService.getDocumentsByType(DocumentType.CIRCULAR).subscribe({
-     next: (documents: Document[]) => {
-       const administrativeDocuments = this.documentService.getDocumentsByType(DocumentType.ADMINISTRATIVE_NOTE).subscribe({
-         next: (additionalDocuments: Document[]) => {
-           this.dataSource.data = [...documents, ...additionalDocuments];
-           this.loading = false;
-         }
-       });
-     },
-     error: (err: any) => {
-       console.error('Erreur lors du chargement des circulaires:', err);
-       this.loading = false;
-     }
-   });
+    // Use forkJoin to handle multiple observables concurrently
+    const documentTypeRequests = adminTypes.map(type => 
+      this.documentService.getDocumentsByType(type)
+    );
+
+    forkJoin(documentTypeRequests).subscribe({
+      next: (responses: Document[][]) => {
+        const documents = responses.flat();
+        this.dataSource.data = documents;
+        this.loading = false;
+      },
+      error: (err: Error) => {
+        console.error('Error fetching documents:', err.message);
+        this.loading = false;
+      }
+    });
   }
 
   applyFilter(event: Event): void {

@@ -1,5 +1,5 @@
 // src/app/modules/communication/report-list/report-list.component.ts
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -43,7 +43,7 @@ import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
     VisibilityLevelPipe,
   ],
 })
-export class ReportListComponent implements OnInit {
+export class ReportListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
     'title',
     'type',
