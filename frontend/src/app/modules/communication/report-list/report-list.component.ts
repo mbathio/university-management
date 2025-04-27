@@ -111,30 +111,35 @@ export class ReportListComponent implements OnInit, AfterViewInit {
     }
   }
 
-  downloadDocument(id: number): void {
-    this.documentService.downloadDocument(id).subscribe({
-      next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `document-${id}.pdf`; // You might want to get the actual filename
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      },
-      error: (err) => {
-        console.error('Error downloading document:', err);
-        this.snackBar.open(
-          'Erreur lors du téléchargement du document',
-          'Fermer',
-          {
-            duration: 3000,
-          },
-        );
-      },
-    });
-  }
+ // Extrait de report-list.component.ts - fonction à implémenter ou corriger
+downloadDocument(id: number): void {
+  this.documentService.downloadDocument(id).subscribe(
+    (data: Blob) => {
+      // Créer un objet URL pour le blob
+      const blob = new Blob([data], { type: 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Créer un élément a temporaire pour déclencher le téléchargement
+      const link = document.createElement('a');
+      link.href = url;
+      // Vous pourriez aussi obtenir le nom du document depuis la liste si disponible
+      link.download = `document-${id}`;
+      link.click();
+      
+      // Nettoyer l'URL object
+      window.URL.revokeObjectURL(url);
+    },
+    (error) => {
+      console.error('Erreur lors du téléchargement du document', error);
+      // Afficher un message d'erreur à l'utilisateur
+      // Par exemple avec MatSnackBar
+      this.snackBar.open('Erreur lors du téléchargement du document', 'Fermer', {
+        duration: 3000,
+        panelClass: 'error-snackbar'
+      });
+    }
+  );
+}
 
   deleteDocument(id: number): void {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {

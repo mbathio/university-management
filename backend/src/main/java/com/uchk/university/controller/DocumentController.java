@@ -101,6 +101,19 @@ public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
             .body(file);
 }
 
+// Méthode à ajouter à DocumentController.java
+
+@GetMapping("/search/types")
+public ResponseEntity<List<Document>> getDocumentsByTypes(@RequestParam String types) {
+    log.debug("REST request to get Documents by types : {}", types);
+    List<DocumentType> documentTypes = Arrays.stream(types.split(","))
+        .map(DocumentType::valueOf)
+        .collect(Collectors.toList());
+    
+    List<Document> documents = documentService.getDocumentsByTypes(documentTypes);
+    return ResponseEntity.ok(documents);
+}
+
 @GetMapping("/download/{id}")
 @PreAuthorize("permitAll()")  // Explicitement défini comme public
 public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) {

@@ -4,7 +4,11 @@
     <mat-card-content>
       <div class="admin-form-title">
         <h1>
-          {{ isEditMode ? "Modifier la note administrative" : "Créer une nouvelle note administrative" }}
+          {{
+            isEditMode
+              ? "Modifier la note administrative"
+              : "Créer une nouvelle note administrative"
+          }}
         </h1>
       </div>
 
@@ -45,16 +49,15 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Type de note</mat-label>
             <mat-select formControlName="type" required>
-              <mat-option
-                *ngFor="let type of noteTypes"
-                [value]="type"
-              >
-                {{ type === 'NOTE_SERVICE' ? 'Note de service' : 'Note administrative' }}
+              <mat-option *ngFor="let type of noteTypes" [value]="type">
+                {{
+                  type === "NOTE_SERVICE"
+                    ? "Note de service"
+                    : "Note administrative"
+                }}
               </mat-option>
             </mat-select>
-            <mat-error
-              *ngIf="noteForm.get('type')?.hasError('required')"
-            >
+            <mat-error *ngIf="noteForm.get('type')?.hasError('required')">
               Le type de note est requis
             </mat-error>
           </mat-form-field>
@@ -68,10 +71,17 @@
                 *ngFor="let level of visibilityLevels"
                 [value]="level"
               >
-                {{ level === 'PUBLIC' ? 'Public' : 
-                   level === 'ADMINISTRATION' ? 'Administration' : 
-                   level === 'ENSEIGNANTS' ? 'Enseignants' :
-                   level === 'ETUDIANTS' ? 'Étudiants' : 'Restreint' }}
+                {{
+                  level === "PUBLIC"
+                    ? "Public"
+                    : level === "ADMINISTRATION"
+                      ? "Administration"
+                      : level === "ENSEIGNANTS"
+                        ? "Enseignants"
+                        : level === "ETUDIANTS"
+                          ? "Étudiants"
+                          : "Restreint"
+                }}
               </mat-option>
             </mat-select>
             <mat-error

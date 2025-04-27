@@ -1,4 +1,4 @@
-// src/app/core/services/document.service.ts
+// src/app/modules/communication/services/document.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -21,15 +21,17 @@ export class DocumentService {
     return this.http.get<Document>(`${this.apiUrl}/${id}`);
   }
 
-  getDocumentsByType(type: string): Observable<Document[]> {
+  getDocumentsByType(type: DocumentType | string): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/type/${type}`);
   }
 
   getReportsByType(adminTypes: DocumentType[]): Observable<Document[]> {
-    // Implémentation correcte
+    // Cette méthode n'existe pas encore dans le backend tel que configuré
+    // Vous devrez soit implémenter l'endpoint dans le backend, 
+    // soit utiliser une autre approche côté frontend
     const types = adminTypes.join(',');
     const params = new HttpParams().set('types', types);
-    return this.http.get<Document[]>(`${this.apiUrl}/types`, { params });
+    return this.http.get<Document[]>(`${this.apiUrl}/search/types`, { params });
   }
 
   getDocumentsByVisibilityLevel(level: string): Observable<Document[]> {
@@ -48,11 +50,16 @@ export class DocumentService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  downloadDocument(id: number | string): Observable<Blob> {
-    // Assuming the document has a filePath property
-    return this.http.get(`${this.apiUrl}/files/${id}`, {
+  // Correction: utiliser l'endpoint de téléchargement correctement défini dans le backend
+  downloadDocument(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/download/${id}`, {
       responseType: 'blob',
     });
+  }
+
+  // Pour accéder directement à un fichier (comme avec l'attribut src d'une balise img)
+  getFileUrl(filename: string): string {
+    return `${environment.apiUrl}/api/documents/files/${filename}`;
   }
 
   searchDocuments(term: string): Observable<Document[]> {
