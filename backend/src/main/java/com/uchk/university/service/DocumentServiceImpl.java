@@ -1,4 +1,4 @@
-package com.uchk.university.service.impl;
+package com.uchk.university.service;
 
 import com.uchk.university.entity.Document;
 import com.uchk.university.entity.DocumentType;
@@ -7,10 +7,11 @@ import com.uchk.university.exception.DocumentStorageException;
 import com.uchk.university.exception.ResourceNotFoundException;
 import com.uchk.university.repository.DocumentRepository;
 import com.uchk.university.repository.UserRepository;
-import com.uchk.university.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -195,20 +196,20 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = getDocumentById(documentId);
         return document.getCreatedBy().getUsername().equals(username);
     }
-    // Add this method to your existing DocumentServiceImpl class
-@Override
-public Resource loadFileAsResource(String filePath) {
-    try {
-        Path rootLocation = getRootLocationPath();
-        Path file = rootLocation.resolve(filePath).normalize();
-        Resource resource = new org.springframework.core.io.UrlResource(file.toUri());
-        if (resource.exists() || resource.isReadable()) {
-            return resource;
-        } else {
-            throw new DocumentStorageException("Could not read file: " + filePath);
+    
+    @Override
+    public Resource loadFileAsResource(String filePath) {
+        try {
+            Path rootLocation = getRootLocationPath();
+            Path file = rootLocation.resolve(filePath).normalize();
+            Resource resource = new UrlResource(file.toUri());
+            if (resource.exists() || resource.isReadable()) {
+                return resource;
+            } else {
+                throw new DocumentStorageException("Could not read file: " + filePath);
+            }
+        } catch (Exception e) {
+            throw new DocumentStorageException("Error loading file: " + filePath, e);
         }
-    } catch (Exception e) {
-        throw new DocumentStorageException("Error loading file: " + filePath, e);
     }
-}
 }
