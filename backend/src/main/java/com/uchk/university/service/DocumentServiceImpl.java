@@ -195,4 +195,20 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = getDocumentById(documentId);
         return document.getCreatedBy().getUsername().equals(username);
     }
+    // Add this method to your existing DocumentServiceImpl class
+@Override
+public Resource loadFileAsResource(String filePath) {
+    try {
+        Path rootLocation = getRootLocationPath();
+        Path file = rootLocation.resolve(filePath).normalize();
+        Resource resource = new org.springframework.core.io.UrlResource(file.toUri());
+        if (resource.exists() || resource.isReadable()) {
+            return resource;
+        } else {
+            throw new DocumentStorageException("Could not read file: " + filePath);
+        }
+    } catch (Exception e) {
+        throw new DocumentStorageException("Error loading file: " + filePath, e);
+    }
+}
 }

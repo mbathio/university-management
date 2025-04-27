@@ -11,6 +11,8 @@ import java.util.List;
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, Long> {
     List<Document> findByType(DocumentType type);
-    List<Document> findByCreatedBy(User createdBy);
+    List<Document> findByCreatedBy(User creator);
     List<Document> findByVisibilityLevel(String visibilityLevel);
+    List<Document> findByTitleContainingIgnoreCase(String title);
+    List<Document> findByTagsContaining(String tag);
 }

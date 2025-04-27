@@ -2,132 +2,112 @@ package com.uchk.university.controller;
 
 import com.uchk.university.entity.Document;
 import com.uchk.university.entity.DocumentType;
-import com.uchk.university.exception.DocumentStorageException;
-import com.uchk.university.exception.ResourceNotFoundException;
 import com.uchk.university.service.DocumentService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import com.uchk.university.security.CurrentUser;
+import com.uchk.university.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Documents", description = "API pour la gestion des documents")
 public class DocumentController {
     private final DocumentService documentService;
-    
-    @Value("${upload.root-location:uploads}")
-    private String uploadRootLocation;
-    
-    private Path getRootLocationPath() {
-        return Paths.get(uploadRootLocation);
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION')")
+    public ResponseEntity<Document> createDocument(
+            @RequestPart("document") Document document,
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @CurrentUser User currentUser) {
+        log.debug("REST request to create Document : {}", document);
+        Document createdDocument = documentService.createDocument(document, currentUser.getId(), file);
+        return ResponseEntity.ok(createdDocument);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION') and " +
+                  "@documentController.checkDocumentCreator(#id, authentication.name) or hasRole('ADMIN')")
+    public ResponseEntity<Document> updateDocument(
+            @PathVariable Long id,
+            @RequestPart("document") Document document,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        log.debug("REST request to update Document : {}", document);
+        Document updatedDocument = documentService.updateDocument(id, document, file);
+        return ResponseEntity.ok(updatedDocument);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Obtenir un document par ID")
-    public ResponseEntity<Document> getDocumentById(@PathVariable Long id) {
+    public ResponseEntity<Document> getDocument(@PathVariable Long id) {
         log.debug("REST request to get Document : {}", id);
-        return ResponseEntity.ok(documentService.getDocumentById(id));
+        Document document = documentService.getDocumentById(id);
+        return ResponseEntity.ok(document);
     }
 
     @GetMapping
-    @Operation(summary = "Obtenir tous les documents")
     public ResponseEntity<List<Document>> getAllDocuments() {
         log.debug("REST request to get all Documents");
-        return ResponseEntity.ok(documentService.getAllDocuments());
+        List<Document> documents = documentService.getAllDocuments();
+        return ResponseEntity.ok(documents);
     }
 
     @GetMapping("/type/{type}")
-    @Operation(summary = "Obtenir les documents par type")
     public ResponseEntity<List<Document>> getDocumentsByType(@PathVariable DocumentType type) {
         log.debug("REST request to get Documents by type : {}", type);
-        return ResponseEntity.ok(documentService.getDocumentsByType(type));
+        List<Document> documents = documentService.getDocumentsByType(type);
+        return ResponseEntity.ok(documents);
     }
 
     @GetMapping("/creator/{userId}")
-    @Operation(summary = "Obtenir les documents par créateur")
     public ResponseEntity<List<Document>> getDocumentsByCreator(@PathVariable Long userId) {
         log.debug("REST request to get Documents by creator : {}", userId);
-        return ResponseEntity.ok(documentService.getDocumentsByCreator(userId));
+        List<Document> documents = documentService.getDocumentsByCreator(userId);
+        return ResponseEntity.ok(documents);
     }
 
     @GetMapping("/visibility/{level}")
-    @Operation(summary = "Obtenir les documents par niveau de visibilité")
     public ResponseEntity<List<Document>> getDocumentsByVisibilityLevel(@PathVariable String level) {
         log.debug("REST request to get Documents by visibility level : {}", level);
-        return ResponseEntity.ok(documentService.getDocumentsByVisibilityLevel(level));
-    }
-
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Créer un nouveau document")
-    public ResponseEntity<Document> createDocument(
-            @RequestPart("document") @Valid Document document,
-            @RequestPart(value = "file", required = false) MultipartFile file,
-            @RequestParam Long userId) {
-        log.debug("REST request to save Document : {}, userId: {}", document, userId);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(documentService.createDocument(document, userId, file));
-    }
-
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN') or @documentService.isDocumentCreator(#id, authentication.principal.username)")
-    @Operation(summary = "Mettre à jour un document existant")
-    public ResponseEntity<Document> updateDocument(
-            @PathVariable Long id,
-            @RequestPart("document") @Valid Document document,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
-        log.debug("REST request to update Document : {}, id: {}", document, id);
-        return ResponseEntity.ok(documentService.updateDocument(id, document, file));
+        List<Document> documents = documentService.getDocumentsByVisibilityLevel(level);
+        return ResponseEntity.ok(documents);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @documentService.isDocumentCreator(#id, authentication.principal.username)")
-    @Operation(summary = "Supprimer un document")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION') and " +
+                  "@documentController.checkDocumentCreator(#id, authentication.name) or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
         log.debug("REST request to delete Document : {}", id);
         documentService.deleteDocument(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/files/{filename:.+}")
-    @ResponseBody
-    @Operation(summary = "Télécharger un fichier")
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-        try {
-            Path file = getRootLocationPath().resolve(filename);
-            Resource resource = new UrlResource(file.toUri());
-            
-            if (resource.exists() || resource.isReadable()) {
-                log.debug("File found: {}", filename);
-                return ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-            } else {
-                log.warn("File not found: {}", filename);
-                throw new ResourceNotFoundException("File not found: " + filename);
-            }
-        } catch (IOException e) {
-            log.error("Error serving file: {}", filename, e);
-            throw new DocumentStorageException("Could not read file: " + filename, e);
+    @GetMapping("/download/{id}")
+    public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) {
+        Document document = documentService.getDocumentById(id);
+        if (document.getFilePath() == null) {
+            return ResponseEntity.notFound().build();
         }
+
+        // This assumes you have a FileStorageService to retrieve the file
+        Resource resource = documentService.loadFileAsResource(document.getFilePath());
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getTitle() + "\"")
+                .body(resource);
+    }
+
+    // Helper method for security expression
+    public boolean checkDocumentCreator(Long documentId, String username) {
+        return documentService.isDocumentCreator(documentId, username);
     }
 }
