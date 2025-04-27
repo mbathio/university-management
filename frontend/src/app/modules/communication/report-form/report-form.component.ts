@@ -1,7 +1,12 @@
 // src/app/modules/communication/report-form/report-form.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,7 +21,11 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 
 import { DocumentService } from '../../../core/services/document.service';
-import { Document, DocumentType, VisibilityLevel } from '../../../core/models/document.model';
+import {
+  Document,
+  DocumentType,
+  VisibilityLevel,
+} from '../../../core/models/document.model';
 import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
@@ -38,8 +47,8 @@ import { AuthService } from '../../../core/auth/auth.service';
     MatSnackBarModule,
     MatDatepickerModule,
     MatChipsModule,
-    MatDividerModule
-  ]
+    MatDividerModule,
+  ],
 })
 export class ReportFormComponent implements OnInit {
   reportForm!: FormGroup;
@@ -52,7 +61,7 @@ export class ReportFormComponent implements OnInit {
     DocumentType.MEETING_REPORT,
     DocumentType.SEMINAR_REPORT,
     DocumentType.WEBINAR_REPORT,
-    DocumentType.UNIVERSITY_COUNCIL
+    DocumentType.UNIVERSITY_COUNCIL,
   ];
   visibilityLevels = Object.values(VisibilityLevel);
   document: Document | null = null;
@@ -63,7 +72,7 @@ export class ReportFormComponent implements OnInit {
     private router: Router,
     private documentService: DocumentService,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -86,7 +95,7 @@ export class ReportFormComponent implements OnInit {
       meetingDate: [new Date(), Validators.required],
       participants: [''],
       location: [''],
-      tags: ['']
+      tags: [''],
     });
   }
 
@@ -96,8 +105,8 @@ export class ReportFormComponent implements OnInit {
       next: (document) => {
         // Check if it's a report type
         if (!this.reportTypes.includes(document.type as DocumentType)) {
-          this.snackBar.open('Ce document n\'est pas un rapport', 'Fermer', {
-            duration: 3000
+          this.snackBar.open("Ce document n'est pas un rapport", 'Fermer', {
+            duration: 3000,
           });
           this.router.navigate(['/communication']);
           return;
@@ -107,10 +116,10 @@ export class ReportFormComponent implements OnInit {
         this.documentFilePath = document.filePath || null;
 
         // Parse additional data from content if available
-        let meetingDate = new Date();
-        let participants = '';
-        let location = '';
-        let tags = document.tags ? document.tags.join(', ') : '';
+        const meetingDate = new Date();
+        const participants = '';
+        const location = '';
+        const tags = document.tags ? document.tags.join(', ') : '';
 
         // In a real app, these would be properly structured in the document
         // For now, assume they're stored in the content or additional metadata fields
@@ -123,18 +132,18 @@ export class ReportFormComponent implements OnInit {
           meetingDate: meetingDate,
           participants: participants,
           location: location,
-          tags: tags
+          tags: tags,
         });
         this.loading = false;
       },
       error: (error) => {
         console.error('Erreur lors du chargement du rapport', error);
         this.snackBar.open('Erreur lors du chargement du rapport', 'Fermer', {
-          duration: 3000
+          duration: 3000,
         });
         this.loading = false;
         this.router.navigate(['/communication']);
-      }
+      },
     });
   }
 
@@ -145,6 +154,7 @@ export class ReportFormComponent implements OnInit {
     }
   }
 
+  // Dans la méthode onSubmit() de report-form.component.ts
   onSubmit(): void {
     if (this.reportForm.invalid) {
       return;
@@ -155,30 +165,43 @@ export class ReportFormComponent implements OnInit {
 
     // Extract tags from the comma-separated string
     const tagsString = this.reportForm.value.tags;
-    const tags = tagsString ? tagsString.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag) : [];
+    const tags = tagsString
+      ? tagsString
+          .split(',')
+          .map((tag: string) => tag.trim())
+          .filter((tag: string) => tag)
+      : [];
 
     // Create enriched content with meeting details
     const enrichedContent = `
-      <h3>Compte rendu</h3>
-      <p><strong>Date:</strong> ${this.reportForm.value.meetingDate.toLocaleDateString()}</p>
-      <p><strong>Lieu:</strong> ${this.reportForm.value.location}</p>
-      <p><strong>Participants:</strong> ${this.reportForm.value.participants}</p>
-      <div class="report-content">
-        ${this.reportForm.value.content}
-      </div>
-    `;
+    <h3>Compte rendu</h3>
+    <p><strong>Date:</strong> ${this.reportForm.value.meetingDate.toLocaleDateString()}</p>
+    <p><strong>Lieu:</strong> ${this.reportForm.value.location}</p>
+    <p><strong>Participants:</strong> ${this.reportForm.value.participants}</p>
+    <div class="report-content">
+      ${this.reportForm.value.content}
+    </div>
+  `;
 
     const documentData: Partial<Document> = {
       title: this.reportForm.value.title,
       content: enrichedContent,
       type: this.reportForm.value.type,
       visibilityLevel: this.reportForm.value.visibilityLevel,
-      tags: tags
+      tags: tags,
     };
+
+    // Convertir l'objet document en JSON et l'ajouter au FormData
+    formData.append(
+      'document',
+      new Blob([JSON.stringify(documentData)], {
+        type: 'application/json',
+      }),
+    );
 
     const currentUser = this.authService.currentUserValue;
     const userId = currentUser?.id;
-    
+
     formData.append('userId', userId?.toString() || '');
 
     if (this.selectedFile) {
@@ -189,35 +212,43 @@ export class ReportFormComponent implements OnInit {
       this.documentService.updateDocument(this.documentId, formData).subscribe({
         next: () => {
           this.snackBar.open('Rapport mis à jour avec succès', 'Fermer', {
-            duration: 3000
+            duration: 3000,
           });
-          this.router.navigate(['/communication/report-list']);
+          this.router.navigate(['/communication/reports']); // Corriger le chemin de redirection
           this.loading = false;
         },
         error: (error) => {
           console.error('Erreur lors de la mise à jour', error);
-          this.snackBar.open('Erreur lors de la mise à jour du rapport', 'Fermer', {
-            duration: 3000
-          });
+          this.snackBar.open(
+            'Erreur lors de la mise à jour du rapport',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           this.loading = false;
-        }
+        },
       });
     } else {
       this.documentService.createDocument(formData).subscribe({
         next: () => {
           this.snackBar.open('Rapport créé avec succès', 'Fermer', {
-            duration: 3000
+            duration: 3000,
           });
-          this.router.navigate(['/communication/report-list']);
+          this.router.navigate(['/communication/reports']); // Corriger le chemin de redirection
           this.loading = false;
         },
         error: (error) => {
           console.error('Erreur lors de la création', error);
-          this.snackBar.open('Erreur lors de la création du rapport', 'Fermer', {
-            duration: 3000
-          });
+          this.snackBar.open(
+            'Erreur lors de la création du rapport',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           this.loading = false;
-        }
+        },
       });
     }
   }

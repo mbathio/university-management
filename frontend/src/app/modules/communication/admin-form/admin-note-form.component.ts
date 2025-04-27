@@ -1,7 +1,12 @@
-// src/app/modules/communication/admin-notes/admin-note-form.component.ts
+// src/app/modules/communication/admin-form/admin-note-form.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -14,8 +19,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Document, DocumentType, VisibilityLevel } from '../../../core/models/document.model';
-import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
+import { Document, VisibilityLevel } from '../../../core/models/document.model';
 
 @Component({
   selector: 'app-admin-note-form',
@@ -34,8 +38,7 @@ import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
     MatProgressSpinnerModule,
     MatSelectModule,
     MatSnackBarModule,
-    VisibilityLevelPipe
-  ]
+  ],
 })
 export class AdminNoteFormComponent implements OnInit {
   noteForm!: FormGroup;
@@ -43,14 +46,15 @@ export class AdminNoteFormComponent implements OnInit {
   documentId?: number;
   loading = false;
   selectedFile: File | null = null;
-  currentFilePath: string = '';
+  currentFilePath = '';
   visibilityLevels = [
     VisibilityLevel.PUBLIC,
     VisibilityLevel.ADMINISTRATION,
     VisibilityLevel.TEACHERS,
     VisibilityLevel.STUDENTS,
-    VisibilityLevel.RESTRICTED
+    VisibilityLevel.RESTRICTED,
   ];
+  noteTypes = ['NOTE_ADMINISTRATIVE', 'NOTE_SERVICE'];
 
   constructor(
     private fb: FormBuilder,
@@ -58,13 +62,13 @@ export class AdminNoteFormComponent implements OnInit {
     private router: Router,
     private documentService: DocumentService,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {
     this.createForm();
   }
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe((params) => {
       if (params['id']) {
         this.isEditMode = true;
         this.documentId = +params['id'];
@@ -76,9 +80,11 @@ export class AdminNoteFormComponent implements OnInit {
   createForm(): void {
     this.noteForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
-      reference: [''],
+      reference: ['', [Validators.maxLength(50)]],
+      type: ['NOTE_ADMINISTRATIVE', [Validators.required]],
       content: ['', [Validators.maxLength(5000)]],
-      visibilityLevel: [VisibilityLevel.ADMINISTRATION, [Validators.required]]
+      visibilityLevel: [VisibilityLevel.ADMINISTRATION, [Validators.required]],
+      tags: [''],
     });
   }
 
@@ -88,12 +94,18 @@ export class AdminNoteFormComponent implements OnInit {
       next: (document) => {
         // Vérifier si l'utilisateur a le droit de modifier ce document
         const currentUser = this.authService.currentUserValue;
-        if (!currentUser || 
-            (!currentUser.role.includes('ADMIN') && 
-             document.createdBy.id !== currentUser.id)) {
-          this.snackBar.open('Vous n\'êtes pas autorisé à modifier ce document', 'Fermer', {
-            duration: 3000,
-          });
+        if (
+          !currentUser ||
+          (!currentUser.role.includes('ADMIN') &&
+            document.createdBy.id !== currentUser.id)
+        ) {
+          this.snackBar.open(
+            "Vous n'êtes pas autorisé à modifier ce document",
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
           this.router.navigate(['/communication/admin-notes']);
           return;
         }
@@ -103,7 +115,7 @@ export class AdminNoteFormComponent implements OnInit {
           title: document.title,
           content: document.content,
           visibilityLevel: document.visibilityLevel,
-          reference: document.reference || ''
+          reference: document.reference || '',
         });
 
         if (document.filePath) {
@@ -119,7 +131,7 @@ export class AdminNoteFormComponent implements OnInit {
         });
         this.loading = false;
         this.router.navigate(['/communication/admin-notes']);
-      }
+      },
     });
   }
 
@@ -135,73 +147,81 @@ export class AdminNoteFormComponent implements OnInit {
 
     this.loading = true;
     const formData = new FormData();
-    
-    // Préparer les données du document
+
+    const tagsString = this.noteForm.value.tags;
+    const tags = tagsString
+      ? tagsString
+          .split(',')
+          .map((tag: string) => tag.trim())
+          .filter((tag: string) => tag)
+      : [];
+
     const documentData: Partial<Document> = {
       title: this.noteForm.value.title,
       content: this.noteForm.value.content,
-      type: DocumentType.ADMINISTRATIVE_NOTE,
+      type: this.noteForm.value.type,
       visibilityLevel: this.noteForm.value.visibilityLevel,
-      reference: this.noteForm.value.reference
+      reference: this.noteForm.value.reference,
+      tags: tags,
     };
+    // Convertir l'objet document en JSON et l'ajouter au FormData
+    formData.append(
+      'document',
+      new Blob([JSON.stringify(documentData)], {
+        type: 'application/json',
+      }),
+    );
+
+    const currentUser = this.authService.currentUserValue;
+    const userId = currentUser?.id;
+
+    formData.append('userId', userId?.toString() || '');
+
+    if (this.selectedFile) {
+      formData.append('file', this.selectedFile);
+    }
 
     if (this.isEditMode && this.documentId) {
-      // Mise à jour du document existant
-      const documentBlob = new Blob([JSON.stringify(documentData)], { type: 'application/json' });
-      formData.append('document', documentBlob);
-      
-      if (this.selectedFile) {
-        formData.append('file', this.selectedFile);
-      }
-
       this.documentService.updateDocument(this.documentId, formData).subscribe({
         next: () => {
-          this.snackBar.open('Note administrative mise à jour avec succès', 'Fermer', {
+          this.snackBar.open('Note mise à jour avec succès', 'Fermer', {
             duration: 3000,
           });
           this.router.navigate(['/communication/admin-notes']);
-        },
-        error: (err) => {
-          console.error('Erreur lors de la mise à jour de la note administrative:', err);
-          this.snackBar.open('Erreur lors de la mise à jour de la note administrative', 'Fermer', {
-            duration: 3000,
-          });
           this.loading = false;
-        }
+        },
+        error: (error) => {
+          console.error('Erreur lors de la mise à jour', error);
+          this.snackBar.open(
+            'Erreur lors de la mise à jour de la note',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
+          this.loading = false;
+        },
       });
     } else {
-      // Création d'un nouveau document
-      const currentUser = this.authService.currentUserValue;
-      if (!currentUser) {
-        this.snackBar.open('Vous devez être connecté pour créer une note administrative', 'Fermer', {
-          duration: 3000,
-        });
-        this.loading = false;
-        return;
-      }
-
-      const documentBlob = new Blob([JSON.stringify(documentData)], { type: 'application/json' });
-      formData.append('document', documentBlob);
-      formData.append('userId', currentUser.id.toString());
-      
-      if (this.selectedFile) {
-        formData.append('file', this.selectedFile);
-      }
-
       this.documentService.createDocument(formData).subscribe({
         next: () => {
-          this.snackBar.open('Note administrative créée avec succès', 'Fermer', {
+          this.snackBar.open('Note créée avec succès', 'Fermer', {
             duration: 3000,
           });
           this.router.navigate(['/communication/admin-notes']);
-        },
-        error: (err) => {
-          console.error('Erreur lors de la création de la note administrative:', err);
-          this.snackBar.open('Erreur lors de la création de la note administrative', 'Fermer', {
-            duration: 3000,
-          });
           this.loading = false;
-        }
+        },
+        error: (error) => {
+          console.error('Erreur lors de la création', error);
+          this.snackBar.open(
+            'Erreur lors de la création de la note',
+            'Fermer',
+            {
+              duration: 3000,
+            },
+          );
+          this.loading = false;
+        },
       });
     }
   }

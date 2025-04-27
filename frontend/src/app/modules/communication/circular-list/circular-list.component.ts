@@ -46,6 +46,7 @@ import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
     DocumentTypePipe,
     VisibilityLevelPipe
   ]
+
 })
 export class CircularListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['title', 'type', 'createdAt', 'visibilityLevel', 'actions'];
