@@ -30,13 +30,7 @@ import java.util.UUID;
 public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
-
-    @Value("${upload.root-location:uploads}")
-    private String uploadRootLocation;
-
-    private Path getRootLocationPath() {
-        return Paths.get(uploadRootLocation);
-    }
+    private final FileStorageService fileStorageService;
 
     @Override
     public Document createDocument(Document document, Long userId, MultipartFile file) {
@@ -50,31 +44,9 @@ public class DocumentServiceImpl implements DocumentService {
 
         // Handle file upload if present
         if (file != null && !file.isEmpty()) {
-            try {
-                // Create upload directory if it doesn't exist
-                Path rootLocation = getRootLocationPath();
-                if (!Files.exists(rootLocation)) {
-                    Files.createDirectories(rootLocation);
-                }
-
-                // Generate unique filename to prevent overwriting
-                String originalFilename = file.getOriginalFilename();
-                String extension = "";
-                if (originalFilename != null && originalFilename.contains(".")) {
-                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                }
-                String filename = UUID.randomUUID() + extension;
-
-                // Copy file to upload location
-                Path destinationFile = rootLocation.resolve(filename);
-                Files.copy(file.getInputStream(), destinationFile, StandardCopyOption.REPLACE_EXISTING);
-
-                // Set file path
-                document.setFilePath(filename);
-                log.debug("File saved: {}", filename);
-            } catch (IOException e) {
-                throw new DocumentStorageException("Failed to store file", e);
-            }
+            String storedFileName = fileStorageService.store(file);
+            document.setFilePath(storedFileName);
+            log.debug("File saved: {}", storedFileName);
         }
 
         return documentRepository.save(document);
@@ -104,45 +76,24 @@ public class DocumentServiceImpl implements DocumentService {
 
         // Handle file upload if present
         if (file != null && !file.isEmpty()) {
-            try {
-                // Create upload directory if it doesn't exist
-                Path rootLocation = getRootLocationPath();
-                if (!Files.exists(rootLocation)) {
-                    Files.createDirectories(rootLocation);
+            // Delete old file if exists
+            if (document.getFilePath() != null) {
+                try {
+                    fileStorageService.deleteFile(document.getFilePath());
+                } catch (Exception e) {
+                    log.warn("Could not delete old file: {}", document.getFilePath(), e);
                 }
-
-                // Delete old file if exists
-                if (document.getFilePath() != null) {
-                    try {
-                        Path oldFile = rootLocation.resolve(document.getFilePath());
-                        Files.deleteIfExists(oldFile);
-                    } catch (IOException e) {
-                        log.warn("Could not delete old file: {}", document.getFilePath(), e);
-                    }
-                }
-
-                // Generate unique filename to prevent overwriting
-                String originalFilename = file.getOriginalFilename();
-                String extension = "";
-                if (originalFilename != null && originalFilename.contains(".")) {
-                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                }
-                String filename = UUID.randomUUID() + extension;
-
-                // Copy file to upload location
-                Path destinationFile = rootLocation.resolve(filename);
-                Files.copy(file.getInputStream(), destinationFile, StandardCopyOption.REPLACE_EXISTING);
-
-                // Set file path
-                document.setFilePath(filename);
-                log.debug("File updated: {}", filename);
-            } catch (IOException e) {
-                throw new DocumentStorageException("Failed to store file", e);
             }
+
+            // Store new file
+            String storedFileName = fileStorageService.store(file);
+            document.setFilePath(storedFileName);
+            log.debug("File updated: {}", storedFileName);
         }
 
         return documentRepository.save(document);
     }
+
 
     @Override
     public Document getDocumentById(Long id) {
@@ -172,6 +123,7 @@ public class DocumentServiceImpl implements DocumentService {
         return documentRepository.findByVisibilityLevel(level);
     }
 
+  
     @Override
     public void deleteDocument(Long id) {
         Document document = getDocumentById(id);
@@ -179,11 +131,9 @@ public class DocumentServiceImpl implements DocumentService {
         // Delete file if exists
         if (document.getFilePath() != null) {
             try {
-                Path rootLocation = getRootLocationPath();
-                Path file = rootLocation.resolve(document.getFilePath());
-                Files.deleteIfExists(file);
+                fileStorageService.deleteFile(document.getFilePath());
                 log.debug("File deleted: {}", document.getFilePath());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.warn("Could not delete file: {}", document.getFilePath(), e);
             }
         }
@@ -192,24 +142,15 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public Resource loadFileAsResource(String filePath) {
+        return fileStorageService.loadAsResource(filePath);
+    }
+
+    @Override
     public boolean isDocumentCreator(Long documentId, String username) {
         Document document = getDocumentById(documentId);
         return document.getCreatedBy().getUsername().equals(username);
     }
     
-    @Override
-    public Resource loadFileAsResource(String filePath) {
-        try {
-            Path rootLocation = getRootLocationPath();
-            Path file = rootLocation.resolve(filePath).normalize();
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                return resource;
-            } else {
-                throw new DocumentStorageException("Could not read file: " + filePath);
-            }
-        } catch (Exception e) {
-            throw new DocumentStorageException("Error loading file: " + filePath, e);
-        }
-    }
+   
 }

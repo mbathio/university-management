@@ -92,27 +92,29 @@ public class DocumentController {
     }
 
     @GetMapping("/files/{filename:.+}")
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-        Resource file = documentService.loadFileAsResource(filename);
-        
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
-                .body(file);
-    }
+@PreAuthorize("permitAll()")  // Explicitement défini comme public
+public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
+    Resource file = documentService.loadFileAsResource(filename);
     
-    @GetMapping("/download/{id}")
-    public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) {
-        Document document = documentService.getDocumentById(id);
-        if (document.getFilePath() == null) {
-            return ResponseEntity.notFound().build();
-        }
-    
-        Resource resource = documentService.loadFileAsResource(document.getFilePath());
-        
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getTitle() + "\"")
-                .body(resource);
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
+            .body(file);
+}
+
+@GetMapping("/download/{id}")
+@PreAuthorize("permitAll()")  // Explicitement défini comme public
+public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) {
+    Document document = documentService.getDocumentById(id);
+    if (document.getFilePath() == null) {
+        return ResponseEntity.notFound().build();
     }
+
+    Resource resource = documentService.loadFileAsResource(document.getFilePath());
+    
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getTitle() + "\"")
+            .body(resource);
+}
 
     // Helper method for security expression
     public boolean checkDocumentCreator(Long documentId, String username) {
