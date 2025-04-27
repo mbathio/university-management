@@ -45,7 +45,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/formations/**").permitAll()
-                .requestMatchers("/api/documents/files/**").permitAll()
+                .requestMatchers("/api/documents/files/**").permitAll()  // Fixed correct endpoint path
+                .requestMatchers("/api/documents/download/**").permitAll() // Added for download endpoint
                 
                 // Endpoints administratifs
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -65,7 +66,7 @@ public class SecurityConfig {
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
+    
         return http.build();
     }
 

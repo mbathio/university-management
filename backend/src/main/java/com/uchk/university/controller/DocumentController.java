@@ -91,14 +91,22 @@ public class DocumentController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/files/{filename:.+}")
+    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
+        Resource file = documentService.loadFileAsResource(filename);
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+                .body(file);
+    }
+    
     @GetMapping("/download/{id}")
     public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) {
         Document document = documentService.getDocumentById(id);
         if (document.getFilePath() == null) {
             return ResponseEntity.notFound().build();
         }
-
-        // This assumes you have a FileStorageService to retrieve the file
+    
         Resource resource = documentService.loadFileAsResource(document.getFilePath());
         
         return ResponseEntity.ok()
