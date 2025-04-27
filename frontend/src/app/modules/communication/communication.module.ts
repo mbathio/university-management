@@ -2,6 +2,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -24,7 +25,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 
-import { CommunicationRoutingModule } from './communication-routing.module';
+import { routes } from './communication.routes';
 import { DocumentListComponent } from './document-list/document-list.component';
 import { DocumentDetailComponent } from './document-detail/document-detail.component';
 import { ReportFormComponent } from './report-form/report-form.component';
@@ -33,10 +34,10 @@ import { NotificationsComponent } from './notifications/notifications.component'
 import { DocumentTypePipe } from './pipes/document-type.pipe';
 import { VisibilityLevelPipe } from './pipes/visibility-level.pipe';
 import { CommunicationDashboardComponent } from './dashboard/communication-dashboard.component';
-import { AdminNotesComponent } from './admin-notes/admin-notes.component';
-import { AdminNoteFormComponent } from './admin-form/admin-note-form.component';
 import { CircularListComponent } from './circular-list/circular-list.component';
 import { CircularFormComponent } from './circular-form/circular-form.component';
+import { AdminNoteFormComponent } from './admin-form/admin-note-form.component';
+// Ne pas importer AdminNotesComponent car il est maintenant standalone
 
 @NgModule({
   declarations: [
@@ -48,7 +49,6 @@ import { CircularFormComponent } from './circular-form/circular-form.component';
     DocumentTypePipe,
     VisibilityLevelPipe,
     CommunicationDashboardComponent,
-    AdminNotesComponent,
     AdminNoteFormComponent,
     CircularListComponent,
     CircularFormComponent
@@ -56,7 +56,7 @@ import { CircularFormComponent } from './circular-form/circular-form.component';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    CommunicationRoutingModule,
+    RouterModule.forChild(routes),
     MatButtonModule,
     MatCardModule,
     MatChipsModule,

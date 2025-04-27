@@ -2,16 +2,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Document } from '../models/document.model';
+import { Document, DocumentType } from '../models/document.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DocumentService {
-  getReportsByType(adminTypes: import("../models/document.model").DocumentType[]) {
-      throw new Error('Method not implemented.');
-  }
   private apiUrl = `${environment.apiUrl}/api/documents`;
 
   constructor(private http: HttpClient) {}
@@ -24,7 +21,7 @@ export class DocumentService {
     return this.http.get<Document>(`${this.apiUrl}/${id}`);
   }
 
-  getDocumentsByType(type: string): Observable<Document[]> {
+  getDocumentsByType(type: DocumentType): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/type/${type}`);
   }
 
@@ -44,11 +41,17 @@ export class DocumentService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  downloadDocument(id: number | string): Observable<Blob> {
-    // Assuming the document has a filePath property
-    return this.http.get(`${this.apiUrl}/files/${id}`, {
-      responseType: 'blob',
+  // Correction de cette méthode pour utiliser le bon endpoint
+  downloadDocument(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/download/${id}`, {
+      responseType: 'blob'
     });
+  }
+
+  getReportsByType(adminTypes: DocumentType[]): Observable<Document[]> {
+    // Implémentation de la méthode manquante
+    const params = new HttpParams().set('types', adminTypes.join(','));
+    return this.http.get<Document[]>(`${this.apiUrl}/search/types`, { params });
   }
 
   searchDocuments(term: string): Observable<Document[]> {

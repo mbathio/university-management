@@ -97,8 +97,21 @@ export class AdminNotesComponent implements OnInit {
 
   downloadDocument(documentId: number): void {
     this.documentService.downloadDocument(documentId).subscribe({
-      next: (response) => {
-        // Téléchargement réussi
+      next: (blob) => {
+        // Créer une URL pour le blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Créer un élément <a> pour déclencher le téléchargement
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `document-${documentId}`;
+        
+        // Ajouter l'élément au DOM, cliquer dessus et le retirer
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
         this.snackBar.open('Téléchargement réussi', 'Fermer', {
           duration: 3000,
         });
