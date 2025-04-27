@@ -1,3 +1,4 @@
+
 // src/app/core/services/document.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -41,16 +42,16 @@ export class DocumentService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  // Correction de cette méthode pour utiliser le bon endpoint
+  // Fixed method to use the correct download endpoint
   downloadDocument(id: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/download/${id}`, {
       responseType: 'blob'
     });
   }
 
-  getReportsByType(adminTypes: DocumentType[]): Observable<Document[]> {
-    // Implémentation de la méthode manquante
-    const params = new HttpParams().set('types', adminTypes.join(','));
+  // Implement the missing search by types method
+  getReportsByType(types: DocumentType[]): Observable<Document[]> {
+    const params = new HttpParams().set('types', types.join(','));
     return this.http.get<Document[]>(`${this.apiUrl}/search/types`, { params });
   }
 

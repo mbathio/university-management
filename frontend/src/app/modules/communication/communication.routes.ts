@@ -1,4 +1,4 @@
-// src/app/modules/communication/communication.routes.ts - Corrigé
+// src/app/modules/communication/communication.routes.ts
 import { Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth.guard';
 import { Role } from '../../core/models/user.model';
@@ -23,8 +23,14 @@ export const routes: Routes = [
     path: 'documents',
     component: DocumentListComponent,
   },
+  // Fix for the detail route to match what's used in templates
   {
-    path: 'detail/:id', // Aligné sur le chemin utilisé dans les templates
+    path: 'detail/:id',
+    component: DocumentDetailComponent,
+  },
+  // Keep the original path as an alias to avoid breaking existing links
+  {
+    path: 'documents/:id',
     component: DocumentDetailComponent,
   },
   {
