@@ -27,7 +27,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     void markAllAsReadForUser(User user);
     
     List<Notification> findTop5ByUserOrderByCreatedAtDesc(User user);
-
+    List<Notification> findByUserUsernameOrderByCreatedAtDesc(String username);
     // Find notifications for a specific user by username
     @Query("SELECT n FROM Notification n WHERE n.user.username = :username ORDER BY n.createdAt DESC")
     List<Notification> findByUserUsername(@Param("username") String username);

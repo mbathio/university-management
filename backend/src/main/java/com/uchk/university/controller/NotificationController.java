@@ -28,4 +28,23 @@ public class NotificationController {
     public ResponseEntity<Void> markAllAsRead() {
         notificationService.markAllAsRead();
         return ResponseEntity.ok().build();
-    }}
+    }
+
+    @GetMapping("/recent")
+public ResponseEntity<List<NotificationDto>> getRecentNotifications(
+        @RequestParam(defaultValue = "5") int limit) {
+    return ResponseEntity.ok(notificationService.getRecentNotificationsForCurrentUser(limit));
+}
+
+@PatchMapping("/{id}/read")
+public ResponseEntity<NotificationDto> markNotificationAsRead(@PathVariable Long id) {
+    return ResponseEntity.ok(notificationService.markAsRead(id));
+}
+
+@PatchMapping("/read-all")
+public ResponseEntity<Void> markAllNotificationsAsRead() {
+    notificationService.markAllAsRead();
+    return ResponseEntity.ok().build();
+
+    }
+}

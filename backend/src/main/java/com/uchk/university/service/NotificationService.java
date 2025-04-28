@@ -4,8 +4,7 @@ import com.uchk.university.dto.NotificationDto;
 import java.util.List;
 
 public interface NotificationService {
-    List<NotificationDto> getNotificationsForCurrentUser();
-    int getUnreadCount();
+    List<NotificationDto> getRecentNotificationsForCurrentUser(int limit);    int getUnreadCount();
     NotificationDto getNotification(Long id);
     NotificationDto markAsRead(Long id);
     void markAllAsRead();
