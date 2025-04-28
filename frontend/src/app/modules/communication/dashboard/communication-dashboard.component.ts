@@ -18,6 +18,8 @@ import { Document, DocumentType } from '../../../core/models/document.model';
 import { Notification } from '../models/notification.model';
 import { DocumentTypePipe } from '../pipes/document-type.pipe';
 import { NotificationsComponent } from '../notifications/notifications.component';
+import { catchError, throwError } from 'rxjs';
+
 @Component({
   selector: 'app-communication-dashboard',
   templateUrl: './communication-dashboard.component.html',
@@ -75,26 +77,34 @@ export class CommunicationDashboardComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.documentService.getAllDocuments().subscribe({
+    this.documentService.getAllDocuments().pipe(
+      catchError((err) => {
+        console.error('Detailed dashboard data loading error:', {
+          message: err.message,
+          status: err.status,
+          url: err.url,
+          errorObject: err
+        });
+        this.error = `Erreur de chargement (${err.status}): ${err.message || 'Serveur injoignable'}`;
+        this.loading = false;
+        return throwError(() => err);
+      })
+    ).subscribe({
       next: (documents) => {
         const sortedDocs = documents.sort((a, b) => 
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         
-        // Derniers documents (tous types confondus)
         this.recentDocuments = sortedDocs.slice(0, 5);
         
-        // Derniers rapports
         this.recentReports = sortedDocs
           .filter(doc => this.reportTypes.includes(doc.type as DocumentType))
           .slice(0, 5);
         
-        // Dernières circulaires et notes
         this.recentCirculars = sortedDocs
           .filter(doc => this.adminTypes.includes(doc.type as DocumentType))
           .slice(0, 5);
         
-        // Mes documents (si l'utilisateur est connecté)
         const currentUser = this.authService.currentUserValue;
         if (currentUser) {
           this.myDocuments = sortedDocs
@@ -103,22 +113,25 @@ export class CommunicationDashboardComponent implements OnInit {
         }
         
         this.loading = false;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des données du tableau de bord:', err);
-        this.error = 'Erreur lors du chargement des données. Veuillez réessayer.';
-        this.loading = false;
       }
     });
   }
 
   loadUnreadNotificationsCount(): void {
-    this.notificationService.getUnreadCount().subscribe({
+    this.notificationService.getUnreadCount().pipe(
+      catchError((err) => {
+        console.error('Detailed unread notifications loading error:', {
+          message: err.message,
+          status: err.status,
+          url: err.url,
+          errorObject: err
+        });
+        this.unreadNotificationsCount = 0;
+        return throwError(() => err);
+      })
+    ).subscribe({
       next: (count) => {
         this.unreadNotificationsCount = count;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des notifications non lues:', err);
       }
     });
   }

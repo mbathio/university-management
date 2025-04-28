@@ -61,10 +61,12 @@ export class DocumentService {
     return this.http.get<Document[]>(`${this.apiUrl}/search`, { params });
   }
 
-  // Helper method for security expression
-  isDocumentCreator(documentId: number, username: string): boolean {
-    // This should ideally check on the server or use cached data
-    // For now, we'll assume it's a stub and will be implemented as needed
-    return true;
+  getReportsByType(types: DocumentType[]): Observable<Document[]> {
+    return this.getDocumentsByTypes(types);
+  }
+
+  // Helper method for security checks (can be expanded with actual implementation)
+  isDocumentCreator(documentId: number, username: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/${documentId}/creator/${username}`);
   }
 }

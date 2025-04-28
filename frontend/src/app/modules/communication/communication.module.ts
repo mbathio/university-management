@@ -31,9 +31,9 @@ import { DocumentDetailComponent } from './document-detail/document-detail.compo
 import { ReportFormComponent } from './report-form/report-form.component';
 import { ReportListComponent } from './report-list/report-list.component';
 import { NotificationsComponent } from './notifications/notifications.component';
-import { CommunicationDashboardComponent } from './dashboard/communication-dashboard.component';
 
 // Import standalone components
+import { CommunicationDashboardComponent } from './dashboard/communication-dashboard.component';
 import { CircularListComponent } from './circular-list/circular-list.component';
 import { CircularFormComponent } from './circular-form/circular-form.component';
 import { DocumentTypePipe } from './pipes/document-type.pipe';
@@ -45,8 +45,8 @@ import { VisibilityLevelPipe } from './pipes/visibility-level.pipe';
     DocumentDetailComponent,
     ReportFormComponent,
     ReportListComponent,
-    NotificationsComponent,
-    CommunicationDashboardComponent
+    NotificationsComponent
+    // CommunicationDashboardComponent removed from here as it's standalone
   ],
   imports: [
     CommonModule,
@@ -74,6 +74,7 @@ import { VisibilityLevelPipe } from './pipes/visibility-level.pipe';
     MatDatepickerModule,
     MatNativeDateModule,
     // Add standalone components as imports
+    CommunicationDashboardComponent,
     CircularListComponent,
     CircularFormComponent,
     DocumentTypePipe,

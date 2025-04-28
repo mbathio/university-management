@@ -4,16 +4,17 @@ export enum NotificationType {
   ACCOUNT_UPDATE = 'ACCOUNT_UPDATE',
   SYSTEM = 'SYSTEM',
   MEETING = 'MEETING',
+  OTHER = 'OTHER'
 }
 
 export interface Notification {
   id: number;
   title: string;
   message: string;
-  type: NotificationType | string;
+  type: NotificationType;
   read: boolean;
   createdAt: Date;
   userId: number;
-  referenceId?: number; // ID of related entity (document, meeting, etc.)
-  referenceType?: string;
+  relatedEntityId?: number;
+  relatedEntityType?: string;
 }
