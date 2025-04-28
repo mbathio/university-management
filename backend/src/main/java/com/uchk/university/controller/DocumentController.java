@@ -7,7 +7,8 @@ import com.uchk.university.security.CurrentUser;
 import com.uchk.university.entity.User;
 import com.uchk.university.repository.UserRepository; 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
-@Slf4j
 public class DocumentController {
+    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
     private final DocumentService documentService;
     private final UserRepository userRepository;
 
@@ -55,23 +56,7 @@ public class DocumentController {
                 return ResponseEntity.badRequest().body("Document cannot be null");
             }
 
-            // Robust type conversion and validation
-            if (document.getType() == null) {
-                log.warn("No document type specified, defaulting to AUTRE");
-                document.setType(DocumentType.AUTRE);
-            } else {
-                // Handle potential string representation of enum
-                String typeStr = document.getType() instanceof String 
-                    ? (String) document.getType() 
-                    : document.getType().toString();
-                
-                try {
-                    document.setType(DocumentType.valueOf(typeStr.toUpperCase().replace(" ", "_")));
-                } catch (IllegalArgumentException e) {
-                    log.error("Invalid document type: {}", typeStr);
-                    return ResponseEntity.badRequest().body("Invalid document type: " + typeStr);
-                }
-            }
+            document.setType(parseDocumentType(document.getType()));
 
             Document createdDocument = documentService.createDocument(document, userId, file);
             return ResponseEntity.ok(createdDocument);
@@ -93,6 +78,7 @@ public class DocumentController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
         log.debug("REST request to update Document : {}", document);
         try {
+            document.setType(parseDocumentType(document.getType()));
             Document updatedDocument = documentService.updateDocument(id, document, file);
             return ResponseEntity.ok(updatedDocument);
         } catch (Exception e) {
@@ -166,5 +152,28 @@ public class DocumentController {
         return userRepository.findByUsername("admin")
             .map(User::getId)
             .orElseThrow(() -> new RuntimeException("No default admin user found"));
+    }
+
+    private DocumentType parseDocumentType(Object typeObj) {
+        if (typeObj == null) {
+            log.warn("No document type specified, defaulting to AUTRE");
+            return DocumentType.AUTRE;
+        }
+        
+        if (typeObj instanceof DocumentType) {
+            return (DocumentType) typeObj;
+        }
+        
+        if (typeObj instanceof String) {
+            try {
+                return DocumentType.valueOf(((String) typeObj).toUpperCase().replace(" ", "_"));
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid document type: {}, defaulting to AUTRE", typeObj);
+                return DocumentType.AUTRE;
+            }
+        }
+        
+        log.warn("Unsupported document type: {}, defaulting to AUTRE", typeObj);
+        return DocumentType.AUTRE;
     }
 }

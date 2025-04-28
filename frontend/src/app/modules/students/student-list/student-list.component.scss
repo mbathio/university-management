@@ -1,65 +1,205 @@
-/* frontend/src/app/modules/students/student-list/student-list.component.scss */
+/* student-list.component.scss */
 .container {
-  padding: 24px;
+  padding: 20px;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 
   h1 {
     margin: 0;
-    font-size: 24px;
-    font-weight: 500;
   }
 }
 
-.table-container {
-  position: relative;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
 .filter-container {
-  padding: 16px 24px 0;
-
+  margin-bottom: 20px;
+  
   mat-form-field {
     width: 100%;
   }
 }
 
-table {
-  width: 100%;
-}
-
-.mat-column-actions {
-  width: 150px;
-  text-align: center;
-}
-
-.loading-container {
+.loading-container, .error-container {
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: 20px;
+  
+  mat-icon {
+    margin-right: 10px;
+  }
+}
+
+.error-container {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+}
+
+.table-container {
+  overflow-x: auto;
+  
+  .student-table {
+    width: 100%;
+  }
+  
+  .student-row:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+  }
 }
 
 .no-data {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px;
+  justify-content: center;
+  padding: 20px;
   color: rgba(0, 0, 0, 0.54);
-
+  
   mat-icon {
     font-size: 48px;
     width: 48px;
     height: 48px;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
+}
 
-  p {
+/* student-form.component.scss */
+.container {
+  padding: 20px;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.loading-container, .error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  
+  mat-icon {
+    margin-right: 10px;
+  }
+}
+
+.error-container {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+}
+
+.student-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-section {
+  background-color: rgba(0, 0, 0, 0.02);
+  padding: 20px;
+  border-radius: 4px;
+  
+  h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: rgba(0, 0, 0, 0.7);
+  }
+}
+
+.form-row {
+  margin-bottom: 16px;
+  
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* student-detail.component.scss */
+.container {
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+
+  h1 {
     margin: 0;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.loading-container, .error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  
+  mat-icon {
+    margin-right: 10px;
+  }
+}
+
+.error-container {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+}
+
+.student-details {
+  margin-top: 20px;
+  
+  mat-card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .student-avatar {
+    background-color: #3f51b5;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+    
+    .detail-item {
+      padding: 10px;
+      border-radius: 4px;
+      background-color: rgba(0, 0, 0, 0.02);
+      
+      .label {
+        font-weight: 500;
+        color: rgba(0, 0, 0, 0.54);
+        margin-bottom: 5px;
+      }
+      
+      .value {
+        font-size: 16px;
+      }
+    }
   }
 }

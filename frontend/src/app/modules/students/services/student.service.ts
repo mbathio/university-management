@@ -22,7 +22,7 @@ export class StudentService {
   }
 
   getStudentByStudentId(studentId: string): Observable<Student> {
-    return this.http.get<Student>(`${this.apiUrl}/by-student-id/${studentId}`);
+    return this.http.get<Student>(`${this.apiUrl}/studentId/${studentId}`);
   }
 
   createStudent(student: any): Observable<Student> {
@@ -38,12 +38,10 @@ export class StudentService {
   }
 
   getStudentsByFormation(formationId: number): Observable<Student[]> {
-    return this.http.get<Student[]>(
-      `${this.apiUrl}/by-formation/${formationId}`,
-    );
+    return this.http.get<Student[]>(`${this.apiUrl}/formation/${formationId}`);
   }
 
   getStudentsByPromo(promo: string): Observable<Student[]> {
-    return this.http.get<Student[]>(`${this.apiUrl}/by-promo/${promo}`);
+    return this.http.get<Student[]>(`${this.apiUrl}/promo/${promo}`);
   }
 }

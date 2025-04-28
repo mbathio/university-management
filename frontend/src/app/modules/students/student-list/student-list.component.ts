@@ -1,27 +1,23 @@
 // frontend/src/app/modules/students/student-list/student-list.component.ts
-import { Component } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule } from '@angular/material/sort';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router, RouterModule } from '@angular/router';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { AfterViewInit, OnInit, ViewChild } from '@angular/core';
-interface Student {
-  id: number;
-  firstName: string;
-  lastName: string;
-  formation: string;
-}
+
+import { StudentService } from '../services/student.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { Student, Role } from '../../../core/models/user.model';
+import { catchError, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-student-list',
@@ -44,28 +40,6 @@ interface Student {
   ],
 })
 export class StudentListComponent implements OnInit, AfterViewInit {
-  ngOnInit(): void {
-    // Simulate fetching data from an API
-    setTimeout(() => {
-      this.dataSource.data = this.students;
-      this.loading = false;
-    }, 1000); // Simulate a 1-second delay
-  }
-
-  ngAfterViewInit(): void {
-    // Assign paginator and sort to the data source
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-  }
-
-  applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
-  }
   displayedColumns: string[] = [
     'studentId',
     'firstName',
@@ -81,39 +55,98 @@ export class StudentListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  students = [
-    { id: 1, firstName: 'Amy', lastName: 'Ndiaye', formation: 'Engineering' },
-    { id: 2, firstName: 'Josephine', lastName: 'Bio', formation: 'Medicine' },
-    { id: 3, firstName: 'Mba', lastName: 'Diallo', formation: 'Law' },
-  ];
+  constructor(
+    private studentService: StudentService,
+    private authService: AuthService,
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) {}
 
-  // Example logic for canEdit
+  ngOnInit(): void {
+    this.loadStudents();
+  }
+
+  ngAfterViewInit(): void {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+
+  loadStudents(): void {
+    this.loading = true;
+    this.studentService
+      .getAllStudents()
+      .pipe(
+        catchError(error => {
+          this.error = 'Erreur lors du chargement des étudiants';
+          this.snackBar.open(this.error, 'Fermer', {
+            duration: 3000,
+          });
+          return of([]);
+        }),
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe(students => {
+        this.dataSource.data = students;
+      });
+  }
+
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
+
   canEdit(): boolean {
-    // Replace this logic with your actual permission check
-    return true; // Allow editing for all students
+    return this.authService.hasRole([
+      Role.ADMIN,
+      Role.FORMATION_MANAGER,
+      Role.ADMINISTRATION
+    ]);
   }
 
-  // Example logic for canDelete
   canDelete(): boolean {
-    // Replace this logic with your actual permission check
-    return true; // Allow deleting for all students
+    return this.authService.hasRole([Role.ADMIN]);
   }
 
-  createStudent() {
-    // Logic to create a student
+  createStudent(): void {
+    this.router.navigate(['/students/add']);
   }
 
-  viewStudent(id: number) {
-    console.log(`Viewing student with ID: ${id}`);
-    // Add logic to view a student here
+  viewStudent(id: number): void {
+    this.router.navigate(['/students', id]);
   }
 
-  editStudent(id: number) {
-    console.log(`Editing student with ID: ${id}`);
-    // Add logic to edit a student here
+  editStudent(id: number): void {
+    this.router.navigate(['/students/edit', id]);
   }
 
-  deleteStudent() {
-    // Logic to delete a student
+  deleteStudent(id: number): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible.')) {
+      this.loading = true;
+      
+      this.studentService.deleteStudent(id)
+        .pipe(
+          catchError(error => {
+            this.snackBar.open("Erreur lors de la suppression de l'étudiant", 'Fermer', {
+              duration: 3000
+            });
+            return of(null);
+          }),
+          finalize(() => {
+            this.loading = false;
+          })
+        )
+        .subscribe(() => {
+          this.snackBar.open("L'étudiant a été supprimé avec succès", 'Fermer', {
+            duration: 3000
+          });
+          this.loadStudents(); // Recharge la liste après suppression
+        });
+    }
   }
 }

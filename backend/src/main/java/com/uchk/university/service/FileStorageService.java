@@ -20,6 +20,8 @@ import java.util.UUID;
 
 @Service
 public class FileStorageService {
+    @Value("${upload.root-location:uploads}")
+    private String uploadRootLocation;
     private final Path rootLocation;
     private final List<String> allowedFileExtensions = Arrays.asList(
             "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", 
@@ -28,6 +30,7 @@ public class FileStorageService {
     
     public FileStorageService(@Value("${upload.root-location:uploads}") String uploadRootLocation) {
         this.rootLocation = Paths.get(uploadRootLocation);
+        this.uploadRootLocation = uploadRootLocation;
     }
 
     public void init() {
@@ -104,6 +107,30 @@ public class FileStorageService {
             Files.deleteIfExists(file);
         } catch (IOException e) {
             throw new DocumentStorageException("Could not delete file: " + filename, e);
+        }
+    }
+
+    public void deleteFilePath(String filePath) {
+        try {
+            if (filePath == null || filePath.isEmpty()) {
+                return;
+            }
+            Path path = Paths.get(filePath).normalize();
+            Files.deleteIfExists(path);
+        } catch (IOException ex) {
+            throw new DocumentStorageException("Could not delete file path " + filePath, ex);
+        }
+    }
+
+    public void delete(String fileName) {
+        try {
+            if (fileName == null || fileName.isEmpty()) {
+                return;
+            }
+            Path filePath = this.rootLocation.resolve(fileName).normalize();
+            Files.deleteIfExists(filePath);
+        } catch (IOException ex) {
+            throw new DocumentStorageException("Could not delete file " + fileName, ex);
         }
     }
 

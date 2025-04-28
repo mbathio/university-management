@@ -47,5 +47,16 @@ public class StudentDto {
     
     private Integer endYear;
 
-    
+    // Explicitly add getter methods for service layer
+    public String getUsername() { return username; }
+    public String getPassword() { return password; }
+    public String getEmail() { return email; }
+    public String getStudentId() { return studentId; }
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public Date getBirthDate() { return birthDate; }
+    public Long getFormationId() { return formationId; }
+    public String getPromo() { return promo; }
+    public Integer getStartYear() { return startYear; }
+    public Integer getEndYear() { return endYear; }
 }
