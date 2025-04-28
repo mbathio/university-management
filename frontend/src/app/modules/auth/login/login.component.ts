@@ -40,37 +40,36 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  // In login.component.ts
-onSubmit(): void {
-  if (this.loginForm.invalid) {
-    return;
+  onSubmit(): void {
+    if (this.loginForm.invalid) {
+      return;
+    }
+  
+    this.isLoading = true;
+    this.errorMessage = '';
+  
+    const { username, password } = this.loginForm.value;
+  
+    this.authService.login(username, password).subscribe({
+      next: (user) => {
+        console.log('Login successful:', user);
+        this.router.navigate(['/dashboard']);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Login error:', error);
+        
+        if (error.status === 401) {
+          this.errorMessage = 'Invalid username or password';
+        } else if (error.status === 403) {
+          this.errorMessage = 'Account not authorized';
+        } else {
+          this.errorMessage = 'Login failed. Please try again later.';
+        }
+      },
+      complete: () => {
+        this.isLoading = false;
+      },
+    });
   }
-
-  this.isLoading = true;
-  this.errorMessage = '';
-
-  const { username, password } = this.loginForm.value;
-
-  this.authService.login(username, password).subscribe({
-    next: (user) => {
-      console.log('Login successful:', user);
-      this.router.navigate(['/dashboard']);
-    },
-    error: (error) => {
-      this.isLoading = false;
-      console.error('Login error:', error);
-      
-      if (error.status === 401) {
-        this.errorMessage = 'Invalid username or password';
-      } else if (error.status === 403) {
-        this.errorMessage = 'Account not authorized';
-      } else {
-        this.errorMessage = 'Login failed. Please try again later.';
-      }
-    },
-    complete: () => {
-      this.isLoading = false;
-    },
-  });
-}
 }
