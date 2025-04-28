@@ -2,6 +2,7 @@ package com.uchk.university.service;
 
 import com.uchk.university.entity.Document;
 import com.uchk.university.entity.DocumentType;
+import com.uchk.university.entity.User;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -17,6 +18,9 @@ public interface DocumentService {
     Resource loadFileAsResource(Long id) throws IOException;
     Resource loadFileAsResource(String filename) throws IOException;
     boolean isDocumentCreator(Long documentId, String username);
+    List<Document> getAllDocuments();
+    List<Document> getDocumentsByType(DocumentType type);
+    List<Document> getDocumentsByTypes(List<DocumentType> types);
+    List<Document> getDocumentsByCreator(Long userId);
+    List<Document> getDocumentsByVisibilityLevel(String level);
 }
-    
-    // Added method for file download

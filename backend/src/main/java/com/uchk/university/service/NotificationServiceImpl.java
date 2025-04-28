@@ -1,6 +1,6 @@
 package com.uchk.university.service;
 
-import com.uchk.university.dto.NotificationDTO;
+import com.uchk.university.dto.NotificationDto;
 import com.uchk.university.entity.Notification;
 import com.uchk.university.repository.NotificationRepository;
 import com.uchk.university.security.SecurityUtils;
@@ -18,7 +18,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<NotificationDTO> getNotificationsForCurrentUser() {
+    public List<NotificationDto> getNotificationsForCurrentUser() {
         String username = SecurityUtils.getCurrentUsername();
         return notificationRepository.findByUserUsername(username)
                 .stream()
@@ -35,7 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public NotificationDTO markAsRead(Long id) {
+    public NotificationDto markAsRead(Long id) {
         Notification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
         notification.setRead(true);
@@ -59,14 +59,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public NotificationDTO getNotification(Long id) {
+    public NotificationDto getNotification(Long id) {
         return notificationRepository.findById(id)
                 .map(this::convertToDTO)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
     }
 
-    private NotificationDTO convertToDTO(Notification notification) {
-        return NotificationDTO.builder()
+    private NotificationDto convertToDTO(Notification notification) {
+        return NotificationDto.builder()
                 .id(notification.getId())
                 .message(notification.getMessage())
                 .type(notification.getType())

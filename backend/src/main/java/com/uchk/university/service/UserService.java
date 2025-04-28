@@ -25,7 +25,7 @@ public class UserService {
         if (userRepository.existsByEmail(userDto.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
-    
+
         User user = new User();
         user.setUsername(userDto.getUsername());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
@@ -62,17 +62,26 @@ public class UserService {
         }
         
         // Check if email is being changed and if it already exists
-        if (!user.getEmail().equals(userDto.getEmail()) && 
+        if (userDto.getEmail() != null && !user.getEmail().equals(userDto.getEmail()) && 
                 userRepository.existsByEmail(userDto.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
         
-        user.setUsername(userDto.getUsername());
+        if (userDto.getUsername() != null) {
+            user.setUsername(userDto.getUsername());
+        }
+        
         if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
-        user.setEmail(userDto.getEmail());
-        user.setRole(userDto.getRole());
+        
+        if (userDto.getEmail() != null) {
+            user.setEmail(userDto.getEmail());
+        }
+        
+        if (userDto.getRole() != null) {
+            user.setRole(userDto.getRole());
+        }
         
         return userRepository.save(user);
     }

@@ -2,6 +2,7 @@ package com.uchk.university.service;
 
 import com.uchk.university.entity.Document;
 import com.uchk.university.entity.DocumentType;
+import com.uchk.university.entity.Role;
 import com.uchk.university.entity.User;
 import com.uchk.university.exception.DocumentStorageException;
 import com.uchk.university.exception.ResourceNotFoundException;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,11 +19,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
-import com.uchk.university.dto.Notificationdto;
+import com.uchk.university.dto.NotificationDto;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -31,7 +30,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
-    private final NotificationService notificationService;  // Add this field
+    private final NotificationService notificationService;
 
     @Value("${document.upload.dir}")
     private String uploadDir;
@@ -52,42 +51,33 @@ public class DocumentServiceImpl implements DocumentService {
         log.debug("Creating document: {}, userId: {}", document, userId);
         User creator = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-
+    
         // Set creator and timestamps
-        document.setCreatedBy(creator);
+        document.setCreator(creator);
         document.setCreatedAt(LocalDateTime.now());
-
+    
         // Handle file upload if present
         if (file != null && !file.isEmpty()) {
             String storedFileName = fileStorageService.store(file);
             document.setFilePath(storedFileName);
+            document.setFileName(file.getOriginalFilename());
             log.debug("File saved: {}", storedFileName);
         }
-
+    
         return documentRepository.save(document);
     }
 
     @Override
-    public Document updateDocument(Long id, Document updatedDocument, MultipartFile file) {
+    public Document updateDocument(Long id, Document updatedDocument, MultipartFile file) throws Exception {
         log.debug("Updating document: {}, id: {}", updatedDocument, id);
         Document document = getDocumentById(id);
 
         // Update fields
         document.setTitle(updatedDocument.getTitle());
-        document.setContent(updatedDocument.getContent());
+        document.setDescription(updatedDocument.getDescription());
         document.setType(updatedDocument.getType());
         document.setVisibilityLevel(updatedDocument.getVisibilityLevel());
         document.setUpdatedAt(LocalDateTime.now());
-        
-        // Update reference if provided
-        if (updatedDocument.getReference() != null) {
-            document.setReference(updatedDocument.getReference());
-        }
-        
-        // Update tags if provided
-        if (updatedDocument.getTags() != null) {
-            document.setTags(updatedDocument.getTags());
-        }
 
         // Handle file upload if present
         if (file != null && !file.isEmpty()) {
@@ -103,12 +93,12 @@ public class DocumentServiceImpl implements DocumentService {
             // Store new file
             String storedFileName = fileStorageService.store(file);
             document.setFilePath(storedFileName);
+            document.setFileName(file.getOriginalFilename());
             log.debug("File updated: {}", storedFileName);
         }
 
         return documentRepository.save(document);
     }
-
 
     @Override
     public Document getDocumentById(Long id) {
@@ -121,7 +111,10 @@ public class DocumentServiceImpl implements DocumentService {
         return documentRepository.findAll();
     }
 
-  
+    @Override
+    public List<Document> getDocumentsByType(DocumentType type) {
+        return documentRepository.findByType(type);
+    }
 
     @Override
     public List<Document> getDocumentsByTypes(List<DocumentType> types) {
@@ -133,7 +126,7 @@ public class DocumentServiceImpl implements DocumentService {
     public List<Document> getDocumentsByCreator(Long userId) {
         User creator = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        return documentRepository.findByCreatedBy(creator);
+        return documentRepository.findByCreator(creator);
     }
 
     @Override
@@ -141,7 +134,6 @@ public class DocumentServiceImpl implements DocumentService {
         return documentRepository.findByVisibilityLevel(level);
     }
 
-  
     @Override
     public void deleteDocument(Long id) {
         Document document = getDocumentById(id);
@@ -167,45 +159,30 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public boolean isDocumentCreator(Long documentId, String username) {
         Document document = getDocumentById(documentId);
-        return document.getCreatedBy().getUsername().equals(username);
+        return document.getCreator().getUsername().equals(username);
     }
     
-  
-@Override
-public List<Document> getDocumentsByType(DocumentType type) {
-    return documentRepository.findByType(type);
-}
-
-
-
-@Override
-public List<Document> getDocumentsForUser(Long userId) {
-    // Implementation based on user's role and permissions
-    User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-    
-    // Admin can see all documents
-    if (user.getRole() == Role.ADMIN) {
-        return getAllDocuments();
+    @Override
+    public List<Document> getDocumentsForUser(Long userId) {
+        // Implementation based on user's role and permissions
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        
+        // Admin can see all documents
+        if (user.getRole() == Role.ADMIN) {
+            return getAllDocuments();
+        }
+        
+        // Other users see documents based on visibility
+        return documentRepository.findByVisibilityLevelOrCreator("PUBLIC", user);
     }
-    
-    // Other users see documents based on visibility
-    return documentRepository.findByVisibilityLevelOrCreatedBy("PUBLIC", user);
-}
 
-@Override
-public Resource loadFileAsResource(Long id) throws IOException {
-    Document document = getDocumentById(id);
-    if (document.getFilePath() == null) {
-        throw new ResourceNotFoundException("No file found for document with id: " + id);
+    @Override
+    public Resource loadFileAsResource(Long id) throws IOException {
+        Document document = getDocumentById(id);
+        if (document.getFilePath() == null) {
+            throw new ResourceNotFoundException("No file found for document with id: " + id);
+        }
+        return loadFileAsResource(document.getFilePath());
     }
-    return loadFileAsResource(document.getFilePath());
-}
-
-@Override
-public List<Document> getDocumentsByTypes(List<DocumentType> types) {
-    log.debug("Fetching documents with types: {}", types);
-    return documentRepository.findByTypeIn(types);
-}
-   
 }
