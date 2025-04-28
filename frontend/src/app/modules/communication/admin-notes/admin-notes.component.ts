@@ -15,7 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 
 import { Document, DocumentType } from '../../../core/models/document.model';
-import { DocumentService } from '../../../core/services/document.service';
+import { DocumentService } from '../services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
@@ -166,7 +166,7 @@ export class AdminNotesComponent implements OnInit {
   }
 
   canEdit(document: Document): boolean {
-    if (this.authService.hasRole([Role.ADMIN as Role])) return true;
+    if (this.authService.hasRole([Role.ADMIN])) return true;
     
     const currentUser = this.authService.currentUserValue;
     if (!currentUser) return false;

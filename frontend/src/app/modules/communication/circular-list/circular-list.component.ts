@@ -9,7 +9,7 @@ import { Document, DocumentType } from '../../../core/models/document.model';
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { Role } from '../../../core/models/user.model';
+import { Role } from '../../../core/models/role.model';
 
 @Component({
   selector: 'app-circular-list',
@@ -54,8 +54,8 @@ export class CircularListComponent implements OnInit {
       DocumentType.ADMINISTRATIVE_NOTE
     ];
 
-    // Use the corrected method to get documents by type
-    this.documentService.getReportsByType(types).subscribe({
+    // Use the correct method to get documents by types
+    this.documentService.getDocumentsByTypes(types).subscribe({
       next: (documents) => {
         this.dataSource = new MatTableDataSource(documents);
         this.dataSource.paginator = this.paginator;
@@ -151,8 +151,13 @@ export class CircularListComponent implements OnInit {
   }
 
   canEdit(document: Document): boolean {
+    // Admin can edit any document
     if (this.authService.hasRole([Role.ADMIN])) return true;
     
+    // Administration can edit administrative documents
+    if (this.authService.hasRole([Role.ADMINISTRATION])) return true;
+    
+    // Document creator can edit their own documents
     const currentUser = this.authService.currentUserValue;
     if (!currentUser) return false;
     
@@ -160,6 +165,7 @@ export class CircularListComponent implements OnInit {
   }
 
   canDelete(document: Document): boolean {
+    // Use the same permission logic as edit for consistency
     return this.canEdit(document);
   }
 }

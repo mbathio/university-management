@@ -1,7 +1,7 @@
 // src/app/modules/communication/communication.routes.ts
 import { Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth.guard';
-import { Role } from '../../core/models/user.model';
+import { Role } from '../../core/models/role.model';
 
 import { DocumentListComponent } from './document-list/document-list.component';
 import { DocumentDetailComponent } from './document-detail/document-detail.component';

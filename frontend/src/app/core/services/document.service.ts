@@ -1,9 +1,8 @@
-
 // src/app/core/services/document.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Document, DocumentType } from '../models/document.model';
+import { Document, DocumentType, VisibilityLevel } from '../models/document.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -26,7 +25,7 @@ export class DocumentService {
     return this.http.get<Document[]>(`${this.apiUrl}/type/${type}`);
   }
 
-  getDocumentsByVisibilityLevel(level: string): Observable<Document[]> {
+  getDocumentsByVisibilityLevel(level: VisibilityLevel): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/visibility/${level}`);
   }
 
@@ -42,15 +41,14 @@ export class DocumentService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  // Fixed method to use the correct download endpoint
   downloadDocument(id: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/download/${id}`, {
       responseType: 'blob'
     });
   }
 
-  // Implement the missing search by types method
-  getReportsByType(types: DocumentType[]): Observable<Document[]> {
+  // Improved method to search documents by multiple types
+  getDocumentsByTypes(types: DocumentType[]): Observable<Document[]> {
     const params = new HttpParams().set('types', types.join(','));
     return this.http.get<Document[]>(`${this.apiUrl}/search/types`, { params });
   }

@@ -11,7 +11,7 @@
 	<groupId>com.uchk</groupId>
 	<artifactId>university-management</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>university-management</name>
+	<name>University Management</name>
 	<description>University Cheikh Hamidou Kane Management System</description>
 	<url>https://www.uchk.edu/management</url>
 	<licenses>

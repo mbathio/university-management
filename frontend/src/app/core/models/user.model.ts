@@ -1,42 +1,12 @@
 // src/app/core/models/user.model.ts
-import { VisibilityLevel } from './document.model';
-
-export enum Role {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  TEACHER = 'TEACHER',
-  STUDENT = 'STUDENT',
-  FORMATION_MANAGER = 'FORMATION_MANAGER',
-  ADMINISTRATION = 'ADMINISTRATION',
-  STAFF = 'STAFF',
-  TUTOR = 'TUTOR',
-}
-
-export enum DocumentType {
-  ADMINISTRATIVE = 'ADMINISTRATIVE',
-  ACADEMIC = 'ACADEMIC',
-  REPORT = 'REPORT',
-  ANNOUNCEMENT = 'ANNOUNCEMENT',
-  COURSE_MATERIAL = 'COURSE_MATERIAL',
-  OTHER = 'OTHER',
-}
+import { VisibilityLevel, DocumentType } from './document.model';
+import { Role } from './role.model';
 
 export interface User {
   id: number;
   username: string;
   email: string;
   role: Role;
-}
-
-export interface Document {
-  id: number;
-  title: string;
-  content?: string;
-  type: DocumentType;
-  createdAt: Date;
-  visibilityLevel: VisibilityLevel;
-  filePath?: string;
-  createdBy?: User;
 }
 
 export interface LoginRequest {

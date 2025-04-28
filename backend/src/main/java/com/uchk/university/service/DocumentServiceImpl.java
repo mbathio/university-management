@@ -32,6 +32,20 @@ public class DocumentServiceImpl implements DocumentService {
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
 
+    @Value("${document.upload.dir}")
+    private String uploadDir;
+
+    @Override
+    public void init() {
+        try {
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(uploadPath);
+            log.info("Document storage directory created: {}", uploadPath);
+        } catch (IOException ex) {
+            throw new DocumentStorageException("Could not create the directory where the uploaded files will be stored.", ex);
+        }
+    }
+
     @Override
     public Document createDocument(Document document, Long userId, MultipartFile file) {
         log.debug("Creating document: {}, userId: {}", document, userId);
@@ -109,6 +123,12 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public List<Document> getDocumentsByType(DocumentType type) {
         return documentRepository.findByType(type);
+    }
+
+    @Override
+    public List<Document> getDocumentsByTypes(List<DocumentType> types) {
+        log.debug("Fetching documents with types: {}", types);
+        return documentRepository.findByTypeIn(types);
     }
 
     @Override

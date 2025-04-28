@@ -13,10 +13,14 @@ public interface DocumentService {
     Document getDocumentById(Long id);
     List<Document> getAllDocuments();
     List<Document> getDocumentsByType(DocumentType type);
+    List<Document> getDocumentsByTypes(List<DocumentType> types);
     List<Document> getDocumentsByCreator(Long userId);
     List<Document> getDocumentsByVisibilityLevel(String level);
     void deleteDocument(Long id);
     boolean isDocumentCreator(Long documentId, String username);
+    
+    // Initialize document storage
+    void init();
     
     // Added method for file download
     Resource loadFileAsResource(String filePath);

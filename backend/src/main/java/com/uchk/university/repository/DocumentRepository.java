@@ -15,4 +15,5 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     List<Document> findByVisibilityLevel(String visibilityLevel);
     List<Document> findByTitleContainingIgnoreCase(String title);
     List<Document> findByTagsContaining(String tag);
+    List<Document> findByTypeIn(List<DocumentType> types);
 }

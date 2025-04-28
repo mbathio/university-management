@@ -33,5 +33,5 @@ export interface Document {
     username: string;
     fullName: string;
   };
-  tags?: string[]; // New optional property
+  tags?: string[];
 }

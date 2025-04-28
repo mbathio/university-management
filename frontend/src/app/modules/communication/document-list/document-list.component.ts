@@ -13,12 +13,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { DocumentService } from '../services/document.service';
+import { DocumentService } from '../../../core/services/document.service';
 import { Document } from '../../../core/models/document.model';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Role } from '../../../core/models/user.model';
+import { Role } from '../../../core/models/role.model';
 import { DocumentTypePipe } from '../pipes/document-type.pipe';
 import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
+
 @Component({
   selector: 'app-document-list',
   templateUrl: './document-list.component.html',
@@ -172,8 +173,7 @@ export class DocumentListComponent implements OnInit, AfterViewInit {
   }
 
   downloadDocument(id: number): void {
-    this.documentService.downloadDocument(id.toString()).subscribe({
-  
+    this.documentService.downloadDocument(id).subscribe({
       next: (blob) => {
         // Trouver le document dans la liste pour obtenir son titre
         const doc = this.dataSource.data.find((d) => d.id === id);

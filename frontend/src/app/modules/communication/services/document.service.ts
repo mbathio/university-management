@@ -47,11 +47,9 @@ export class DocumentService {
     });
   }
 
-  // Fixed method to use a proper parameter structure for the types
   getReportsByType(types: DocumentType[]): Observable<Document[]> {
-    // Convert the array to a comma-separated string and set it as a query parameter
     const params = new HttpParams().set('types', types.join(','));
-    return this.http.get<Document[]>(`${this.apiUrl}/types`, { params });
+    return this.http.get<Document[]>(`${this.apiUrl}/search/types`, { params });
   }
 
   searchDocuments(term: string): Observable<Document[]> {
