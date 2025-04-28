@@ -1,20 +1,49 @@
-// Style global pour votre application (styles.scss)
-@import "assets/styles/_variables";
-@import "assets/styles/mixins";
+@use "sass:color";
 
-// Reset et base
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+// Variables globales
+$primary-color: #4caf50;
+$secondary-color: #2196f3;
+$accent-color: #ff9800;
+$error-color: #f44336;
+$text-color: #333;
+$background-color: #f9f9f9;
+$border-color: #ccc;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin card-style {
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  background-color: $background-color;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+}
+
+html,
 body {
-  font-family: $font-family;
-  font-size: $font-size-base;
-  color: $dark;
-  background-color: $light;
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
+  font-size: 16px;
   line-height: 1.5;
+  color: $text-color;
+  background-color: #f5f5f5;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow-x: hidden;
 }
 
 h1,
@@ -23,651 +52,260 @@ h3,
 h4,
 h5,
 h6 {
-  margin-bottom: $spacing-md;
+  color: $primary-color;
+  margin: 0 0 16px;
   font-weight: 500;
   line-height: 1.2;
 }
 
-h1 {
-  font-size: $font-size-xl;
+a {
+  color: #3366cc;
+  text-decoration: none;
 }
 
-h2 {
-  font-size: $font-size-lg;
+a:hover {
+  text-decoration: underline;
 }
 
-// Styles pour cartes d'administration
-.admin-card {
-  @include card-shadow;
-  border-radius: $border-radius;
-  overflow: hidden;
-  transition: transform $transition-speed ease;
+button {
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
   cursor: pointer;
+  font-size: 14px;
 
-  &:hover {
-    transform: translateY(-5px);
+  &.primary {
+    background-color: $primary-color;
+    color: white;
+
+    &:hover {
+      background-color: color.adjust($primary-color, $lightness: -10%);
+    }
   }
 
-  .card-title {
-    font-size: $font-size-md;
-    font-weight: 500;
-    margin-bottom: $spacing-xs;
+  &.secondary {
+    background-color: $secondary-color;
+    color: white;
+
+    &:hover {
+      background-color: color.adjust($secondary-color, $lightness: -10%);
+    }
   }
 
-  .card-description {
-    color: $medium-dark;
-  }
+  &.danger {
+    background-color: $error-color;
+    color: white;
 
-  .card-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background-color: $primary;
-    @include flex-center;
-    margin-right: $spacing-md;
-
-    mat-icon {
-      color: $white;
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
+    &:hover {
+      background-color: color.adjust($error-color, $lightness: -10%);
     }
   }
 }
 
-// Grille d'administration
-.admin-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: $spacing-lg;
-  margin-bottom: $spacing-xl;
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
 
-  @media (max-width: $breakpoint-md) {
-    grid-template-columns: 1fr;
+.mb-1 {
+  margin-bottom: 8px;
+}
+.mb-2 {
+  margin-bottom: 16px;
+}
+.mb-3 {
+  margin-bottom: 24px;
+}
+.mb-4 {
+  margin-bottom: 32px;
+}
+
+.mt-1 {
+  margin-top: 8px;
+}
+.mt-2 {
+  margin-top: 16px;
+}
+.mt-3 {
+  margin-top: 24px;
+}
+.mt-4 {
+  margin-top: 32px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
-// Formulaires
-.form-container {
-  @include responsive-container;
-  max-width: 800px;
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
 
-  mat-card {
-    padding: $spacing-lg;
-    @include card-shadow;
-
-    .form-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: $spacing-lg;
-
-      h1 {
-        margin: 0;
-      }
-    }
+/* Responsive breakpoints */
+/* Small devices (phones, 576px and up) */
+@media (min-width: 576px) {
+  .container {
+    max-width: 540px;
   }
+}
 
-  .form-field {
-    @include form-field;
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
   }
+}
 
-  .form-actions {
-    @include form-actions;
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
   }
+}
 
-  .file-upload {
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+}
+
+// Conteneurs principaux
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.card {
+  @include card-style;
+  margin-bottom: 16px;
+
+  .card-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: $spacing-md;
-    margin-bottom: $spacing-sm;
+  }
 
-    input[type="file"] {
-      display: none;
-    }
-
-    .file-name {
-      font-style: italic;
-      color: $medium-dark;
-    }
-
-    .file-info {
-      font-size: $font-size-xs;
-      color: $medium-dark;
-      margin-top: $spacing-xs;
-    }
+  .card-content {
+    font-size: 14px;
+    color: $text-color;
   }
 }
 
 // Tableaux
-.table-container {
+.table {
   width: 100%;
-  overflow-x: auto;
-  margin-bottom: $spacing-lg;
+  border-collapse: collapse;
+  margin: 16px 0;
+  margin-top: 20px;
 
-  table {
+  th,
+  td {
+    border: 1px solid $border-color;
+    padding: 8px;
+    text-align: left;
+  }
+
+  th {
+    background-color: $primary-color;
+    color: white;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+}
+
+// Messages
+.alert {
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+
+  &.success {
+    background-color: color.adjust($primary-color, $lightness: 40%);
+    color: $primary-color;
+  }
+
+  &.error {
+    background-color: color.adjust($error-color, $lightness: 40%);
+    color: $error-color;
+  }
+
+  &.info {
+    background-color: color.adjust($secondary-color, $lightness: 40%);
+    color: $secondary-color;
+  }
+}
+
+// Loader
+.loading-container {
+  @include flex-center;
+  height: 100px;
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid $border-color;
+    border-top: 5px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+// Formulaires
+.form-group {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
+
+  input,
+  select,
+  textarea {
     width: 100%;
-    border-collapse: collapse;
-
-    th {
-      font-weight: 500;
-      color: $medium-dark;
-      text-align: left;
-      padding: $spacing-md;
-      border-bottom: 2px solid $light-medium;
-    }
-
-    td {
-      padding: $spacing-md;
-      border-bottom: 1px solid $light-medium;
-    }
-
-    tr:hover {
-      background-color: rgba($primary, 0.05);
-    }
-
-    .mat-row:hover {
-      background-color: rgba($primary, 0.05);
-    }
+    padding: 8px;
+    border: 1px solid $border-color;
+    border-radius: 4px;
+    font-size: 14px;
   }
 }
 
-// Badges de visibilité
-.visibility-badge {
-  display: inline-block;
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $border-radius;
-  font-size: $font-size-xs;
-  font-weight: 500;
-  text-transform: uppercase;
-
-  &.public {
-    background-color: lighten($info, 35%);
-    color: darken($info, 15%);
-  }
-
-  &.administration {
-    background-color: lighten($primary, 35%);
-    color: darken($primary, 15%);
-  }
-
-  &.enseignants {
-    background-color: lighten($success, 35%);
-    color: darken($success, 15%);
-  }
-
-  &.etudiants {
-    background-color: lighten($accent, 35%);
-    color: darken($accent, 15%);
-  }
-
-  &.restreint {
-    background-color: lighten($warn, 35%);
-    color: darken($warn, 15%);
-  }
-}
-
-// Boutons d'action
-.action-buttons {
-  display: flex;
-  gap: $spacing-xs;
-
-  button {
-    mat-icon {
-      font-size: 20px;
-    }
-  }
-}
-
-// Page de connexion et inscription
-.auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, lighten($primary, 30%), $primary);
-  padding: $spacing-md;
-
-  .auth-card {
-    width: 100%;
-    max-width: 450px;
-    @include card-shadow;
-    border-radius: $border-radius;
-    padding: $spacing-xl;
-    background-color: $white;
-
-    h2 {
-      text-align: center;
-      margin-bottom: $spacing-xl;
-      color: $primary;
-      font-weight: 500;
-    }
-
-    .form-group {
-      margin-bottom: $spacing-lg;
-
-      label {
-        display: block;
-        margin-bottom: $spacing-sm;
-        font-weight: 500;
-        color: $dark;
-      }
-
-      .form-control {
-        width: 100%;
-        padding: $spacing-md;
-        border: 1px solid $light-medium;
-        border-radius: $border-radius;
-        font-size: $font-size-base;
-
-        &:focus {
-          outline: none;
-          border-color: $primary;
-          box-shadow: 0 0 0 2px rgba($primary, 0.25);
-        }
-
-        &.is-invalid {
-          border-color: $warn;
-        }
-      }
-
-      .invalid-feedback {
-        color: $warn;
-        font-size: $font-size-xs;
-        margin-top: $spacing-xs;
-      }
-    }
-
-    .auth-button {
-      width: 100%;
-      padding: $spacing-md;
-      background-color: $primary;
-      color: $white;
-      border: none;
-      border-radius: $border-radius;
-      font-size: $font-size-base;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color $transition-speed ease;
-
-      &:hover {
-        background-color: darken($primary, 10%);
-      }
-
-      &:disabled {
-        background-color: $medium;
-        cursor: not-allowed;
-      }
-    }
-
-    .error-message {
-      color: $warn;
-      text-align: center;
-      margin-bottom: $spacing-md;
-    }
-
-    .auth-link {
-      text-align: center;
-      margin-top: $spacing-md;
-
-      a {
-        color: $primary;
-        text-decoration: none;
-
-        &:hover {
-          text-decoration: underline;
-        }
-      }
-    }
-  }
-}
-
-// Améliorations spécifiques pour le dashboard d'administration
-.admin-dashboard-container {
-  @include responsive-container;
-
-  .admin-header {
-    margin-bottom: $spacing-xl;
-
-    h1 {
-      color: $primary;
-      font-weight: 500;
-      margin-bottom: $spacing-xs;
-    }
-
-    p {
-      color: $medium-dark;
-    }
-  }
-
-  .loading-spinner {
-    @include loading-spinner;
-    height: 300px;
-  }
-
-  .error-message {
-    @include error-message;
-  }
-
-  .admin-sections-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: $spacing-lg;
-    margin-bottom: $spacing-xl;
-
-    .admin-section-card {
-      padding: $spacing-md;
-      border-radius: $border-radius;
-      color: $white;
-      transition: transform $transition-speed ease;
-      cursor: pointer;
-
-      &:hover:not(.disabled) {
-        transform: scale(1.05);
-      }
-
-      &.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      mat-card-title {
-        font-size: $font-size-md;
-        font-weight: 500;
-        margin-bottom: $spacing-xs;
-      }
-
-      mat-card-subtitle {
-        color: rgba($white, 0.8);
-        margin-bottom: $spacing-md;
-      }
-
-      .admin-section-icon {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: $spacing-lg 0;
-
-        mat-icon {
-          font-size: 48px;
-          width: 48px;
-          height: 48px;
-        }
-      }
-    }
-  }
-
-  .dashboard-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: $spacing-lg;
-    background-color: $light;
-    padding: $spacing-lg;
-    border-radius: $border-radius;
-
-    .stat-card {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      background-color: $white;
-      padding: $spacing-md;
-      border-radius: $border-radius;
-      @include card-shadow;
-
-      mat-icon {
-        margin-right: $spacing-sm;
-        color: $primary;
-      }
-
-      span {
-        font-weight: 500;
-      }
-    }
-  }
-}
-
-// Document form component
-.document-form-container {
-  @include responsive-container;
-  max-width: 800px;
-
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-lg;
-
-    h1 {
-      margin: 0;
-      color: $primary;
-    }
-  }
-
-  .document-form {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-md;
-  }
-
-  .file-upload-section {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-sm;
-    margin-bottom: $spacing-md;
-
-    .file-upload-label {
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
-      color: $medium-dark;
-      font-weight: 500;
-    }
-
-    input[type="file"] {
-      display: none;
-    }
-
-    .selected-file {
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
-      font-style: italic;
-      color: $medium-dark;
-    }
-  }
-}
-
-// Document management component
-.document-management-container {
-  @include responsive-container;
-
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-xl;
-
-    @media (max-width: $breakpoint-md) {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: $spacing-md;
-    }
-
-    h1 {
-      margin: 0;
-      color: $primary;
-    }
-  }
-
-  .filter-section {
-    margin-bottom: $spacing-lg;
-
-    mat-form-field {
-      width: 100%;
-      max-width: 500px;
-    }
-  }
-
-  .loading-shade {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    background: rgba($white, 0.8);
-    z-index: 1;
-    @include flex-center;
-  }
-
-  .table-container {
-    position: relative;
-
-    .document-row {
-      cursor: pointer;
-      transition: background-color $transition-speed ease;
-
-      &:hover {
-        background-color: rgba($primary, 0.05);
-      }
-    }
-
-    .no-data-message {
-      @include flex-center;
-      flex-direction: column;
-      padding: $spacing-xl;
-
-      mat-icon {
-        font-size: $font-size-xxl;
-        color: $light-medium;
-        margin-bottom: $spacing-md;
-      }
-
-      p {
-        color: $medium-dark;
-      }
-    }
-  }
-}
-
-// Admin notes component
-.admin-notes {
-  @include responsive-container;
-  max-width: 1000px;
-
-  h2 {
-    text-align: center;
-    margin-bottom: $spacing-lg;
-    color: $primary;
-  }
-
-  .heading-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-lg;
-
-    @media (max-width: $breakpoint-md) {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: $spacing-md;
-    }
-
-    h1 {
-      margin: 0;
-      color: $primary;
-    }
-  }
-
-  .filter-field {
-    width: 100%;
-    margin-bottom: $spacing-lg;
-  }
-
-  .loading-container {
-    @include loading-spinner;
-  }
-
-  .error-container {
-    @include error-message;
-  }
-
-  .admin-notes-table {
-    width: 100%;
-
-    .document-title {
-      color: $primary;
-      text-decoration: none;
-      font-weight: 500;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-  }
-}
-
-// Circular form component
-.circular-form-container {
-  @include responsive-container;
-  max-width: 800px;
-
-  mat-card-header {
-    margin-bottom: $spacing-lg;
-
-    h1 {
-      margin: 0;
-      color: $primary;
-    }
-  }
-
-  .form-field-container {
-    @include form-field;
-  }
-
-  .file-upload-container {
-    display: flex;
-    align-items: center;
-    gap: $spacing-md;
-    margin-bottom: $spacing-sm;
-
-    .selected-file-name {
-      font-style: italic;
-      color: $medium-dark;
-    }
-  }
-
-  .file-info {
-    font-size: $font-size-xs;
-    color: $medium-dark;
-    margin-bottom: $spacing-md;
-  }
-
-  .form-actions {
-    @include form-actions;
-  }
-}
-
-// Responsive adjustments
-@media (max-width: $breakpoint-md) {
-  .admin-sections-grid,
-  .dashboard-stats,
-  .admin-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .header-section,
-  .heading-container,
-  .form-actions {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: $spacing-md;
-  }
-
-  .form-actions {
-    align-items: stretch;
-
-    button {
-      width: 100%;
+// Navigation
+.navbar {
+  background-color: $primary-color;
+  color: white;
+  padding: 16px;
+
+  .nav-item {
+    margin-right: 16px;
+    color: white;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
     }
   }
 }

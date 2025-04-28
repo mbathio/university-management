@@ -100,7 +100,7 @@ public class DocumentServiceImpl implements DocumentService {
             // Delete old file if exists
             if (document.getFilePath() != null) {
                 try {
-                    fileStorageService.deleteFile(document.getFilePath());
+                    fileStorageService.delete(document.getFilePath());
                 } catch (Exception e) {
                     log.warn("Could not delete old file: {}", document.getFilePath(), e);
                 }
@@ -111,7 +111,7 @@ public class DocumentServiceImpl implements DocumentService {
             document.setFilePath(storedFileName);
             document.setFileName(file.getOriginalFilename());
             log.debug("File updated: {}", storedFileName);
-        }
+        } 
 
         return documentRepository.save(document);
     }
@@ -153,18 +153,25 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public void deleteDocument(Long id) {
         Document document = getDocumentById(id);
-
-        // Delete file if exists
-        if (document.getFilePath() != null) {
-            try {
-                fileStorageService.deleteFile(document.getFilePath());
-                log.debug("File deleted: {}", document.getFilePath());
-            } catch (Exception e) {
-                log.warn("Could not delete file: {}", document.getFilePath(), e);
+        
+        try {
+            // Delete associated file if it exists
+            if (document.getFilePath() != null && !document.getFilePath().isEmpty()) {
+                try {
+                    fileStorageService.deleteFile(document.getFilePath());
+                    log.info("Associated file deleted: {}", document.getFilePath());
+                } catch (Exception e) {
+                    log.warn("Could not delete associated file: {}", document.getFilePath(), e);
+                }
             }
+            
+            // Delete document from database
+            documentRepository.delete(document);
+            log.info("Document deleted successfully: {}", id);
+        } catch (Exception e) {
+            log.error("Error deleting document: {}", id, e);
+            throw new DocumentStorageException("Could not delete document: " + id, e);
         }
-
-        documentRepository.delete(document);
     }
 
     @Override
