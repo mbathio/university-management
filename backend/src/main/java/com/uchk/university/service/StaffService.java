@@ -99,9 +99,9 @@ public class StaffService {
     // Method to safely check if a user is the owner of a staff profile
 
     // À ajouter à StaffService
-public boolean isOwnStaffProfile(Long staffId, String username) {
-    Staff staff = getStaffById(staffId);
-    return staff != null && staff.getUser() != null && 
-           username.equals(staff.getUser().getUsername());
-}
+    public boolean isOwnStaffProfile(Long staffId, String username) {
+        Staff staff = getStaffById(staffId);
+        return staff != null && staff.getUser() != null && 
+               username.equals(staff.getUser().getUsername());
+    }
 }

@@ -23,7 +23,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
+import com.uchk.university.dto.Notificationdto;
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -173,5 +173,42 @@ public class DocumentServiceImpl implements DocumentService {
         return document.getCreatedBy().getUsername().equals(username);
     }
     
+  
+@Override
+public List<Document> getDocumentsByType(DocumentType type) {
+    return documentRepository.findByType(type);
+}
+
+
+
+@Override
+public List<Document> getDocumentsForUser(Long userId) {
+    // Implementation based on user's role and permissions
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    
+    // Admin can see all documents
+    if (user.getRole() == Role.ADMIN) {
+        return getAllDocuments();
+    }
+    
+    // Other users see documents based on visibility
+    return documentRepository.findByVisibilityLevelOrCreatedBy("PUBLIC", user);
+}
+
+@Override
+public Resource loadFileAsResource(Long id) throws IOException {
+    Document document = getDocumentById(id);
+    if (document.getFilePath() == null) {
+        throw new ResourceNotFoundException("No file found for document with id: " + id);
+    }
+    return loadFileAsResource(document.getFilePath());
+}
+
+@Override
+public List<Document> getDocumentsByTypes(List<DocumentType> types) {
+    log.debug("Fetching documents with types: {}", types);
+    return documentRepository.findByTypeIn(types);
+}
    
 }
