@@ -33,72 +33,68 @@ public class DataInitializer {
     @Value("${MANAGER_PASSWORD:manager123}")
     private String managerPassword;
     
+  
     @Bean
     @Profile("dev")
-    @Bean
-@Profile("dev")
-public CommandLineRunner initData() {
-    return args -> {
-        try {
-            log.info("Initializing development data...");
-            
-            // Initialize document storage
-            documentService.init();
-            log.info("Document storage initialized");
-            
-            // Rest of your initialization code
-            // ...
-        } catch (Exception e) {
-            log.error("Error initializing development data", e);
-        }
-    
-            // Create admin user if it doesn't exist
-            if (!userExists("admin")) {
-                UserDto adminDto = new UserDto(
-                        "admin",
-                        adminPassword,
-                        "admin@uchk.edu",
-                        Role.ADMIN
-                );
-                userService.createUser(adminDto);
-                log.info("Admin user created successfully");
+    public CommandLineRunner initData() {
+        return args -> {
+            try {
+                log.info("Initializing development data...");
+                
+                // Initialize document storage
+                documentService.init();
+                log.info("Document storage initialized");
+                
+                // Create admin user if it doesn't exist
+                if (!userExists("admin")) {
+                    UserDto adminDto = new UserDto(
+                            "admin",
+                            adminPassword,
+                            "admin@uchk.edu",
+                            Role.ADMIN
+                    );
+                    userService.createUser(adminDto);
+                    log.info("Admin user created successfully");
+                }
+                
+                // Create test users for different roles if they don't exist
+                if (!userExists("teacher")) {
+                    UserDto teacherDto = new UserDto(
+                            "teacher",
+                            teacherPassword,
+                            "teacher@uchk.edu",
+                            Role.TEACHER
+                    );
+                    userService.createUser(teacherDto);
+                    log.info("Teacher user created successfully");
+                }
+                
+                if (!userExists("student")) {
+                    UserDto studentDto = new UserDto(
+                            "student",
+                            studentPassword,
+                            "student@uchk.edu",
+                            Role.STUDENT
+                    );
+                    userService.createUser(studentDto);
+                    log.info("Student user created successfully");
+                }
+                
+                if (!userExists("manager")) {
+                    UserDto managerDto = new UserDto(
+                            "manager",
+                            managerPassword,
+                            "manager@uchk.edu",
+                            Role.FORMATION_MANAGER
+                    );
+                    userService.createUser(managerDto);
+                    log.info("Formation Manager user created successfully");
+                }
+                
+                log.info("Development data initialization completed");
+            } catch (Exception e) {
+                log.error("Error initializing development data", e);
             }
-            
-            // Create test users for different roles if they don't exist
-            if (!userExists("teacher")) {
-                UserDto teacherDto = new UserDto(
-                        "teacher",
-                        teacherPassword,
-                        "teacher@uchk.edu",
-                        Role.TEACHER
-                );
-                userService.createUser(teacherDto);
-                log.info("Teacher user created successfully");
-            }
-            
-            if (!userExists("student")) {
-                UserDto studentDto = new UserDto(
-                        "student",
-                        studentPassword,
-                        "student@uchk.edu",
-                        Role.STUDENT
-                );
-                userService.createUser(studentDto);
-                log.info("Student user created successfully");
-            }
-            
-            if (!userExists("manager")) {
-                UserDto managerDto = new UserDto(
-                        "manager",
-                        managerPassword,
-                        "manager@uchk.edu",
-                        Role.FORMATION_MANAGER
-                );
-                userService.createUser(managerDto);
-                log.info("Formation Manager user created successfully");
-            }
-            
-            log.info("Development data initialization completed");
         };
     }
     

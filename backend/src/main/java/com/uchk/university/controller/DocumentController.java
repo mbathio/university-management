@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DocumentController {
     private final DocumentService documentService;
-    
+
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Document>> getAllDocuments(@CurrentUser User currentUser) {

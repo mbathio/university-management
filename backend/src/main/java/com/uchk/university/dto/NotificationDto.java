@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationDto {  // Changed from NotificationDTO to NotificationDto
+public class NotificationDTO {  // Changed from NotificationDTO to NotificationDto
     private Long id;
     private String message;
     private NotificationType type;
@@ -21,3 +21,4 @@ public class NotificationDto {  // Changed from NotificationDTO to NotificationD
     private LocalDateTime createdAt;
     private User user;
 }
+

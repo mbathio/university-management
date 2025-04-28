@@ -1,6 +1,6 @@
 package com.uchk.university.controller;
 
-import com.uchk.university.dto.NotificationDto;  // Change to match actual class name
+import com.uchk.university.dto.NotificationDTO;  // Change to match actual class name
 import com.uchk.university.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

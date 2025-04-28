@@ -1,6 +1,6 @@
 package com.uchk.university.service;
 
-import com.uchk.university.dto.NotificationDto;
+import com.uchk.university.dto.NotificationDTO;
 import java.util.List;
 
 public interface NotificationService {

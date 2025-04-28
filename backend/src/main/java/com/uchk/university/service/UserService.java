@@ -21,12 +21,11 @@ public class UserService {
         if (userRepository.existsByUsername(userDto.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
-       // Check if email is being changed and if it already exists
-if (userDto.getEmail() != null && !user.getEmail().equals(userDto.getEmail()) && 
-userRepository.existsByEmail(userDto.getEmail())) {
-throw new IllegalArgumentException("Email already exists");
-}
-
+        
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+    
         User user = new User();
         user.setUsername(userDto.getUsername());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
