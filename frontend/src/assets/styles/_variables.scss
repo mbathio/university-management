@@ -1,0 +1,50 @@
+// src/assets/styles/_variables.scss
+
+// Couleurs
+$primary: #3f51b5;
+$primary-light: lighten($primary, 15%);
+$primary-dark: darken($primary, 15%);
+$accent: #ff4081;
+$warn: #f44336;
+$success: #4caf50;
+$info: #2196f3;
+
+// Couleurs neutres
+$dark: #333333;
+$medium-dark: #666666;
+$medium: #999999;
+$light-medium: #cccccc;
+$light: #f5f5f5;
+$white: #ffffff;
+
+// Typographie
+$font-family: "Roboto", sans-serif;
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-base: 16px;
+$font-size-md: 18px;
+$font-size-lg: 24px;
+$font-size-xl: 28px;
+$font-size-xxl: 36px;
+
+// Espacements
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// Bordures et ombres
+$border-radius: 4px;
+$box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+$box-shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
+
+// Transitions
+$transition-speed: 0.3s;
+
+// Breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;

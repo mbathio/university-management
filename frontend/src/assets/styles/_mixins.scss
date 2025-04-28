@@ -1,0 +1,65 @@
+// src/assets/styles/_mixins.scss
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin card-shadow {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow $transition-speed ease;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+@mixin form-field {
+  margin-bottom: $spacing-md;
+  width: 100%;
+}
+
+@mixin form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+}
+
+@mixin responsive-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: $spacing-md;
+}
+
+@mixin loading-spinner {
+  @include flex-center;
+  flex-direction: column;
+  padding: $spacing-xl;
+
+  mat-spinner {
+    margin-bottom: $spacing-md;
+  }
+
+  span {
+    color: $medium-dark;
+    font-size: $font-size-base;
+  }
+}
+
+@mixin error-message {
+  @include flex-center;
+  flex-direction: column;
+  background-color: lighten($warn, 35%);
+  color: $warn;
+  padding: $spacing-md;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-md;
+
+  mat-icon {
+    margin-right: $spacing-sm;
+    color: $warn;
+  }
+}

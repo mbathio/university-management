@@ -5,7 +5,7 @@ import com.uchk.university.entity.DocumentType;
 import com.uchk.university.service.DocumentService;
 import com.uchk.university.security.CurrentUser;
 import com.uchk.university.entity.User;
-import com.uchk.university.repository.UserRepository; // Add this import
+import com.uchk.university.repository.UserRepository; 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -41,9 +41,8 @@ public class DocumentController {
     }
 
     @PostMapping
-    // Re-add the PreAuthorize annotation to match what the security interceptor is expecting
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION')")
-    public ResponseEntity<Document> createDocument(
+    public ResponseEntity<?> createDocument(
             @RequestPart("document") Document document,
             @RequestPart(value = "file", required = false) MultipartFile file,
             @CurrentUser User currentUser) {
@@ -51,21 +50,38 @@ public class DocumentController {
         try {
             Long userId = (currentUser != null) ? currentUser.getId() : getDefaultAdminUserId();
 
+            if (document == null) {
+                log.error("Received null document in createDocument");
+                return ResponseEntity.badRequest().body("Document cannot be null");
+            }
+
+            // Robust type conversion and validation
+            if (document.getType() == null) {
+                log.warn("No document type specified, defaulting to AUTRE");
+                document.setType(DocumentType.AUTRE);
+            } else {
+                // Handle potential string representation of enum
+                String typeStr = document.getType() instanceof String 
+                    ? (String) document.getType() 
+                    : document.getType().toString();
+                
+                try {
+                    document.setType(DocumentType.valueOf(typeStr.toUpperCase().replace(" ", "_")));
+                } catch (IllegalArgumentException e) {
+                    log.error("Invalid document type: {}", typeStr);
+                    return ResponseEntity.badRequest().body("Invalid document type: " + typeStr);
+                }
+            }
+
             Document createdDocument = documentService.createDocument(document, userId, file);
             return ResponseEntity.ok(createdDocument);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid document creation request", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            log.error("Error creating document", e);
-            return ResponseEntity.internalServerError().build();
+            log.error("Unexpected error creating document", e);
+            return ResponseEntity.internalServerError().body("Failed to create document: " + e.getMessage());
         }
-    }
-
-    
-
-     // New method to get default admin user ID
-     private Long getDefaultAdminUserId() {
-        return userRepository.findByUsername("admin")
-            .map(User::getId)
-            .orElseThrow(() -> new RuntimeException("No default admin user found"));
     }
 
     @PutMapping("/{id}")
@@ -143,5 +159,12 @@ public class DocumentController {
     // Helper method for security expression
     public boolean checkDocumentCreator(Long documentId, String username) {
         return documentService.isDocumentCreator(documentId, username);
+    }
+
+    // New method to get default admin user ID
+    private Long getDefaultAdminUserId() {
+        return userRepository.findByUsername("admin")
+            .map(User::getId)
+            .orElseThrow(() -> new RuntimeException("No default admin user found"));
     }
 }

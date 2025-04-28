@@ -38,7 +38,6 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public void init() {
         try {
-            // Change this line from "uploadRootLocation" to "uploadDir"
             Path directoryPath = Paths.get(uploadDir);
             if (!Files.exists(directoryPath)) {
                 Files.createDirectories(directoryPath);
@@ -53,22 +52,35 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public Document createDocument(Document document, Long userId, MultipartFile file) {
         log.debug("Creating document: {}, userId: {}", document, userId);
-        User creator = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-    
-        // Set creator and timestamps
-        document.setCreator(creator);
-        document.setCreatedAt(LocalDateTime.now());
-    
-        // Handle file upload if present
-        if (file != null && !file.isEmpty()) {
-            String storedFileName = fileStorageService.store(file);
-            document.setFilePath(storedFileName);
-            document.setFileName(file.getOriginalFilename());
-            log.debug("File saved: {}", storedFileName);
+        try {
+            User creator = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        
+            // Validate document before saving
+            if (document == null) {
+                log.error("Attempted to create null document");
+                throw new IllegalArgumentException("Document cannot be null");
+            }
+        
+            // Set creator and timestamps
+            document.setCreator(creator);
+            document.setCreatedAt(LocalDateTime.now());
+        
+            // Handle file upload if present
+            if (file != null && !file.isEmpty()) {
+                String storedFileName = fileStorageService.store(file);
+                document.setFilePath(storedFileName);
+                document.setFileName(file.getOriginalFilename());
+                log.debug("File saved: {}", storedFileName);
+            }
+        
+            Document savedDocument = documentRepository.save(document);
+            log.info("Document created successfully: {}", savedDocument.getId());
+            return savedDocument;
+        } catch (Exception e) {
+            log.error("Error creating document: {}", e.getMessage(), e);
+            throw new DocumentStorageException("Could not create document: " + e.getMessage(), e);
         }
-    
-        return documentRepository.save(document);
     }
 
     @Override

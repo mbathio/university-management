@@ -38,6 +38,16 @@ public class Document {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    @PrePersist
+protected void onCreate() {
+    this.createdAt = LocalDateTime.now();
+}
+
+@PreUpdate
+protected void onUpdate() {
+    this.updatedAt = LocalDateTime.now();
+}
+
     // Champ de visibilité pour contrôler qui peut voir le document
     private String visibilityLevel;
 }
