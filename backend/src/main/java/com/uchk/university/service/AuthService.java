@@ -19,7 +19,8 @@ public class AuthService {
     private final JwtTokenUtil jwtTokenUtil;
     private final UserRepository userRepository;
 
-    public LoginResponse login(LoginRequest loginRequest) {
+   public LoginResponse login(LoginRequest loginRequest) {
+    try {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
@@ -31,5 +32,14 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
         return new LoginResponse(token, user.getUsername(), user.getEmail(), user.getRole());
+    } catch (BadCredentialsException e) {
+        // Log the specific authentication error
+        logger.error("Authentication failed: Bad credentials for user {}", loginRequest.getUsername());
+        throw e;
+    } catch (Exception e) {
+        // Log any other errors
+        logger.error("Login error: {}", e.getMessage());
+        throw e;
     }
+}
 }
