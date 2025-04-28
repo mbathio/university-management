@@ -5,7 +5,9 @@ import com.uchk.university.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,8 +21,30 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     int countUnreadByUser(User user);
     
     @Modifying
+    @Transactional
     @Query("UPDATE Notification n SET n.read = true WHERE n.user = ?1")
     void markAllAsReadForUser(User user);
     
     List<Notification> findTop5ByUserOrderByCreatedAtDesc(User user);
+
+    // Find notifications for a specific user by username
+    @Query("SELECT n FROM Notification n WHERE n.user.username = :username ORDER BY n.createdAt DESC")
+    List<Notification> findByUserUsername(@Param("username") String username);
+
+    // Find recent notifications for a specific user
+    @Query("SELECT n FROM Notification n WHERE n.user.username = :username ORDER BY n.createdAt DESC")
+    List<Notification> findRecentNotificationsByUsername(
+            @Param("username") String username, 
+            @Param("limit") int limit
+    );
+
+    // Count unread notifications for a specific user
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.user.username = :username AND n.read = false")
+    int countUnreadByUsername(@Param("username") String username);
+
+    // Mark all notifications as read for a specific user
+    @Modifying
+    @Transactional
+    @Query("UPDATE Notification n SET n.read = true WHERE n.user.username = :username")
+    void markAllAsReadByUsername(@Param("username") String username);
 }

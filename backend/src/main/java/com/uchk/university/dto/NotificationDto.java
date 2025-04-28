@@ -1,6 +1,7 @@
 package com.uchk.university.dto;
 
 import com.uchk.university.entity.NotificationType;
+import com.uchk.university.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,15 +13,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationDto {
+public class NotificationDTO {
     private Long id;
-    private String title;
     private String message;
     private NotificationType type;
-    private Long userId;
-    private String username;
     private boolean read;
     private LocalDateTime createdAt;
-    private Long relatedEntityId;
-    private String relatedEntityType;
+    private User user;
 }

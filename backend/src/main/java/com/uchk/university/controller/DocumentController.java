@@ -20,11 +20,24 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/documents")
+@RequestMapping("/documents")
 @RequiredArgsConstructor
 @Slf4j
 public class DocumentController {
     private final DocumentService documentService;
+
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<Document>> getAllDocuments(@CurrentUser User currentUser) {
+        log.debug("REST request to get all documents for current user");
+        try {
+            List<Document> documents = documentService.getDocumentsForUser(currentUser.getId());
+            return ResponseEntity.ok(documents);
+        } catch (Exception e) {
+            log.error("Error getting documents for user", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION')")
@@ -33,8 +46,13 @@ public class DocumentController {
             @RequestPart(value = "file", required = false) MultipartFile file,
             @CurrentUser User currentUser) {
         log.debug("REST request to create Document : {}", document);
-        Document createdDocument = documentService.createDocument(document, currentUser.getId(), file);
-        return ResponseEntity.ok(createdDocument);
+        try {
+            Document createdDocument = documentService.createDocument(document, currentUser.getId(), file);
+            return ResponseEntity.ok(createdDocument);
+        } catch (Exception e) {
+            log.error("Error creating document", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PutMapping("/{id}")
@@ -45,43 +63,26 @@ public class DocumentController {
             @RequestPart("document") Document document,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         log.debug("REST request to update Document : {}", document);
-        Document updatedDocument = documentService.updateDocument(id, document, file);
-        return ResponseEntity.ok(updatedDocument);
+        try {
+            Document updatedDocument = documentService.updateDocument(id, document, file);
+            return ResponseEntity.ok(updatedDocument);
+        } catch (Exception e) {
+            log.error("Error updating document", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Document> getDocument(@PathVariable Long id) {
         log.debug("REST request to get Document : {}", id);
-        Document document = documentService.getDocumentById(id);
-        return ResponseEntity.ok(document);
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Document>> getAllDocuments() {
-        log.debug("REST request to get all Documents");
-        List<Document> documents = documentService.getAllDocuments();
-        return ResponseEntity.ok(documents);
-    }
-
-    @GetMapping("/type/{type}")
-    public ResponseEntity<List<Document>> getDocumentsByType(@PathVariable DocumentType type) {
-        log.debug("REST request to get Documents by type : {}", type);
-        List<Document> documents = documentService.getDocumentsByType(type);
-        return ResponseEntity.ok(documents);
-    }
-
-    @GetMapping("/creator/{userId}")
-    public ResponseEntity<List<Document>> getDocumentsByCreator(@PathVariable Long userId) {
-        log.debug("REST request to get Documents by creator : {}", userId);
-        List<Document> documents = documentService.getDocumentsByCreator(userId);
-        return ResponseEntity.ok(documents);
-    }
-
-    @GetMapping("/visibility/{level}")
-    public ResponseEntity<List<Document>> getDocumentsByVisibilityLevel(@PathVariable String level) {
-        log.debug("REST request to get Documents by visibility level : {}", level);
-        List<Document> documents = documentService.getDocumentsByVisibilityLevel(level);
-        return ResponseEntity.ok(documents);
+        try {
+            Document document = documentService.getDocumentById(id);
+            return ResponseEntity.ok(document);
+        } catch (Exception e) {
+            log.error("Error getting document", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -89,47 +90,42 @@ public class DocumentController {
                   "@documentController.checkDocumentCreator(#id, authentication.name) or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
         log.debug("REST request to delete Document : {}", id);
-        documentService.deleteDocument(id);
-        return ResponseEntity.noContent().build();
+        try {
+            documentService.deleteDocument(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Error deleting document", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
-    @GetMapping("/files/{filename:.+}")
-@PreAuthorize("permitAll()")  // Explicitement défini comme public
-public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-    Resource file = documentService.loadFileAsResource(filename);
-    
-    return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
-            .body(file);
-}
-
-// Méthode à ajouter à DocumentController.java
-
-@GetMapping("/search/types")
-public ResponseEntity<List<Document>> getDocumentsByTypes(@RequestParam String types) {
-    log.debug("REST request to get Documents by types : {}", types);
-    List<DocumentType> documentTypes = Arrays.stream(types.split(","))
-        .map(DocumentType::valueOf)
-        .collect(Collectors.toList());
-    
-    List<Document> documents = documentService.getDocumentsByTypes(documentTypes);
-    return ResponseEntity.ok(documents);
-}
-
-@GetMapping("/download/{id}")
-@PreAuthorize("permitAll()")  // Explicitement défini comme public
-public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) {
-    Document document = documentService.getDocumentById(id);
-    if (document.getFilePath() == null) {
-        return ResponseEntity.notFound().build();
+    @GetMapping("/types")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<DocumentType>> getDocumentTypes() {
+        log.debug("REST request to get all document types");
+        try {
+            return ResponseEntity.ok(Arrays.asList(DocumentType.values()));
+        } catch (Exception e) {
+            log.error("Error getting document types", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
-    Resource resource = documentService.loadFileAsResource(document.getFilePath());
-    
-    return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getTitle() + "\"")
-            .body(resource);
-}
+    @GetMapping("/download/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) throws IOException {
+        log.debug("REST request to download Document : {}", id);
+        try {
+            Resource resource = documentService.loadFileAsResource(id);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, 
+                            "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error downloading document", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     // Helper method for security expression
     public boolean checkDocumentCreator(Long documentId, String username) {

@@ -11,6 +11,10 @@ public interface DocumentService {
     Document createDocument(Document document, Long userId, MultipartFile file);
     Document updateDocument(Long id, Document document, MultipartFile file);
     Document getDocumentById(Long id);
+    
+    // New method to get documents for a specific user
+    List<Document> getDocumentsForUser(Long userId);
+    
     List<Document> getAllDocuments();
     List<Document> getDocumentsByType(DocumentType type);
     List<Document> getDocumentsByTypes(List<DocumentType> types);
