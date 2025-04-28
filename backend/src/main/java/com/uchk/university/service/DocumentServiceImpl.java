@@ -31,6 +31,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;  // Add this field
 
     @Value("${document.upload.dir}")
     private String uploadDir;

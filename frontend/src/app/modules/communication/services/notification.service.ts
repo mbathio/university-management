@@ -10,8 +10,7 @@ import { Notification, NotificationType } from '../models/notification.model';
   providedIn: 'root'
 })
 export class NotificationService {
-  private apiUrl = `${environment.apiUrl}/notifications`;
-
+  private apiUrl = `${environment.apiUrl}/api/notifications`;
   constructor(private http: HttpClient) {}
 
   getNotifications(): Observable<Notification[]> {

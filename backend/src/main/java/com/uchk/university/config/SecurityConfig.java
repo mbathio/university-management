@@ -45,13 +45,14 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/formations/**").permitAll()
-                .requestMatchers("/api/documents/files/**").permitAll()  // Fixed correct endpoint path
-                .requestMatchers("/api/documents/download/**").permitAll() // Added for download endpoint
-                
+               // Dans SecurityConfig.java
+.requestMatchers("/api/documents/files/**").permitAll()  
+.requestMatchers("/api/documents/download/**").permitAll()
                 // Endpoints administratifs
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
-                
+                .requestMatchers("/api/notifications/unread/count").permitAll()
+                .requestMatchers("/api/notifications/mark-all-read").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "STUDENT")
                 // Endpoints enseignants
                 .requestMatchers("/api/teacher/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER")
                 
@@ -72,14 +73,14 @@ public class SecurityConfig {
 
     @Bean
 public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:8080"));
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-    configuration.setExposedHeaders(List.of("Authorization"));
-    configuration.setMaxAge(3600L);
-    
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+CorsConfiguration configuration = new CorsConfiguration();
+configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:8080"));
+configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+configuration.setExposedHeaders(List.of("Authorization"));
+configuration.setMaxAge(3600L);
+
+UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
     return source;
 }

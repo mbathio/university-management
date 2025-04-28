@@ -35,7 +35,10 @@ public class Student {
     @ManyToOne
     @JoinColumn(name = "formation_id")
     private Formation currentFormation;
-
+    // In Student.java
+public User getUser() {
+    return user;
+}
     private String promo;
     private Integer startYear;
     private Integer endYear;

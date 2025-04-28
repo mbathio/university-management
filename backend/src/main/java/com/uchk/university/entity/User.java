@@ -38,4 +38,9 @@ public class User {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // In User.java
+public Long getId() {
+    return id;
+}
 }

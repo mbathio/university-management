@@ -17,15 +17,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/documents")
+@RequestMapping("/api/documents")  // Corrected the base path to match API schema
 @RequiredArgsConstructor
 @Slf4j
 public class DocumentController {
     private final DocumentService documentService;
-    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
@@ -112,8 +110,22 @@ public class DocumentController {
         }
     }
 
+    @GetMapping("/files/{filename}")
+    public ResponseEntity<Resource> getFile(@PathVariable String filename) throws IOException {
+        log.debug("REST request to get file : {}", filename);
+        try {
+            Resource resource = documentService.loadFileAsResource(filename);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, 
+                            "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error getting file", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/download/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) throws IOException {
         log.debug("REST request to download Document : {}", id);
         try {
