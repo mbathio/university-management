@@ -40,31 +40,37 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  onSubmit(): void {
-    if (this.loginForm.invalid) {
-      return;
-    }
-
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    const { username, password } = this.loginForm.value;
-
-    this.authService.login(username, password).subscribe({
-      next: () => {
-        this.router.navigate(['/']);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        if (error.status === 401) {
-          this.errorMessage = 'Invalid username or password';
-        } else {
-          this.errorMessage = 'An error occurred. Please try again later.';
-        }
-      },
-      complete: () => {
-        this.isLoading = false;
-      },
-    });
+  // In login.component.ts
+onSubmit(): void {
+  if (this.loginForm.invalid) {
+    return;
   }
+
+  this.isLoading = true;
+  this.errorMessage = '';
+
+  const { username, password } = this.loginForm.value;
+
+  this.authService.login(username, password).subscribe({
+    next: (user) => {
+      console.log('Login successful:', user);
+      this.router.navigate(['/dashboard']);
+    },
+    error: (error) => {
+      this.isLoading = false;
+      console.error('Login error:', error);
+      
+      if (error.status === 401) {
+        this.errorMessage = 'Invalid username or password';
+      } else if (error.status === 403) {
+        this.errorMessage = 'Account not authorized';
+      } else {
+        this.errorMessage = 'Login failed. Please try again later.';
+      }
+    },
+    complete: () => {
+      this.isLoading = false;
+    },
+  });
+}
 }

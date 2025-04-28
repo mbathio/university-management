@@ -1,8 +1,8 @@
 // src/app/core/auth/auth.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User, Role } from '../models/user.model';
 import { Router } from '@angular/router';
@@ -41,6 +41,8 @@ export class AuthService {
       try {
         const user: User = JSON.parse(userJson);
         this.currentUserSubject.next(user);
+        // Validate the token silently in background
+        this.validateToken().subscribe();
       } catch (error) {
         console.error('Error parsing stored user', error);
         this.logout();
@@ -69,10 +71,13 @@ export class AuthService {
           this.currentUserSubject.next(user);
           return user;
         }),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Login error in service:', error);
+          return throwError(() => error);
+        })
       );
   }
 
-  // Mise à jour de la méthode register dans auth.service.ts
   register(userData: {
     username: string;
     email: string;
@@ -82,6 +87,11 @@ export class AuthService {
     return this.http.post<AuthResponse>(
       `${environment.apiUrl}/api/auth/register`,
       userData,
+    ).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Registration error in service:', error);
+        return throwError(() => error);
+      })
     );
   }
 
@@ -117,10 +127,16 @@ export class AuthService {
     }
 
     return this.http
-      .post<{ valid: boolean }>(`${environment.apiUrl}/api/auth/validate`, {})
+      .get<{ valid: boolean }>(`${environment.apiUrl}/api/auth/validate`)
       .pipe(
-        map((response) => response.valid),
-        catchError(() => of(false)),
+        map(() => true), // If the request succeeds, token is valid
+        catchError((error) => {
+          console.error('Token validation error:', error);
+          if (error.status === 401 || error.status === 403) {
+            this.logout(); // Logout if token is invalid
+          }
+          return of(false);
+        }),
       );
   }
 }
