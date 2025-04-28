@@ -48,7 +48,7 @@ export class DocumentService {
 
   downloadDocument(id: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/download/${id}`, {
-      responseType: 'blob'
+      responseType: 'blob',
     });
   }
 
@@ -67,6 +67,8 @@ export class DocumentService {
 
   // Helper method for security checks (can be expanded with actual implementation)
   isDocumentCreator(documentId: number, username: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/${documentId}/creator/${username}`);
+    return this.http.get<boolean>(
+      `${this.apiUrl}/${documentId}/creator/${username}`,
+    );
   }
 }

@@ -19,5 +19,13 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getNotificationsForCurrentUser());
     }
 
-    // ... rest of the controller remains unchanged
-}
+    @GetMapping("/unread/count")
+    public ResponseEntity<Integer> getUnreadCount() {
+        return ResponseEntity.ok(notificationService.getUnreadCount());
+    }
+    
+    @PatchMapping("/mark-all-read")
+    public ResponseEntity<Void> markAllAsRead() {
+        notificationService.markAllAsRead();
+        return ResponseEntity.ok().build();
+    }}

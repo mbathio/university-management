@@ -46,10 +46,17 @@ public class SecurityConfig {
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/formations/**").permitAll()
                // Dans SecurityConfig.java
-.requestMatchers("/api/documents/files/**").permitAll()  
-.requestMatchers("/api/documents/download/**").permitAll()
-                // Endpoints administratifs
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/documents/files/**").permitAll()  
+                .requestMatchers("/api/documents/download/**").permitAll()
+                // Add this in SecurityConfig.java
+                .requestMatchers("/api/documents").permitAll()
+                // or restrict as needed// Endpoints administratifs
+               .requestMatchers("/api/admin/**").hasRole("ADMIN")
+               .requestMatchers("/api/formation/**").hasRole("ADMIN")
+                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/users/**").permitAll()
+                .requestMatchers("/api/roles/**").permitAll()
+                .requestMatchers("/api/formation-manager/**").hasRole("ADMIN")
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .requestMatchers("/api/notifications/unread/count").permitAll()
                 .requestMatchers("/api/notifications/mark-all-read").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "STUDENT")

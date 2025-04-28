@@ -38,11 +38,14 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public void init() {
         try {
-            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Files.createDirectories(uploadPath);
-            log.info("Document storage directory created: {}", uploadPath);
-        } catch (IOException ex) {
-            throw new DocumentStorageException("Could not create the directory where the uploaded files will be stored.", ex);
+            Path directoryPath = Paths.get(uploadRootLocation);
+            if (!Files.exists(directoryPath)) {
+                Files.createDirectories(directoryPath);
+                log.info("Created document storage directory: {}", directoryPath);
+            }
+        } catch (IOException e) {
+            log.error("Failed to initialize document storage: {}", e.getMessage(), e);
+            throw new DocumentStorageException("Could not initialize storage", e);
         }
     }
 
@@ -185,4 +188,6 @@ public class DocumentServiceImpl implements DocumentService {
         }
         return loadFileAsResource(document.getFilePath());
     }
+
+    
 }
