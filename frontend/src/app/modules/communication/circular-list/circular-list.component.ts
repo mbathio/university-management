@@ -14,6 +14,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-circular-list',
@@ -27,7 +29,9 @@ import { MatTableModule, MatTableDataSource } from '@angular/material/table';
     MatPaginatorModule,
     MatSnackBarModule,
     MatDialogModule,
-    MatTableModule
+    MatTableModule,
+    MatFormFieldModule,
+    MatInputModule
   ]
 })
 export class CircularListComponent implements OnInit {
