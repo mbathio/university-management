@@ -118,6 +118,12 @@
             <version>2.3.0</version>
         </dependency>
 
+        <!-- Ajout de la dépendance pour Flyway -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>

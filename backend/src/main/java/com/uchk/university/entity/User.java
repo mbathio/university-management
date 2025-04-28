@@ -29,6 +29,7 @@ public class User {
     private String email;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "role", columnDefinition = "VARCHAR(255)")
     private Role role;
 
     private boolean active = true;
@@ -40,8 +41,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     // In User.java
-public Long getId() {
-    return id;
-}
-
+    public Long getId() {
+        return id;
+    }
 }
