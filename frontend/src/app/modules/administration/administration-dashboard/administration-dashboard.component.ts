@@ -1,11 +1,16 @@
 // Le template fait référence à router mais il n'est pas injecté
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router'; // Ajouter Router ici
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { DocumentService } from '../../../core/services/document.service';
+import { NotificationService } from '../../communication/services/notification.service';
 import { Role } from '../../../core/models/role.model';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { catchError, of } from 'rxjs';
 
 interface AdminSection {
   title: string;
@@ -21,9 +26,16 @@ interface AdminSection {
   templateUrl: './administration-dashboard.component.html',
   styleUrls: ['./administration-dashboard.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, MatCardModule, MatIconModule], // Ajouter les modules Angular Material
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    MatCardModule, 
+    MatIconModule, 
+    MatSnackBarModule,
+    MatProgressSpinnerModule
+  ],
 })
-export class AdministrationDashboardComponent {
+export class AdministrationDashboardComponent implements OnInit {
   adminSections: AdminSection[] = [
     {
       title: 'Gestion Documentaire',
@@ -50,11 +62,54 @@ export class AdministrationDashboardComponent {
     },
   ];
   hasRestrictedSections = false;
+  unreadNotificationsCount = 0;
+  documentCount = 0;
+  loading = false;
+  error = '';
 
   constructor(
     private authService: AuthService,
-    public router: Router, // Ajouter l'injection du router pour le template
+    private documentService: DocumentService,
+    private notificationService: NotificationService,
+    private snackBar: MatSnackBar,
+    public router: Router,
   ) {}
+
+  ngOnInit(): void {
+    this.loadDashboardData();
+  }
+
+  loadDashboardData(): void {
+    this.loading = true;
+    this.error = '';
+
+    // Parallel requests for documents and notifications
+    this.documentService.getAllDocuments().pipe(
+      catchError((err) => {
+        this.handleError('Impossible de charger les documents', err);
+        return of([]);
+      })
+    ).subscribe(documents => {
+      this.documentCount = documents.length;
+    });
+
+    this.notificationService.getUnreadCount().pipe(
+      catchError((err) => {
+        this.handleError('Impossible de charger les notifications', err);
+        return of(0);
+      })
+    ).subscribe(count => {
+      this.unreadNotificationsCount = count;
+      this.loading = false;
+    });
+  }
+
+  private handleError(message: string, err: any): void {
+    this.error = message;
+    this.loading = false;
+    this.snackBar.open(message, 'Fermer', { duration: 5000 });
+    console.error(message, err);
+  }
 
   isAllowed(section: AdminSection): boolean {
     if (!section.roles) {

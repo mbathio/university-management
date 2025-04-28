@@ -5,7 +5,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NotificationService } from '../services/notification.service';
-import { Notification } from '../models/notification.model';
+import { Notification, NotificationType } from '../models/notification.model';
 
 @Component({
   selector: 'app-notifications',
@@ -126,7 +126,7 @@ export class NotificationsComponent implements OnInit {
     });
   }
 
-  getNotificationIcon(type: string): string {
+  getNotificationIcon(type: NotificationType): string {
     return this.notificationService.getNotificationIcon(type);
   }
 }
