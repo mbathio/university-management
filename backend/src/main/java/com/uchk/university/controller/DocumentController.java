@@ -5,6 +5,7 @@ import com.uchk.university.entity.DocumentType;
 import com.uchk.university.service.DocumentService;
 import com.uchk.university.security.CurrentUser;
 import com.uchk.university.entity.User;
+import com.uchk.university.repository.UserRepository; // Add this import
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DocumentController {
     private final DocumentService documentService;
-    private final UserRepository userRepository;  // Add this line
+    private final UserRepository userRepository;
 
     @GetMapping
     public ResponseEntity<List<Document>> getAllDocuments(@CurrentUser User currentUser) {
@@ -41,7 +41,8 @@ public class DocumentController {
     }
 
     @PostMapping
-   // @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION')")
+    // Re-add the PreAuthorize annotation to match what the security interceptor is expecting
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION')")
     public ResponseEntity<Document> createDocument(
             @RequestPart("document") Document document,
             @RequestPart(value = "file", required = false) MultipartFile file,
@@ -50,13 +51,15 @@ public class DocumentController {
         try {
             Long userId = (currentUser != null) ? currentUser.getId() : getDefaultAdminUserId();
 
-            Document createdDocument = documentService.createDocument(document, currentUser.getId(), file);
+            Document createdDocument = documentService.createDocument(document, userId, file);
             return ResponseEntity.ok(createdDocument);
         } catch (Exception e) {
             log.error("Error creating document", e);
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    
 
      // New method to get default admin user ID
      private Long getDefaultAdminUserId() {

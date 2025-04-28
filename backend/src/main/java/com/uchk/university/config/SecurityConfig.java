@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/documents/files/**").permitAll()  
                 .requestMatchers("/api/documents/download/**").permitAll()
                 // Add this in SecurityConfig.java
-                .requestMatchers("/api/documents").permitAll()
+                .requestMatchers("/api/documents").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
                 // or restrict as needed// Endpoints administratifs
                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                .requestMatchers("/api/formation/**").hasRole("ADMIN")

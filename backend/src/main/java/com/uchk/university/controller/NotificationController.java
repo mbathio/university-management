@@ -15,8 +15,8 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    public ResponseEntity<List<NotificationDto>> getNotifications() {
-        return ResponseEntity.ok(notificationService.getNotificationsForCurrentUser());
+    public ResponseEntity<List<NotificationDto>> getNotifications(@RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(notificationService.getRecentNotificationsForCurrentUser(limit));
     }
 
     @GetMapping("/unread/count")

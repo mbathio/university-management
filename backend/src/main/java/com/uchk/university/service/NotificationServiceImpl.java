@@ -22,20 +22,6 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<NotificationDto> getNotificationsForCurrentUser() {
-        String username = SecurityUtils.getCurrentUsername();
-        if (username == null) {
-            logger.error("Unable to retrieve username for notifications");
-            return Collections.emptyList();
-        }
-        return notificationRepository.findByUserUsername(username)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public int getUnreadCount() {
         String username = SecurityUtils.getCurrentUsername();
         if (username == null) {
@@ -86,24 +72,25 @@ public class NotificationServiceImpl implements NotificationService {
     public List<NotificationDto> getRecentNotificationsForCurrentUser(int limit) {
         String username = SecurityUtils.getCurrentUsername();
         if (username == null) {
-            logger.error("Unable to retrieve username for recent notifications");
+            logger.error("Unable to retrieve username for notifications");
             return Collections.emptyList();
         }
-        return notificationRepository.findByUserUsernameOrderByCreatedAtDesc(username)
+        return notificationRepository.findByUserUsername(username)
                 .stream()
-                .limit(limit)
+                .sorted((n1, n2) -> n2.getCreatedAt().compareTo(n1.getCreatedAt())) // Sort by most recent first
                 .map(this::convertToDTO)
+                .limit(limit)
                 .collect(Collectors.toList());
     }
 
     private NotificationDto convertToDTO(Notification notification) {
-        return NotificationDto.builder()
-                .id(notification.getId())
-                .message(notification.getMessage())
-                .type(notification.getType())
-                .read(notification.isRead())
-                .createdAt(notification.getCreatedAt())
-                .user(notification.getUser())
-                .build();
+        NotificationDto dto = new NotificationDto();
+        dto.setId(notification.getId());
+        dto.setMessage(notification.getMessage());
+        dto.setType(notification.getType());
+        dto.setRead(notification.isRead());
+        dto.setCreatedAt(notification.getCreatedAt());
+        dto.setUser(notification.getUser());
+        return dto;
     }
 }
