@@ -1,21 +1,25 @@
 // src/app/modules/communication/circular-list/circular-list.component.ts
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { Document, DocumentType } from '../../../core/models/document.model';
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { Role } from '../../../core/models/role.model';
+import { Role } from '../../../core/models/user.model';
 import { MatIconModule } from '@angular/material/icon';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DocumentTypePipe } from '../pipes/document-type.pipe';
+import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-circular-list',
@@ -31,10 +35,16 @@ import { MatInputModule } from '@angular/material/input';
     MatDialogModule,
     MatTableModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
+    MatSortModule,
+    MatButtonModule,
+    DocumentTypePipe,
+    VisibilityLevelPipe
   ]
 })
-export class CircularListComponent implements OnInit {
+export class CircularListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['title', 'type', 'createdAt', 'visibilityLevel', 'actions'];
   dataSource: MatTableDataSource<Document> = new MatTableDataSource<Document>([]);
   loading = false;

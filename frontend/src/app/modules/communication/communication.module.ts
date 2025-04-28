@@ -31,13 +31,13 @@ import { DocumentDetailComponent } from './document-detail/document-detail.compo
 import { ReportFormComponent } from './report-form/report-form.component';
 import { ReportListComponent } from './report-list/report-list.component';
 import { NotificationsComponent } from './notifications/notifications.component';
-import { DocumentTypePipe } from './pipes/document-type.pipe';
-import { VisibilityLevelPipe } from './pipes/visibility-level.pipe';
 import { CommunicationDashboardComponent } from './dashboard/communication-dashboard.component';
+
+// Import standalone components
 import { CircularListComponent } from './circular-list/circular-list.component';
 import { CircularFormComponent } from './circular-form/circular-form.component';
-// Le composant AdminNoteFormComponent est maintenant standalone
-// Le composant AdminNotesComponent est également standalone
+import { DocumentTypePipe } from './pipes/document-type.pipe';
+import { VisibilityLevelPipe } from './pipes/visibility-level.pipe';
 
 @NgModule({
   declarations: [
@@ -46,11 +46,7 @@ import { CircularFormComponent } from './circular-form/circular-form.component';
     ReportFormComponent,
     ReportListComponent,
     NotificationsComponent,
-    DocumentTypePipe,
-    VisibilityLevelPipe,
-    CommunicationDashboardComponent,
-    CircularListComponent,
-    CircularFormComponent
+    CommunicationDashboardComponent
   ],
   imports: [
     CommonModule,
@@ -76,7 +72,12 @@ import { CircularFormComponent } from './circular-form/circular-form.component';
     MatTooltipModule,
     MatBadgeModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    // Add standalone components as imports
+    CircularListComponent,
+    CircularFormComponent,
+    DocumentTypePipe,
+    VisibilityLevelPipe
   ]
 })
 export class CommunicationModule { }

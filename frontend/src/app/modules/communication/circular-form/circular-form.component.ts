@@ -14,7 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { DocumentService } from '../../../core/services/document.service';
 import { Document, DocumentType, VisibilityLevel } from '../../../core/models/document.model';
-import { AuthService } from '../../../core/auth/auth.service'; // Import AuthService
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-circular-form',
@@ -56,7 +56,7 @@ export class CircularFormComponent implements OnInit {
     private router: Router,
     private documentService: DocumentService,
     private snackBar: MatSnackBar,
-    private authService: AuthService // Inject AuthService
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -137,6 +137,7 @@ export class CircularFormComponent implements OnInit {
       visibilityLevel: this.circularForm.value.visibilityLevel
     };
 
+    // Correctly handle document data as JSON string
     formData.append('document', new Blob([JSON.stringify(documentData)], { type: 'application/json' }));
 
     if (this.selectedFile) {
@@ -149,7 +150,7 @@ export class CircularFormComponent implements OnInit {
           this.snackBar.open('Document mis à jour avec succès', 'Fermer', {
             duration: 3000
           });
-          this.router.navigate(['/communication']);
+          this.router.navigate(['/communication/circulars']);
           this.loading = false;
         },
         error: (error) => {
@@ -161,19 +162,12 @@ export class CircularFormComponent implements OnInit {
         }
       });
     } else {
-      // Obtain the ID of the currently logged-in user
-      const currentUser = this.authService.currentUserValue;
-      const userId = currentUser?.id;
-      
-      // Append userId to formData, using an empty string if no user is found
-      formData.append('userId', userId?.toString() || '');
-      
       this.documentService.createDocument(formData).subscribe({
         next: () => {
           this.snackBar.open('Document créé avec succès', 'Fermer', {
             duration: 3000
           });
-          this.router.navigate(['/communication']);
+          this.router.navigate(['/communication/circulars']);
           this.loading = false;
         },
         error: (error) => {
