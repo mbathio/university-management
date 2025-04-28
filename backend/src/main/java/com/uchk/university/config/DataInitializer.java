@@ -35,14 +35,23 @@ public class DataInitializer {
     
     @Bean
     @Profile("dev")
-    public CommandLineRunner initData() {
-        return args -> {
+    @Bean
+@Profile("dev")
+public CommandLineRunner initData() {
+    return args -> {
+        try {
             log.info("Initializing development data...");
             
             // Initialize document storage
             documentService.init();
             log.info("Document storage initialized");
             
+            // Rest of your initialization code
+            // ...
+        } catch (Exception e) {
+            log.error("Error initializing development data", e);
+        }
+    
             // Create admin user if it doesn't exist
             if (!userExists("admin")) {
                 UserDto adminDto = new UserDto(

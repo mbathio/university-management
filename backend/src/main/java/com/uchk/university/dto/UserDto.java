@@ -1,107 +1,27 @@
 package com.uchk.university.dto;
 
-import java.util.Date;
+import com.uchk.university.entity.Role;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public class StudentDto {
-    private String studentId;
-    private String firstName;
-    private String lastName;
-    private Date birthDate;
-    private Long formationId;
-    private String promo;
-    private Integer startYear;
-    private Integer endYear;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserDto {
+    @NotBlank(message = "Username is required")
     private String username;
+
+    @NotBlank(message = "Password is required")
     private String password;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
     private String email;
-    
-    // Getters
-    public String getStudentId() {
-        return studentId;
-    }
-    
-    public String getFirstName() {
-        return firstName;
-    }
-    
-    public String getLastName() {
-        return lastName;
-    }
-    
-    public Date getBirthDate() {
-        return birthDate;
-    }
-    
-    public Long getFormationId() {
-        return formationId;
-    }
-    
-    public String getPromo() {
-        return promo;
-    }
-    
-    public Integer getStartYear() {
-        return startYear;
-    }
-    
-    public Integer getEndYear() {
-        return endYear;
-    }
-    
-    public String getUsername() {
-        return username;
-    }
-    
-    public String getPassword() {
-        return password;
-    }
-    
-    public String getEmail() {
-        return email;
-    }
-    
-    // Setters
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-    
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-    
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-    
-    public void setBirthDate(Date birthDate) {
-        this.birthDate = birthDate;
-    }
-    
-    public void setFormationId(Long formationId) {
-        this.formationId = formationId;
-    }
-    
-    public void setPromo(String promo) {
-        this.promo = promo;
-    }
-    
-    public void setStartYear(Integer startYear) {
-        this.startYear = startYear;
-    }
-    
-    public void setEndYear(Integer endYear) {
-        this.endYear = endYear;
-    }
-    
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    
-    public void setEmail(String email) {
-        this.email = email;
-    }
+
+    @NotNull(message = "Role is required")
+    private Role role;
 }

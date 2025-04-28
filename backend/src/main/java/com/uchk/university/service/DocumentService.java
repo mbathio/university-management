@@ -8,24 +8,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface DocumentService {
-    Document createDocument(Document document, Long userId, MultipartFile file);
-    Document updateDocument(Long id, Document document, MultipartFile file);
-    Document getDocumentById(Long id);
-    
-    // New method to get documents for a specific user
-    List<Document> getDocumentsForUser(Long userId);
-    
-    List<Document> getAllDocuments();
-    List<Document> getDocumentsByType(DocumentType type);
-    List<Document> getDocumentsByTypes(List<DocumentType> types);
-    List<Document> getDocumentsByCreator(Long userId);
-    List<Document> getDocumentsByVisibilityLevel(String level);
-    void deleteDocument(Long id);
-    boolean isDocumentCreator(Long documentId, String username);
-    
-    // Initialize document storage
     void init();
+    List<Document> getDocumentsForUser(Long userId);
+    Document createDocument(Document document, Long userId, MultipartFile file) throws Exception;
+    Document updateDocument(Long id, Document document, MultipartFile file) throws Exception;
+    Document getDocumentById(Long id);
+    void deleteDocument(Long id);
+    Resource loadFileAsResource(Long id) throws IOException;
+    Resource loadFileAsResource(String filename) throws IOException;
+    boolean isDocumentCreator(Long documentId, String username);
+}
     
     // Added method for file download
-    Resource loadFileAsResource(String filePath);
-}

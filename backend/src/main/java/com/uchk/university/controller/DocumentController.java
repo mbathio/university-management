@@ -20,13 +20,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/documents")
+@RequestMapping("/api/documents")
 @RequiredArgsConstructor
 @Slf4j
 public class DocumentController {
     private final DocumentService documentService;
-    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
-
+    
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Document>> getAllDocuments(@CurrentUser User currentUser) {
