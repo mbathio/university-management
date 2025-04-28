@@ -38,7 +38,8 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public void init() {
         try {
-            Path directoryPath = Paths.get(uploadRootLocation);
+            // Change this line from "uploadRootLocation" to "uploadDir"
+            Path directoryPath = Paths.get(uploadDir);
             if (!Files.exists(directoryPath)) {
                 Files.createDirectories(directoryPath);
                 log.info("Created document storage directory: {}", directoryPath);

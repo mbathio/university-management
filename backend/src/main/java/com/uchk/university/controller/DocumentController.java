@@ -28,7 +28,6 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Document>> getAllDocuments(@CurrentUser User currentUser) {
         log.debug("REST request to get all documents for current user");
         try {
