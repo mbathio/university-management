@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -33,10 +34,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     // Find recent notifications for a specific user
     @Query("SELECT n FROM Notification n WHERE n.user.username = :username ORDER BY n.createdAt DESC")
-    List<Notification> findRecentNotificationsByUsername(
-            @Param("username") String username, 
-            @Param("limit") int limit
-    );
+List<Notification> findRecentNotificationsByUsername(
+    @Param("username") String username,
+    Pageable pageable
+);
+
 
     // Count unread notifications for a specific user
     @Query("SELECT COUNT(n) FROM Notification n WHERE n.user.username = :username AND n.read = false")

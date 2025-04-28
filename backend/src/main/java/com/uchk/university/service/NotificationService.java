@@ -10,4 +10,4 @@ public interface NotificationService {
     NotificationDto markAsRead(Long id);
     void markAllAsRead();
     void deleteNotification(Long id);
-}
+}                                                                                                                 
