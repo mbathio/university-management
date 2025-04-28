@@ -36,8 +36,8 @@ import { VisibilityLevelPipe } from './pipes/visibility-level.pipe';
 import { CommunicationDashboardComponent } from './dashboard/communication-dashboard.component';
 import { CircularListComponent } from './circular-list/circular-list.component';
 import { CircularFormComponent } from './circular-form/circular-form.component';
-import { AdminNoteFormComponent } from './admin-form/admin-note-form.component';
-// Ne pas importer AdminNotesComponent car il est maintenant standalone
+// Le composant AdminNoteFormComponent est maintenant standalone
+// Le composant AdminNotesComponent est également standalone
 
 @NgModule({
   declarations: [
@@ -49,7 +49,6 @@ import { AdminNoteFormComponent } from './admin-form/admin-note-form.component';
     DocumentTypePipe,
     VisibilityLevelPipe,
     CommunicationDashboardComponent,
-    AdminNoteFormComponent,
     CircularListComponent,
     CircularFormComponent
   ],

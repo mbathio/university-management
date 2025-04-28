@@ -1,4 +1,3 @@
-
 // src/app/modules/communication/circular-list/circular-list.component.ts
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
@@ -55,7 +54,7 @@ export class CircularListComponent implements OnInit {
       DocumentType.ADMINISTRATIVE_NOTE
     ];
 
-    // Use the correct method to get documents by type
+    // Use the corrected method to get documents by type
     this.documentService.getReportsByType(types).subscribe({
       next: (documents) => {
         this.dataSource = new MatTableDataSource(documents);
@@ -71,7 +70,6 @@ export class CircularListComponent implements OnInit {
     });
   }
 
-  // Fixed download method to properly handle document downloads
   downloadDocument(id: number): void {
     this.loading = true;
     

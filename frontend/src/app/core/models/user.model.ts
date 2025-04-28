@@ -3,6 +3,7 @@ import { VisibilityLevel } from './document.model';
 
 export enum Role {
   ADMIN = 'ADMIN',
+  USER = 'USER',
   TEACHER = 'TEACHER',
   STUDENT = 'STUDENT',
   FORMATION_MANAGER = 'FORMATION_MANAGER',

@@ -19,7 +19,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Document, VisibilityLevel } from '../../../core/models/document.model';
+import { Document, DocumentType, VisibilityLevel } from '../../../core/models/document.model';
 
 @Component({
   selector: 'app-admin-note-form',
@@ -54,7 +54,7 @@ export class AdminNoteFormComponent implements OnInit {
     VisibilityLevel.STUDENTS,
     VisibilityLevel.RESTRICTED,
   ];
-  noteTypes = ['NOTE_ADMINISTRATIVE', 'NOTE_SERVICE'];
+  noteTypes = [DocumentType.ADMINISTRATIVE_NOTE, DocumentType.NOTE_SERVICE];
 
   constructor(
     private fb: FormBuilder,
@@ -81,7 +81,7 @@ export class AdminNoteFormComponent implements OnInit {
     this.noteForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
       reference: ['', [Validators.maxLength(50)]],
-      type: ['NOTE_ADMINISTRATIVE', [Validators.required]],
+      type: [DocumentType.ADMINISTRATIVE_NOTE, [Validators.required]],
       content: ['', [Validators.maxLength(5000)]],
       visibilityLevel: [VisibilityLevel.ADMINISTRATION, [Validators.required]],
       tags: [''],
@@ -116,6 +116,8 @@ export class AdminNoteFormComponent implements OnInit {
           content: document.content,
           visibilityLevel: document.visibilityLevel,
           reference: document.reference || '',
+          type: document.type,
+          tags: document.tags ? document.tags.join(', ') : ''
         });
 
         if (document.filePath) {
@@ -164,6 +166,7 @@ export class AdminNoteFormComponent implements OnInit {
       reference: this.noteForm.value.reference,
       tags: tags,
     };
+    
     // Convertir l'objet document en JSON et l'ajouter au FormData
     formData.append(
       'document',
