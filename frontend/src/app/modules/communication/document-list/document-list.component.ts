@@ -31,15 +31,15 @@ import { VisibilityLevelPipe } from '../pipes/visibility-level.pipe';
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    VisibilityLevelPipe,
     MatSnackBarModule,
     MatFormFieldModule,
     MatInputModule,
-    DocumentTypePipe,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    DocumentTypePipe,
+    VisibilityLevelPipe
   ],
 })
 export class DocumentListComponent implements OnInit, AfterViewInit {

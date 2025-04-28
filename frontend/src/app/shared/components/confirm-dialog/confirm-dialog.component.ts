@@ -1,7 +1,8 @@
-
 // src/app/shared/components/confirm-dialog/confirm-dialog.component.ts
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
 
 export interface ConfirmDialogData {
   title: string;
@@ -26,7 +27,13 @@ export interface ConfirmDialogData {
     h2 {
       margin-top: 0;
     }
-  `]
+  `],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    MatButtonModule
+  ]
 })
 export class ConfirmDialogComponent {
   constructor(

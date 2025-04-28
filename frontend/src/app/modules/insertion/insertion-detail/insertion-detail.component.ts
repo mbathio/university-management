@@ -8,7 +8,7 @@ import {
   InsertionStatus,
 } from '../services/insertion.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Role } from '../../../core/models/user.model';
+import { Role } from '../../../core/models/role.model';
 import { StudentService } from '../../students/services/student.service';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';

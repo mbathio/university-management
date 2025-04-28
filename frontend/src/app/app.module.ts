@@ -15,11 +15,24 @@ import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error.interceptor';
 import { SharedModule } from './shared/shared.module';
 import { PageNotFoundComponent } from './core/components/page-not-found/page-not-found.component';
+import { DocumentTypePipe } from './modules/communication/pipes/document-type.pipe';
+import { VisibilityLevelPipe } from './modules/communication/pipes/visibility-level.pipe';
+
+@NgModule({
+  declarations: [
+    // other declarations
+    DocumentTypePipe,
+    VisibilityLevelPipe
+  ],
+  // other configurations
+})
 
 @NgModule({
   declarations: [
     // AppComponent is now standalone, so it should be removed from here if it's truly standalone
     // AppComponent
+    DocumentTypePipe,
+    VisibilityLevelPipe
   ],
   imports: [
     BrowserModule,

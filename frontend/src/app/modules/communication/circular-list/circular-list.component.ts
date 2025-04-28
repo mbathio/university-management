@@ -2,19 +2,33 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { Document, DocumentType } from '../../../core/models/document.model';
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { Role } from '../../../core/models/role.model';
+import { MatIconModule } from '@angular/material/icon';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 
 @Component({
   selector: 'app-circular-list',
   templateUrl: './circular-list.component.html',
-  styleUrls: ['./circular-list.component.scss']
+  styleUrls: ['./circular-list.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatIconModule,
+    MatPaginatorModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatTableModule
+  ]
 })
 export class CircularListComponent implements OnInit {
   displayedColumns: string[] = ['title', 'type', 'createdAt', 'visibilityLevel', 'actions'];

@@ -9,7 +9,7 @@ import {
   InsertionStatus,
 } from '../services/insertion.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Role } from '../../../core/models/user.model';
+import { Role } from '../../../core/models/role.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { catchError, finalize } from 'rxjs/operators';

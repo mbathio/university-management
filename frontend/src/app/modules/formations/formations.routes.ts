@@ -6,7 +6,7 @@ import { FormationFormComponent } from './formation-form/formation-form.componen
 import { ScheduleComponent } from './schedule/schedule.component';
 import { TrainerListComponent } from './trainer-list/trainer-list.component';
 import { authGuard } from '../../core/guards/auth.guard';
-import { Role } from '../../core/models/user.model';
+import { Role } from '../../core/models/role.model';
 
 export default [
   {

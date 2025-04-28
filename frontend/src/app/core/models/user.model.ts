@@ -2,6 +2,8 @@
 import { VisibilityLevel, DocumentType } from './document.model';
 import { Role } from './role.model';
 
+export { Role };
+
 export interface User {
   id: number;
   username: string;

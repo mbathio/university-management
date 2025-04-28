@@ -18,7 +18,6 @@ import { Document, DocumentType } from '../../../core/models/document.model';
 import { Notification } from '../models/notification.model';
 import { DocumentTypePipe } from '../pipes/document-type.pipe';
 import { NotificationsComponent } from '../notifications/notifications.component';
-
 @Component({
   selector: 'app-communication-dashboard',
   templateUrl: './communication-dashboard.component.html',
