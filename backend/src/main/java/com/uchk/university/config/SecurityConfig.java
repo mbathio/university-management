@@ -40,26 +40,29 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                // Endpoints publics avec restrictions spécifiques
+                // Endpoints publics
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/validate").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/formations/**").permitAll()
-               // Dans SecurityConfig.java
                 .requestMatchers("/api/documents/files/**").permitAll()  
                 .requestMatchers("/api/documents/download/**").permitAll()
-                // Add this in SecurityConfig.java
-                .requestMatchers("/api/documents").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
-                // or restrict as needed// Endpoints administratifs
-               .requestMatchers("/api/admin/**").hasRole("ADMIN")
-               .requestMatchers("/api/formation/**").hasRole("ADMIN")
-                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // Endpoints administratifs (suppression du doublon)
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/formation/**").hasRole("ADMIN")
                 .requestMatchers("/api/users/**").permitAll()
                 .requestMatchers("/api/roles/**").permitAll()
                 .requestMatchers("/api/formation-manager/**").hasRole("ADMIN")
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
+                
+                // Documents management endpoints
+                .requestMatchers("/api/documents").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
+                
+                // Notifications endpoints
                 .requestMatchers("/api/notifications/unread/count").permitAll()
                 .requestMatchers("/api/notifications/mark-all-read").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "STUDENT")
+                
                 // Endpoints enseignants
                 .requestMatchers("/api/teacher/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER")
                 
@@ -79,21 +82,19 @@ public class SecurityConfig {
     }
 
     @Bean
-public CorsConfigurationSource corsConfigurationSource() {
-CorsConfiguration configuration = new CorsConfiguration();
-configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:8080"));
-configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-configuration.setExposedHeaders(List.of("Authorization"));
-configuration.setMaxAge(3600L);
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:8080"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setMaxAge(3600L);
 
-UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
-    return source;
-}
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
     
-    
-
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();

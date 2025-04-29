@@ -10,7 +10,8 @@ import { catchError } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class FormationService {
-  private apiUrl = `${environment.apiUrl}/formations`;
+  // Update to include /api in the base URL
+  private apiUrl = `${environment.apiUrl}/api/formations`;
 
   constructor(private http: HttpClient) {}
 
@@ -39,6 +40,18 @@ export class FormationService {
       .pipe(catchError(this.handleError));
   }
 
+  // Correction des endpoints pour correspondre au backend
+  getFormationsByType(type: string): Observable<Formation[]> {
+    return this.http.get<Formation[]>(`${this.apiUrl}/type/${type}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getFormationsByLevel(level: string): Observable<Formation[]> {
+    return this.http.get<Formation[]>(`${this.apiUrl}/level/${level}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Endpoints personnalisés qui nécessitent une implémentation backend
   getFormationSchedule(id: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${id}/schedule`)
       .pipe(catchError(this.handleError));
@@ -51,16 +64,6 @@ export class FormationService {
 
   getMyFormation(): Observable<Formation> {
     return this.http.get<Formation>(`${this.apiUrl}/my-formation`)
-      .pipe(catchError(this.handleError));
-  }
-
-  getFormationsByType(type: string): Observable<Formation[]> {
-    return this.http.get<Formation[]>(`${this.apiUrl}/by-type/${type}`)
-      .pipe(catchError(this.handleError));
-  }
-
-  getFormationsByLevel(level: string): Observable<Formation[]> {
-    return this.http.get<Formation[]>(`${this.apiUrl}/by-level/${level}`)
       .pipe(catchError(this.handleError));
   }
 
