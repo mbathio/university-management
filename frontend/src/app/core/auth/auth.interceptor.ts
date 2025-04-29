@@ -3,8 +3,8 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
-import { catchError } from 'rxjs/operators';
-import { throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import { throwError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -24,13 +24,37 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
     return next(clonedRequest).pipe(
       catchError((error: HttpErrorResponse) => {
-        // Redirect to login if 401 Unauthorized response
+        // Handle different types of authentication errors
         if (error.status === 401) {
-          authService.logout();
-          router.navigate(['/login']);
+          // Try to refresh the token
+          return authService.refreshToken().pipe(
+            switchMap((newToken) => {
+              // If token refresh is successful, retry the original request
+              const retryRequest = req.clone({
+                setHeaders: {
+                  Authorization: `Bearer ${newToken}`,
+                },
+              });
+              return next(retryRequest);
+            }),
+            catchError((refreshError) => {
+              // If token refresh fails, logout and redirect to login
+              console.error('Token refresh failed', refreshError);
+              authService.logout();
+              router.navigate(['/login'], {
+                queryParams: { 
+                  returnUrl: router.url,
+                  reason: 'session_expired' 
+                }
+              });
+              return throwError(() => refreshError);
+            })
+          );
         }
+        
+        // For other errors, just rethrow
         return throwError(() => error);
-      }),
+      })
     );
   }
 

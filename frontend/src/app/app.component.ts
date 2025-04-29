@@ -50,7 +50,7 @@ export class AppComponent implements OnInit {
   }
 
   private setupNavItems(): void {
-    const currentUser = this.authService.currentUserValue;
+    const currentUser = this.authService.currentUser;
     if (!currentUser || this.isLoginPage) {
       this.navItems = [];
       return;
@@ -65,8 +65,8 @@ export class AppComponent implements OnInit {
       {
         label: 'Administration',
         icon: 'admin_panel_settings',
-        route: '/administration',
-        roles: [Role.ADMIN, Role.ADMINISTRATION],
+        route: '/admin',
+        roles: [Role.ADMIN],
       },
       {
         label: 'Communications',

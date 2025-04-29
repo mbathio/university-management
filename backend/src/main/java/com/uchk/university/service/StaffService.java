@@ -3,9 +3,12 @@ package com.uchk.university.service;
 import com.uchk.university.entity.Role;
 import com.uchk.university.entity.Staff;
 import com.uchk.university.entity.User;
+import com.uchk.university.entity.Formation;
 import com.uchk.university.dto.StaffDto;
 import com.uchk.university.exception.ResourceNotFoundException;
 import com.uchk.university.repository.StaffRepository;
+import com.uchk.university.service.UserService;
+import com.uchk.university.repository.FormationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ import java.util.Optional;
 public class StaffService {
     private final StaffRepository staffRepository;
     private final UserService userService;
+    private final FormationRepository formationRepository;
 
     @Transactional
     public Staff createStaff(StaffDto staffDto) {
@@ -107,6 +111,9 @@ public class StaffService {
 
     @Transactional(readOnly = true)
     public List<Staff> getTrainersByFormationId(Long formationId) {
-        return staffRepository.findByFormationId(formationId);
+        Formation formation = formationRepository.findById(formationId)
+            .orElseThrow(() -> new ResourceNotFoundException("Formation not found with id: " + formationId));
+        
+        return staffRepository.findByFormations(formation);
     }
 }

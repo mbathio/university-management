@@ -55,9 +55,8 @@ public class FormationController {
         
         // Get student's formation by username
         Student student = studentService.getStudentByUsername(username);
-        if (student != null && student.getFormationId() != null) {
-            Formation formation = formationService.getFormationById(student.getFormationId());
-            return ResponseEntity.ok(formation);
+        if (student != null && student.getCurrentFormation() != null) {
+            return ResponseEntity.ok(student.getCurrentFormation());
         }
         
         return ResponseEntity.notFound().build();

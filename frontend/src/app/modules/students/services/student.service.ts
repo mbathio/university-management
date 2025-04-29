@@ -64,33 +64,9 @@ export class StudentService {
     };
     
     return this.http.post<Student>(this.apiUrl, studentToCreate, { 
-      headers: this.getHeaders(),
-      observe: 'response'  // Capture full HTTP response
+      headers: this.getHeaders()
     }).pipe(
-      map(response => {
-        console.log('Student creation response:', response);
-        if (!response.body) {
-          throw new Error('No student data returned from server');
-        }
-        return response.body;
-      }),
-      catchError(error => {
-        console.error('Student creation error details:', {
-          status: error.status,
-          message: error.message,
-          headers: error.headers,
-          body: error.error
-        });
-        
-        if (error.status === 403) {
-          console.error('Access Forbidden: Detailed error information', {
-            currentRole: localStorage.getItem('role'),
-            requiredRole: 'ADMIN'
-          });
-        }
-        
-        return throwError(() => new Error(`Student creation failed: ${error.message}`));
-      })
+      catchError(this.handleError)
     );
   }
 
@@ -130,11 +106,17 @@ export class StudentService {
   }
 
   private handleError(error: HttpErrorResponse) {
-    if (error.status === 403) {
-      console.error('Access Forbidden: You do not have permission to perform this action.');
-      // Optionally, show a user-friendly notification
-      // this.notificationService.showError('You do not have permission to create a student.');
+    console.error('An error occurred:', error);
+    let errorMessage = 'Une erreur inconnue est survenue';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Erreur: ${error.error.message}`;
+    } else {
+      // Server-side error
+      errorMessage = `Code d'erreur: ${error.status}\nMessage: ${error.error?.message || error.statusText}`;
     }
-    return throwError(() => new Error('An error occurred: ' + error.message));
+    
+    return throwError(() => new Error(errorMessage));
   }
 }

@@ -1,9 +1,11 @@
+
 package com.uchk.university.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.Set;
 
 @Entity
 @Table(name = "staff")
@@ -31,4 +33,13 @@ public class Staff {
     private String position;
     private String department;
     private String contactInfo;
+    
+    // Add this relationship if staff members can be assigned to multiple formations
+    @ManyToMany
+    @JoinTable(
+        name = "staff_formation",
+        joinColumns = @JoinColumn(name = "staff_id"),
+        inverseJoinColumns = @JoinColumn(name = "formation_id")
+    )
+    private Set<Formation> formations;
 }

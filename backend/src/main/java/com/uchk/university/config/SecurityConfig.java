@@ -48,15 +48,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // For APIs, we use JWT for auth so we can disable CSRF protection for /api endpoints
-            // but enable it for other routes
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                // Only disable CSRF for auth endpoints, not all API endpoints
-                .ignoringRequestMatchers("/api/auth/**")
+            // Explicitly disable CSRF for stateless JWT authentication
+            .csrf(csrf -> csrf.disable())
+            
+            // Configure stateless session management
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+            
+            // CORS configuration remains the same
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // Add security headers
+            
+            // Security headers and authorization rules remain unchanged
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp
                     .policyDirectives("default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; " +
@@ -71,7 +74,8 @@ public class SecurityConfig {
                 .referrerPolicy(referrer -> referrer
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                 .permissionsPolicy(permissions -> permissions
-                    .policy("camera=(), microphone=(), geolocation=(), payment=()")))
+                    .policy("camera=(), microphone=(), geolocation=(), payment=()"))
+            )
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - accessible without authentication
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
@@ -129,9 +133,6 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             );
         
         return http.build();
