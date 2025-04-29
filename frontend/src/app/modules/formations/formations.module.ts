@@ -28,38 +28,16 @@ import { FormationFormComponent } from './formation-form/formation-form.componen
 import { ScheduleComponent } from './schedule/schedule.component';
 import { TrainerListComponent } from './trainer-list/trainer-list.component';
 
-const routes: Routes = [
-  { path: '', component: FormationListComponent },
-  { path: 'add', component: FormationFormComponent },
-  { path: 'edit/:id', component: FormationFormComponent },
-  { path: ':id', component: FormationDetailComponent },
-  { path: ':id/schedule', component: ScheduleComponent },
-  { path: ':id/trainers', component: TrainerListComponent },
-  {
-    path: 'my-formation',
-    component: FormationDetailComponent,
-    data: { myFormation: true },
-  },
-];
+// Routes sont maintenant importées depuis formations.routes.ts
+import formationsRoutes from './formations.routes';
 
 @NgModule({
-  declarations: [],
-
   imports: [
-    FormationListComponent,
-    FormationListComponent,
-    FormationDetailComponent,
-    FormationFormComponent,
-    TrainerListComponent,
     CommonModule,
+    RouterModule.forChild(formationsRoutes),
+    ReactiveFormsModule,
+    // Material Modules
     MatTableModule,
-    MatPaginatorModule,
-    RouterModule.forChild(routes),
-    ReactiveFormsModule,
-    ReactiveFormsModule,
-    FormationFormComponent,
-    TrainerListComponent,
-    FormationDetailComponent,
     MatPaginatorModule,
     MatSortModule,
     MatInputModule,
@@ -74,6 +52,12 @@ const routes: Routes = [
     MatSnackBarModule,
     MatChipsModule,
     MatTabsModule,
+    // Components
+    FormationListComponent,
+    FormationDetailComponent,
+    FormationFormComponent,
+    ScheduleComponent,
+    TrainerListComponent,
   ],
 })
 export class FormationsModule {}

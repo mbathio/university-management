@@ -1,85 +1,149 @@
 <!-- src/app/modules/formations/schedule/schedule.component.html -->
-<div class="schedule-container">
-  <div class="schedule-header">
-    <h1>Planning des Formations</h1>
-    <div class="schedule-actions">
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="createNewSchedule()"
-        *ngIf="canCreateSchedule()"
-      >
-        <mat-icon>add</mat-icon>
-        Nouveau Planning
+<div class="container-fluid">
+  <div class="page-header">
+    <div class="title-section">
+      <h1>Emploi du temps - {{ formation?.name || 'Formation' }}</h1>
+    </div>
+    <div class="actions-section">
+      <button mat-raised-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon> Retour
+      </button>
+      <button mat-raised-button color="primary" *ngIf="canManageSchedule()">
+        <mat-icon>add</mat-icon> Ajouter un événement
       </button>
     </div>
   </div>
 
-  <div class="loading-container" *ngIf="loading">
-    <mat-spinner diameter="50"></mat-spinner>
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
   </div>
 
-  <div *ngIf="!loading && schedules.length === 0" class="no-schedules">
-    <mat-icon>calendar_today</mat-icon>
-    <p>Aucun planning de formation n'est actuellement disponible.</p>
+  <div *ngIf="error" class="error-message">
+    {{ error }}
   </div>
 
-  <div *ngIf="!loading && schedules.length > 0" class="schedules-grid">
-    <mat-card *ngFor="let schedule of schedules" class="schedule-card">
-      <mat-card-header>
-        <mat-card-title>{{ schedule.name }}</mat-card-title>
-        <mat-card-subtitle>{{ schedule.period }}</mat-card-subtitle>
-      </mat-card-header>
-
+  <div *ngIf="!loading && !error">
+    <mat-card>
       <mat-card-content>
-        <div class="schedule-details">
-          <div class="schedule-info">
-            <mat-icon>date_range</mat-icon>
-            <span
-              >{{ schedule.startDate | date: "dd/MM/yyyy" }} -
-              {{ schedule.endDate | date: "dd/MM/yyyy" }}</span
-            >
-          </div>
+        <mat-tab-group>
+          <!-- Liste des événements -->
+          <mat-tab label="Liste des événements">
+            <div class="table-container">
+              <table 
+                mat-table 
+                [dataSource]="scheduleEvents" 
+                class="mat-elevation-z8"
+              >
+                <!-- Title Column -->
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef>Titre</th>
+                  <td mat-cell *matCellDef="let event">{{ event.title }}</td>
+                </ng-container>
 
-          <div class="schedule-stats">
-            <div class="stat">
-              <mat-icon>group</mat-icon>
-              <span>{{ schedule.totalParticipants }} participants</span>
+                <!-- Date Column -->
+                <ng-container matColumnDef="date">
+                  <th mat-header-cell *matHeaderCellDef>Date</th>
+                  <td mat-cell *matCellDef="let event">
+                    {{ formatDateTime(event.startDateTime) }}
+                  </td>
+                </ng-container>
+
+                <!-- Time Column -->
+                <ng-container matColumnDef="time">
+                  <th mat-header-cell *matHeaderCellDef>Horaire</th>
+                  <td mat-cell *matCellDef="let event">
+                    {{ formatTime(event.startDateTime) }} -
+                    {{ formatTime(event.endDateTime) }}
+                  </td>
+                </ng-container>
+
+                <!-- Location Column -->
+                <ng-container matColumnDef="location">
+                  <th mat-header-cell *matHeaderCellDef>Lieu</th>
+                  <td mat-cell *matCellDef="let event">{{ event.location }}</td>
+                </ng-container>
+
+                <!-- Trainer Column -->
+                <ng-container matColumnDef="trainer">
+                  <th mat-header-cell *matHeaderCellDef>Formateur</th>
+                  <td mat-cell *matCellDef="let event">{{ event.trainer }}</td>
+                </ng-container>
+
+                <!-- Type Column -->
+                <ng-container matColumnDef="type">
+                  <th mat-header-cell *matHeaderCellDef>Type</th>
+                  <td mat-cell *matCellDef="let event">
+                    <span class="event-type-badge" [ngClass]="'event-type-' + event.type.toLowerCase()">
+                      {{ event.type }}
+                    </span>
+                  </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let event">
+                    <button mat-icon-button color="primary" matTooltip="Détails">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      color="accent" 
+                      *ngIf="canManageSchedule()" 
+                      matTooltip="Modifier"
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      color="warn" 
+                      *ngIf="canManageSchedule()" 
+                      matTooltip="Supprimer"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+              </table>
             </div>
-            <div class="stat">
-              <mat-icon>school</mat-icon>
-              <span>{{ schedule.totalFormations }} formations</span>
+          </mat-tab>
+
+          <!-- Vue calendrier hebdomadaire -->
+          <mat-tab label="Vue hebdomadaire">
+            <div class="weekly-calendar">
+              <table class="timetable">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th *ngFor="let day of weekDays">{{ day }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let timeSlot of timeSlots">
+                    <td class="time-slot">{{ timeSlot }}</td>
+                    <td *ngFor="let day of weekDays; let i = index" class="day-slot">
+                      <div 
+                        *ngFor="let event of getEventsForTimeSlot(timeSlot, i)" 
+                        class="event-card" 
+                        [ngClass]="'event-type-' + event.type.toLowerCase()"
+                      >
+                        <div class="event-title">{{ event.title }}</div>
+                        <div class="event-details">
+                          <div>{{ event.location }}</div>
+                          <div>{{ event.trainer }}</div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
-        </div>
+          </mat-tab>
+        </mat-tab-group>
       </mat-card-content>
-
-      <mat-card-actions>
-        <button
-          mat-button
-          color="primary"
-          (click)="viewScheduleDetails(schedule.id)"
-        >
-          Détails
-        </button>
-        <button
-          mat-button
-          color="accent"
-          *ngIf="canEditSchedule(schedule)"
-          (click)="editSchedule(schedule.id)"
-        >
-          Modifier
-        </button>
-      </mat-card-actions>
     </mat-card>
   </div>
-
-  <mat-paginator
-    *ngIf="schedules.length > 0"
-    [length]="totalSchedules"
-    [pageSize]="pageSize"
-    [pageSizeOptions]="[5, 10, 25, 50]"
-    (page)="onPageChange($event)"
-  >
-  </mat-paginator>
 </div>

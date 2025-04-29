@@ -11,7 +11,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { NgModule } from '@angular/core';
 
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -20,6 +19,7 @@ import { of } from 'rxjs';
   selector: 'app-trainer-list',
   templateUrl: './trainer-list.component.html',
   styleUrls: ['./trainer-list.component.scss'],
+  standalone: true, // Ajout de standalone: true
   imports: [
     CommonModule,
     RouterModule,
@@ -28,8 +28,6 @@ import { of } from 'rxjs';
     MatButtonModule,
     MatIconModule,
     MatCardModule,
-    MatSnackBarModule,
-    MatTableModule,
     MatSnackBarModule,
   ],
 })

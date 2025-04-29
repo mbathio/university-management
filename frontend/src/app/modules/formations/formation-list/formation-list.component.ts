@@ -1,8 +1,7 @@
-// Correction du formation-list.component.ts
-// Supprimer l'import des modules Angular Material individuels et utiliser imports correctly
+// frontend/src/app/modules/formations/formation-list/formation-list.component.ts
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
@@ -18,10 +17,8 @@ import { Formation } from '../../../core/models/user.model';
 import { Role } from '../../../core/models/role.model';
 import { FormationService } from '../services/formation.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Router } from '@angular/router';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { NgModule } from '@angular/core';
 
 @Component({
   selector: 'app-formation-list',
@@ -72,8 +69,10 @@ export class FormationListComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+    if (this.dataSource) {
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+    }
   }
 
   loadFormations(): void {
@@ -107,18 +106,32 @@ export class FormationListComponent implements OnInit, AfterViewInit {
     }
   }
 
-  deleteFormation(id: string): void {
-    if (confirm('Are you sure you want to delete this formation?')) {
-      this.formationService.deleteFormation(Number(id)).subscribe(() => {
-        this.snackBar.open('Formation deleted successfully', 'Close', {
-          duration: 3000,
+  deleteFormation(id: number): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
+      this.formationService
+        .deleteFormation(id)
+        .pipe(
+          catchError((error) => {
+            this.snackBar.open(
+              'Erreur lors de la suppression de la formation',
+              'Fermer',
+              { duration: 3000 }
+            );
+            return of(null);
+          })
+        )
+        .subscribe((response) => {
+          if (response !== null) {
+            this.snackBar.open('Formation supprimée avec succès', 'Fermer', {
+              duration: 3000,
+            });
+            this.loadFormations();
+          }
         });
-        this.loadFormations();
-      });
     }
   }
 
-  navigateToDetails(id: string): void {
+  navigateToDetails(id: number): void {
     this.router.navigate(['/formations', id]);
   }
 
@@ -134,15 +147,3 @@ export class FormationListComponent implements OnInit, AfterViewInit {
     return this.authService.hasRole([Role.ADMIN]);
   }
 }
-
-@NgModule({
-  declarations: [
-    // Component declarations
-  ],
-  imports: [
-    CommonModule,
-    MatProgressSpinnerModule,
-    // Other imports
-  ],
-})
-export class FormationsModule {}

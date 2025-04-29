@@ -1,25 +1,30 @@
-// Correction du schedule.component.ts
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { FormationService } from '../services/formation.service';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/paginator';
-import { MatCardModule } from '@angular/material/card';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
+
+import { AuthService } from '../../../core/auth/auth.service';
+import { Role } from '../../../core/models/role.model';
+import { FormationService } from '../services/formation.service';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 
-interface Schedule {
+interface ScheduleEvent {
   id: number;
-  name: string;
-  period: string;
-  startDate: Date;
-  endDate: Date;
-  totalParticipants: number;
-  totalFormations: number;
+  title: string;
+  startDateTime: Date;
+  endDateTime: Date;
+  location: string;
+  trainer: string;
+  type: string;
 }
 
 @Component({
@@ -30,21 +35,32 @@ interface Schedule {
   imports: [
     CommonModule,
     RouterModule,
-    MatSnackBarModule,
+    MatTableModule,
     MatPaginatorModule,
-    MatCardModule,
+    MatSortModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
-  ],
+    MatProgressSpinnerModule,
+    MatTabsModule,
+    MatSnackBarModule,
+    MatCardModule,
+  ]
 })
 export class ScheduleComponent implements OnInit {
   formationId!: number;
-  schedules: Schedule[] = [];
-  loading = true;
-  formationName = '';
-  totalSchedules = 0;
-  pageSize = 10;
+  formation: any = null;
+  loading = false;
+  error: string | null = null;
+
+  scheduleEvents: ScheduleEvent[] = [];
+  displayedColumns: string[] = ['title', 'date', 'time', 'location', 'trainer', 'type', 'actions'];
+
+  // Weekly calendar properties
+  weekDays: string[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  timeSlots: string[] = [
+    '08:00', '09:00', '10:00', '11:00', '12:00', 
+    '13:00', '14:00', '15:00', '16:00', '17:00'
+  ];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -52,98 +68,57 @@ export class ScheduleComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private formationService: FormationService,
+    private authService: AuthService,
     private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
-      const id = params.get('id');
-      if (id) {
-        this.formationId = +id;
-        this.loadFormationDetails();
-        this.loadSchedule();
-      } else {
-        this.router.navigate(['/formations']);
-      }
+    this.route.params.subscribe(params => {
+      this.formationId = +params['id'];
+      this.loadFormationSchedule();
     });
   }
 
-  private loadFormationDetails(): void {
-    this.formationService
-      .getFormationById(this.formationId)
-      .pipe(
-        catchError((error) => {
-          this.snackBar.open(
-            'Erreur lors du chargement des détails de la formation',
-            'Fermer',
-            {
-              duration: 3000,
-            },
-          );
-          return of(null);
-        }),
-      )
-      .subscribe((formation) => {
-        if (formation) {
-          this.formationName = formation.name;
-        }
-      });
-  }
-
-  private loadSchedule(): void {
+  loadFormationSchedule(): void {
     this.loading = true;
-    this.formationService
-      .getFormationSchedule(this.formationId)
+    this.error = null;
+
+    this.formationService.getFormationSchedule(this.formationId)
       .pipe(
-        catchError((error) => {
-          this.snackBar.open(
-            'Erreur lors du chargement du planning',
-            'Fermer',
-            {
-              duration: 3000,
-            },
-          );
+        catchError((err) => {
+          this.error = 'Impossible de charger l\'emploi du temps';
+          this.loading = false;
           return of([]);
         }),
-        finalize(() => {
-          this.loading = false;
-        }),
+        finalize(() => this.loading = false)
       )
       .subscribe((scheduleItems) => {
-        // Assuming the API returns the appropriate format
-        this.schedules = scheduleItems;
-        this.totalSchedules = scheduleItems.length;
+        this.scheduleEvents = scheduleItems.map(item => ({
+          ...item,
+          startDateTime: new Date(item.startDateTime),
+          endDateTime: new Date(item.endDateTime)
+        }));
       });
   }
 
-  canCreateSchedule(): boolean {
-    // Implement authorization logic
-    return true;
+  formatDateTime(date: Date): string {
+    return date ? date.toLocaleDateString('fr-FR') : '';
   }
 
-  canEditSchedule(schedule: Schedule): boolean {
-    // Implement authorization logic
-    return true;
+  formatTime(date: Date): string {
+    return date ? date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
   }
 
-  createNewSchedule(): void {
-    // Implement navigation to schedule creation
-    console.log('Create new schedule');
+  canManageSchedule(): boolean {
+    return this.authService.hasRole([Role.ADMIN, Role.FORMATION_MANAGER]);
   }
 
-  viewScheduleDetails(scheduleId: number): void {
-    // Implement navigation to schedule details
-    console.log('View schedule', scheduleId);
-  }
-
-  editSchedule(scheduleId: number): void {
-    // Implement navigation to schedule edit
-    console.log('Edit schedule', scheduleId);
-  }
-
-  onPageChange(event: PageEvent): void {
-    // Handle pagination
-    console.log('Page event', event);
+  getEventsForTimeSlot(timeSlot: string, dayIndex: number): ScheduleEvent[] {
+    return this.scheduleEvents.filter(event => {
+      const eventDay = event.startDateTime.getDay();
+      const eventTime = event.startDateTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return eventDay === dayIndex && eventTime === timeSlot;
+    });
   }
 
   goBack(): void {

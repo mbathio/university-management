@@ -1,129 +1,128 @@
+```html
 <!-- src/app/modules/formations/formation-detail/formation-detail.component.html -->
-<div class="formation-detail-container">
-  <div class="formation-header">
-    <h1>
-      {{ isMyFormationView ? "Ma Formation" : "Détails de la Formation" }}
-    </h1>
-    <div class="formation-actions" *ngIf="!loading && formation">
-      <button
-        mat-icon-button
-        *ngIf="canEdit()"
-        (click)="onEdit()"
-        matTooltip="Modifier"
-      >
-        <mat-icon>edit</mat-icon>
-      </button>
-      <button
-        mat-icon-button
-        *ngIf="canDelete()"
-        (click)="onDelete()"
-        matTooltip="Supprimer"
-      >
-        <mat-icon>delete</mat-icon>
-      </button>
-      <button mat-raised-button color="primary" [routerLink]="['/formations']">
-        <mat-icon>arrow_back</mat-icon>
-        Retour à la liste
-      </button>
+<div class="container-fluid">
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && formation">
+    <div class="page-header">
+      <div class="title-section">
+        <h1>{{ formation.name }}</h1>
+        <div class="formation-badges">
+          <span class="badge type-badge">{{ formation.type }}</span>
+          <span class="badge level-badge">{{ formation.level }}</span>
+        </div>
+      </div>
+      <div class="actions-section">
+        <button mat-raised-button color="primary" *ngIf="canEdit()" (click)="onEdit()">
+          <mat-icon>edit</mat-icon> Modifier
+        </button>
+        <button mat-raised-button color="warn" *ngIf="canDelete()" (click)="onDelete()">
+          <mat-icon>delete</mat-icon> Supprimer
+        </button>
+      </div>
     </div>
-  </div>
 
-  <div class="loading-container" *ngIf="loading">
-    <mat-spinner diameter="40"></mat-spinner>
-  </div>
-
-  <div class="formation-content" *ngIf="!loading && formation">
     <mat-card>
       <mat-card-content>
         <mat-tab-group>
-          <!-- Informations générales -->
-          <mat-tab label="Informations générales">
-            <div class="tab-content">
-              <div class="info-section">
-                <h2>{{ formation.name }}</h2>
-                <div class="info-badges">
-                  <span class="info-badge type">{{
-                    formation.type || "Type non spécifié"
-                  }}</span>
-                  <span class="info-badge level">{{
-                    formation.level || "Niveau non spécifié"
-                  }}</span>
+          <mat-tab label="Informations">
+            <div class="info-container">
+              <div class="info-group">
+                <div class="info-item">
+                  <span class="label">Type:</span>
+                  <span class="value">{{ formation.type }}</span>
                 </div>
-
-                <div class="info-grid">
-                  <div class="info-item">
-                    <span class="info-label">Date de début:</span>
-                    <span class="info-value">{{
-                      formation.startDate
-                        ? (formation.startDate | date: "dd/MM/yyyy")
-                        : "Non spécifiée"
-                    }}</span>
-                  </div>
-
-                  <div class="info-item">
-                    <span class="info-label">Date de fin:</span>
-                    <span class="info-value">{{
-                      formation.endDate
-                        ? (formation.endDate | date: "dd/MM/yyyy")
-                        : "Non spécifiée"
-                    }}</span>
-                  </div>
-
-                  <div class="info-item">
-                    <span class="info-label">Financement:</span>
-                    <span class="info-value"
-                      >{{ formation.fundingAmount || 0 }} € ({{
-                        formation.fundingType || "Non spécifié"
-                      }})</span
-                    >
-                  </div>
+                <div class="info-item">
+                  <span class="label">Niveau:</span>
+                  <span class="value">{{ formation.level }}</span>
                 </div>
+              </div>
 
-                <div class="description-section">
-                  <h3>Description</h3>
-                  <p>
-                    {{
-                      formation.description || "Aucune description disponible."
-                    }}
-                  </p>
+              <div class="info-group">
+                <div class="info-item">
+                  <span class="label">Date de début:</span>
+                  <span class="value">{{ formation.startDate | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Date de fin:</span>
+                  <span class="value">{{ formation.endDate | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+
+              <div class="info-group full-width">
+                <div class="info-item">
+                  <span class="label">Description:</span>
+                  <p class="value description">{{ formation.description }}</p>
+                </div>
+              </div>
+
+              <div class="info-group">
+                <div class="info-item">
+                  <span class="label">Montant du financement:</span>
+                  <span class="value">{{ formation.fundingAmount | currency:'XOF':'symbol':'1.0-0' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Type de financement:</span>
+                  <span class="value">{{ formation.fundingType }}</span>
                 </div>
               </div>
             </div>
           </mat-tab>
 
-          <!-- Liste des étudiants (visible selon les droits) -->
+          <mat-tab label="Emploi du temps" [disabled]="!formation.id">
+            <div class="schedule-container">
+              <button mat-raised-button color="primary" [routerLink]="['/formations', formation.id, 'schedule']">
+                Voir l'emploi du temps complet
+              </button>
+            </div>
+          </mat-tab>
+
+          <mat-tab label="Formateurs" [disabled]="!formation.id">
+            <div class="trainers-container">
+              <button mat-raised-button color="primary" [routerLink]="['/formations', formation.id, 'trainers']">
+                Gérer les formateurs
+              </button>
+            </div>
+          </mat-tab>
+
           <mat-tab label="Étudiants" *ngIf="canViewStudents()">
-            <div class="tab-content">
-              <div class="students-section">
-                <h3>Étudiants inscrits ({{ students.length }})</h3>
-
-                <div *ngIf="students.length === 0" class="no-data">
-                  Aucun étudiant inscrit à cette formation.
-                </div>
-
-                <mat-card *ngFor="let student of students" class="student-card">
-                  <div class="student-info">
-                    <span class="student-name"
-                      >{{ student.firstName }} {{ student.lastName }}</span
-                    >
-                    <span class="student-id">ID: {{ student.studentId }}</span>
-                  </div>
-                  <div class="student-details">
-                    <span class="student-promo"
-                      >Promo: {{ student.promo }}</span
-                    >
-                    // Correction pour formation-detail.component.html
-                    <!-- Correction de la balise fermante -->
-                    <span class="student-years">
-                      {{ student.startYear }} - {{ student.endYear }}
-                    </span>
-                  </div></mat-card
-                >
+            <div class="students-container" *ngIf="students.length > 0; else noStudents">
+              <table class="students-table">
+                <thead>
+                  <tr>
+                    <th>ID Étudiant</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Promotion</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let student of students">
+                    <td>{{ student.studentId }}</td>
+                    <td>{{ student.lastName }}</td>
+                    <td>{{ student.firstName }}</td>
+                    <td>{{ student.promo }}</td>
+                    <td>
+                      <button mat-icon-button color="primary" [routerLink]="['/students', student.id]" matTooltip="Voir profil">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #noStudents>
+              <div class="no-data">
+                <p>Aucun étudiant inscrit dans cette formation.</p>
               </div>
-            </div></mat-tab
-          ></mat-tab-group
-        ></mat-card-content
-      ></mat-card
-    >
+            </ng-template>
+          </mat-tab>
+        </mat-tab-group>
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>
+```
