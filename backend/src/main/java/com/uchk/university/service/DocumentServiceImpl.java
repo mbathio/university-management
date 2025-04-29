@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,7 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import com.uchk.university.dto.NotificationDto;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +45,7 @@ public class DocumentServiceImpl implements DocumentService {
                 log.info("Created document storage directory: {}", directoryPath);
             }
         } catch (IOException e) {
-            log.error("Failed to initialize document storage: {}", e.getMessage(), e);
+            log.error("Failed to initialize document storage: {}", e.getMessage());
             throw new DocumentStorageException("Could not initialize storage", e);
         }
     }
@@ -78,7 +79,7 @@ public class DocumentServiceImpl implements DocumentService {
             log.info("Document created successfully: {}", savedDocument.getId());
             return savedDocument;
         } catch (Exception e) {
-            log.error("Error creating document: {}", e.getMessage(), e);
+            log.error("Error creating document: {}", e.getMessage());
             throw new DocumentStorageException("Could not create document: " + e.getMessage(), e);
         }
     }
@@ -102,7 +103,7 @@ public class DocumentServiceImpl implements DocumentService {
                 try {
                     fileStorageService.delete(document.getFilePath());
                 } catch (Exception e) {
-                    log.warn("Could not delete old file: {}", document.getFilePath(), e);
+                    log.warn("Could not delete old file: {}", document.getFilePath());
                 }
             }
 
@@ -161,7 +162,7 @@ public class DocumentServiceImpl implements DocumentService {
                     fileStorageService.deleteFile(document.getFilePath());
                     log.info("Associated file deleted: {}", document.getFilePath());
                 } catch (Exception e) {
-                    log.warn("Could not delete associated file: {}", document.getFilePath(), e);
+                    log.warn("Could not delete associated file: {}", document.getFilePath());
                 }
             }
             
@@ -169,7 +170,7 @@ public class DocumentServiceImpl implements DocumentService {
             documentRepository.delete(document);
             log.info("Document deleted successfully: {}", id);
         } catch (Exception e) {
-            log.error("Error deleting document: {}", id, e);
+            log.error("Error deleting document: {}", id);
             throw new DocumentStorageException("Could not delete document: " + id, e);
         }
     }
@@ -208,6 +209,20 @@ public class DocumentServiceImpl implements DocumentService {
         }
         return loadFileAsResource(document.getFilePath());
     }
-
     
+    @Override
+    public boolean userHasAccessToDocument(Document document, User user) {
+        // Admin has access to all documents
+        if (user.getRole() == Role.ADMIN) {
+            return true;
+        }
+        
+        // Document creator always has access to their documents
+        if (document.getCreator() != null && Objects.equals(document.getCreator().getId(), user.getId())) {
+            return true;
+        }
+        
+        // Document visibility level determines access
+        return document.getVisibilityLevel().equals("PUBLIC");
+    }
 }

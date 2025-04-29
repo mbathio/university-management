@@ -38,48 +38,55 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
+                // Public endpoints - accessible without authentication
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                .requestMatchers("/api/auth/validate").authenticated()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 
-                // Allow read operations for specific endpoints
+                // Publicly readable resources
                 .requestMatchers(HttpMethod.GET, "/api/formations/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/students/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/documents/files/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/documents/download/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/documents/files/**").permitAll()
                 
-                // Admin-specific endpoints
+                // Admin-only endpoints
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/students").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/students/**").hasAnyRole("ADMIN", "STUDENT")
                 .requestMatchers(HttpMethod.DELETE, "/api/students/**").hasRole("ADMIN")
-                
-                // Other write operations
-                .requestMatchers(HttpMethod.POST, "/api/formations/**").hasAnyRole("ADMIN", "FORMATION_MANAGER")
-                .requestMatchers(HttpMethod.PUT, "/api/formations/**").hasAnyRole("ADMIN", "FORMATION_MANAGER")
                 .requestMatchers(HttpMethod.DELETE, "/api/formations/**").hasRole("ADMIN")
                 
-                // Other endpoints
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/users/**").permitAll()
-                .requestMatchers("/api/roles/**").permitAll()
-                .requestMatchers("/actuator/**").hasRole("ADMIN")
+                // Student endpoints
+                .requestMatchers("/api/student/**").hasAnyRole("ADMIN", "STUDENT")
+                .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "STUDENT")
+                .requestMatchers(HttpMethod.PUT, "/api/students/**").hasAnyRole("ADMIN", "STUDENT")
                 
-                // Documents endpoints
-                .requestMatchers("/api/documents").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
-                
-                // Notifications endpoints
-                .requestMatchers("/api/notifications/unread/count").permitAll()
-                .requestMatchers("/api/notifications/mark-all-read").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "STUDENT")
+                // Formation management
+                .requestMatchers(HttpMethod.POST, "/api/formations/**").hasAnyRole("ADMIN", "FORMATION_MANAGER")
+                .requestMatchers(HttpMethod.PUT, "/api/formations/**").hasAnyRole("ADMIN", "FORMATION_MANAGER")
                 
                 // Teacher endpoints
                 .requestMatchers("/api/teacher/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER")
                 
-                // Student endpoints
-                .requestMatchers("/api/student/**").hasAnyRole("ADMIN", "STUDENT")
+                // Document management
+                .requestMatchers("/api/documents").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
                 
-                // Require authentication for all other requests
+                // User management - restrict to admin only
+                .requestMatchers(HttpMethod.GET, "/api/users/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/users/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
+                
+                // Role management - restrict to admin only
+                .requestMatchers("/api/roles/**").hasRole("ADMIN")
+                
+                // Notification endpoints
+                .requestMatchers("/api/notifications/unread/count").authenticated()
+                .requestMatchers("/api/notifications/mark-all-read").authenticated()
+                
+                // Token validation endpoint
+                .requestMatchers("/api/auth/validate").authenticated()
+                
+                // All other requests require authentication
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

@@ -1,3 +1,4 @@
+
 package com.uchk.university.security;
 
 import io.jsonwebtoken.*;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,11 +18,16 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil {
 
-    @Value("${jwt.secret:defaultSecretKeyNeedsToBeAtLeast32CharsLongForHS256}")
-    private String secret;
+    private final SecretKey key;
+    private final long jwtExpiration;
 
-    @Value("${jwt.expiration:86400000}") // Default: 24 hours
-    private long jwtExpiration;
+    public JwtTokenUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration:86400000}") long jwtExpiration) {
+        // Generate a proper key from the secret
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.jwtExpiration = jwtExpiration;
+    }
 
     public String getUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
@@ -36,7 +43,6 @@ public class JwtTokenUtil {
     }
 
     private Claims getAllClaimsFromToken(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
@@ -51,13 +57,12 @@ public class JwtTokenUtil {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        // You can add custom claims here
+        // Add user roles to the claims
+        claims.put("authorities", userDetails.getAuthorities());
         return doGenerateToken(claims, userDetails.getUsername());
     }
 
     private String doGenerateToken(Map<String, Object> claims, String subject) {
-        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
@@ -78,7 +83,6 @@ public class JwtTokenUtil {
 
     public Boolean validateToken(String token) {
         try {
-            SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
             Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()

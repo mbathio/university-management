@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -30,14 +31,18 @@ public class DocumentController {
     private final UserRepository userRepository;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Document>> getAllDocuments(@CurrentUser User currentUser) {
-        log.debug("REST request to get all documents for current user");
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         try {
             List<Document> documents = documentService.getDocumentsForUser(currentUser.getId());
             return ResponseEntity.ok(documents);
         } catch (Exception e) {
-            log.error("Error getting documents for user", e);
-            return ResponseEntity.internalServerError().build();
+            log.error("Error getting documents for user: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -47,98 +52,140 @@ public class DocumentController {
             @RequestPart("document") Document document,
             @RequestPart(value = "file", required = false) MultipartFile file,
             @CurrentUser User currentUser) {
-        log.debug("REST request to create Document : {}", document);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         try {
-            Long userId = (currentUser != null) ? currentUser.getId() : getDefaultAdminUserId();
-
             if (document == null) {
-                log.error("Received null document in createDocument");
                 return ResponseEntity.badRequest().body("Document cannot be null");
             }
 
             document.setType(parseDocumentType(document.getType()));
-
-            Document createdDocument = documentService.createDocument(document, userId, file);
-            return ResponseEntity.ok(createdDocument);
+            Document createdDocument = documentService.createDocument(document, currentUser.getId(), file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdDocument);
         } catch (IllegalArgumentException e) {
-            log.error("Invalid document creation request", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid document data: " + e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error creating document", e);
-            return ResponseEntity.internalServerError().body("Failed to create document: " + e.getMessage());
+            log.error("Error creating document: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An error occurred while creating the document");
         }
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION') and " +
-                  "@documentController.checkDocumentCreator(#id, authentication.name) or hasRole('ADMIN')")
-    public ResponseEntity<Document> updateDocument(
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION')")
+    public ResponseEntity<?> updateDocument(
             @PathVariable Long id,
             @RequestPart("document") Document document,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
-        log.debug("REST request to update Document : {}", document);
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @CurrentUser User currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         try {
+            // Check if user has permission to update this document
+            if (!documentService.isDocumentCreator(id, currentUser.getUsername()) && 
+                !currentUser.getRole().name().equals("ADMIN")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have permission to update this document");
+            }
+            
             document.setType(parseDocumentType(document.getType()));
             Document updatedDocument = documentService.updateDocument(id, document, file);
             return ResponseEntity.ok(updatedDocument);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
         } catch (Exception e) {
-            log.error("Error updating document", e);
-            return ResponseEntity.internalServerError().build();
+            log.error("Error updating document: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An error occurred while updating the document");
         }
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Document> getDocument(@PathVariable Long id) {
-        log.debug("REST request to get Document : {}", id);
+    public ResponseEntity<?> getDocument(@PathVariable Long id, @CurrentUser User currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         try {
             Document document = documentService.getDocumentById(id);
+            
+            // Check if the user has access to this document based on visibility level
+            if (!documentService.userHasAccessToDocument(document, currentUser)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have access to this document");
+            }
+            
             return ResponseEntity.ok(document);
         } catch (Exception e) {
-            log.error("Error getting document", e);
-            return ResponseEntity.internalServerError().build();
+            log.error("Error getting document: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An error occurred while retrieving the document");
         }
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION') and " +
-                  "@documentController.checkDocumentCreator(#id, authentication.name) or hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
-        log.debug("REST request to delete Document : {}", id);
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION')")
+    public ResponseEntity<?> deleteDocument(@PathVariable Long id, @CurrentUser User currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         try {
+            // Check if user has permission to delete this document
+            if (!documentService.isDocumentCreator(id, currentUser.getUsername()) && 
+                !currentUser.getRole().name().equals("ADMIN")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have permission to delete this document");
+            }
+            
             documentService.deleteDocument(id);
             return ResponseEntity.ok().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
         } catch (Exception e) {
-            log.error("Error deleting document", e);
-            return ResponseEntity.internalServerError().build();
+            log.error("Error deleting document: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An error occurred while deleting the document");
         }
     }
 
     @GetMapping("/types")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<DocumentType>> getDocumentTypes() {
-        log.debug("REST request to get all document types");
         try {
             return ResponseEntity.ok(Arrays.asList(DocumentType.values()));
         } catch (Exception e) {
-            log.error("Error getting document types", e);
-            return ResponseEntity.internalServerError().build();
+            log.error("Error getting document types: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/download/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) throws IOException {
-        log.debug("REST request to download Document : {}", id);
+    public ResponseEntity<?> downloadDocument(@PathVariable Long id, @CurrentUser User currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         try {
+            Document document = documentService.getDocumentById(id);
+            
+            // Check if the user has access to this document based on visibility level
+            if (!documentService.userHasAccessToDocument(document, currentUser)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have access to this document");
+            }
+            
             Resource resource = documentService.loadFileAsResource(id);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, 
                             "attachment; filename=\"" + resource.getFilename() + "\"")
                     .body(resource);
         } catch (Exception e) {
-            log.error("Error downloading document", e);
-            return ResponseEntity.internalServerError().build();
+            log.error("Error downloading document: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An error occurred while downloading the document");
         }
     }
 
@@ -147,16 +194,8 @@ public class DocumentController {
         return documentService.isDocumentCreator(documentId, username);
     }
 
-    // New method to get default admin user ID
-    private Long getDefaultAdminUserId() {
-        return userRepository.findByUsername("admin")
-            .map(User::getId)
-            .orElseThrow(() -> new RuntimeException("No default admin user found"));
-    }
-
     private DocumentType parseDocumentType(Object typeObj) {
         if (typeObj == null) {
-            log.warn("No document type specified, defaulting to AUTRE");
             return DocumentType.AUTRE;
         }
         
@@ -168,12 +207,10 @@ public class DocumentController {
             try {
                 return DocumentType.valueOf(((String) typeObj).toUpperCase().replace(" ", "_"));
             } catch (IllegalArgumentException e) {
-                log.warn("Invalid document type: {}, defaulting to AUTRE", typeObj);
                 return DocumentType.AUTRE;
             }
         }
         
-        log.warn("Unsupported document type: {}, defaulting to AUTRE", typeObj);
         return DocumentType.AUTRE;
     }
 }

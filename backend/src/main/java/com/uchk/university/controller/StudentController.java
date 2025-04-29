@@ -22,11 +22,13 @@ public class StudentController {
     private static final Logger logger = LoggerFactory.getLogger(StudentController.class);
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER') or @studentService.isCurrentUserStudent(#id)")
     public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
         return ResponseEntity.ok(studentService.getStudentById(id));
     }
 
     @GetMapping("/studentId/{studentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER')")
     public ResponseEntity<Student> getStudentByStudentId(@PathVariable String studentId) {
         return ResponseEntity.ok(studentService.getStudentByStudentId(studentId));
     }
@@ -38,11 +40,13 @@ public class StudentController {
     }
 
     @GetMapping("/formation/{formationId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER')")
     public ResponseEntity<List<Student>> getStudentsByFormation(@PathVariable Long formationId) {
         return ResponseEntity.ok(studentService.getStudentsByFormation(formationId));
     }
 
     @GetMapping("/promo/{promo}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER')")
     public ResponseEntity<List<Student>> getStudentsByPromo(@PathVariable String promo) {
         return ResponseEntity.ok(studentService.getStudentsByPromo(promo));
     }

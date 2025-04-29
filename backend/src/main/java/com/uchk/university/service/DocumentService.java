@@ -18,6 +18,7 @@ public interface DocumentService {
     Resource loadFileAsResource(Long id) throws IOException;
     Resource loadFileAsResource(String filename) throws IOException;
     boolean isDocumentCreator(Long documentId, String username);
+    boolean userHasAccessToDocument(Document document, User user);
     List<Document> getAllDocuments();
     List<Document> getDocumentsByType(DocumentType type);
     List<Document> getDocumentsByTypes(List<DocumentType> types);
