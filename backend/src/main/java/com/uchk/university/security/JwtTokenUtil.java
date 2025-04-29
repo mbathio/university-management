@@ -67,6 +67,15 @@ public class JwtTokenUtil {
                 .compact();
     }
 
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        try {
+            String username = getUsernameFromToken(token);
+            return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public Boolean validateToken(String token) {
         try {
             SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));

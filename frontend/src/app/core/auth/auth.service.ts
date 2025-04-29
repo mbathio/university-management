@@ -1,6 +1,6 @@
 // src/app/core/auth/auth.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -17,8 +17,9 @@ interface AuthResponse {
 })
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  private tokenKey = 'auth_token';
-  private userKey = 'current_user';
+  private tokenKey = 'token';
+  private userKey = 'username';
+  private roleKey = 'role';
 
   constructor(
     private http: HttpClient,
@@ -39,7 +40,12 @@ export class AuthService {
 
     if (token && userJson) {
       try {
-        const user: User = JSON.parse(userJson);
+        const user: User = {
+          username: userJson,
+          role: localStorage.getItem(this.roleKey) as Role,
+          id: 0,
+          email: ''
+        };
         this.currentUserSubject.next(user);
         // Validate the token silently in background
         this.validateToken().subscribe();
@@ -50,32 +56,22 @@ export class AuthService {
     }
   }
 
-  login(username: string, password: string): Observable<User> {
-    return this.http
-      .post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, {
-        username,
-        password,
-      })
-      .pipe(
-        map((response) => {
-          // Store token and user in localStorage
+  login(credentials: { username: string, password: string }): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, credentials).pipe(
+      tap(response => {
+        console.log('Login Response:', JSON.stringify(response, null, 2));
+        if (response.token) {
           localStorage.setItem(this.tokenKey, response.token);
-          const user = {
-            username: response.username,
-            email: response.email,
-            role: response.role,
-          } as User;
-          localStorage.setItem(this.userKey, JSON.stringify(user));
-
-          // Update currentUserSubject
-          this.currentUserSubject.next(user);
-          return user;
-        }),
-        catchError((error: HttpErrorResponse) => {
-          console.error('Login error in service:', error);
-          return throwError(() => error);
-        })
-      );
+          localStorage.setItem(this.userKey, response.username);
+          localStorage.setItem(this.roleKey, response.role.toString());
+          console.log('Stored Role:', response.role.toString());
+        }
+      }),
+      catchError(error => {
+        console.error('Login error:', error);
+        return throwError(() => new Error('Login failed'));
+      })
+    );
   }
 
   register(userData: {
@@ -99,6 +95,7 @@ export class AuthService {
     // Clear localStorage
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
+    localStorage.removeItem(this.roleKey);
 
     // Reset current user
     this.currentUserSubject.next(null);
@@ -112,7 +109,12 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.warn('No token found in localStorage');
+      return null;
+    }
+    return token;
   }
 
   hasRole(roles: Role[]): boolean {
@@ -127,16 +129,24 @@ export class AuthService {
     }
 
     return this.http
-      .get<{ valid: boolean }>(`${environment.apiUrl}/api/auth/validate`)
+      .get<{ valid: boolean }>(`${environment.apiUrl}/api/auth/validate`, {
+        headers: new HttpHeaders({
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        })
+      })
       .pipe(
-        map(() => true), // If the request succeeds, token is valid
+        map((response) => {
+          console.log('Token validation response:', response);
+          return response.valid;
+        }),
         catchError((error) => {
           console.error('Token validation error:', error);
           if (error.status === 401 || error.status === 403) {
             this.logout(); // Logout if token is invalid
           }
           return of(false);
-        }),
+        })
       );
   }
 }

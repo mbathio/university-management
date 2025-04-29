@@ -50,7 +50,7 @@ export class LoginComponent implements OnInit {
   
     const { username, password } = this.loginForm.value;
   
-    this.authService.login(username, password).subscribe({
+    this.authService.login({ username, password }).subscribe({
       next: (user) => {
         console.log('Login successful:', user);
         this.router.navigate(['/dashboard']);

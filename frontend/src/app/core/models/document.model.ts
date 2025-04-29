@@ -7,7 +7,7 @@ export enum DocumentType {
   NOTE_SERVICE = 'NOTE_SERVICE',
   CIRCULAR = 'CIRCULAIRE',
   ADMINISTRATIVE_NOTE = 'NOTE_ADMINISTRATIVE',
-  OTHER = 'AUTRE',
+  OTHER = 'AUTRE'
 }
 
 export enum VisibilityLevel {

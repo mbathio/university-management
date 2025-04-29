@@ -22,6 +22,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,13 +50,25 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/validate").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/formations/**").permitAll()
-                .requestMatchers("/api/documents/files/**").permitAll()  
-                .requestMatchers("/api/documents/download/**").permitAll()
                 
-                // Endpoints administratifs (suppression du doublon)
+                // Permettre les opérations de lecture pour plusieurs endpoints
+                .requestMatchers(HttpMethod.GET, "/api/formations/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/students/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/documents/files/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/documents/download/**").permitAll()
+                
+                // Restreindre les opérations d'écriture
+                .requestMatchers(HttpMethod.POST, "/api/formations/**").hasAnyRole("ADMIN", "FORMATION_MANAGER")
+                .requestMatchers(HttpMethod.PUT, "/api/formations/**").hasAnyRole("ADMIN", "FORMATION_MANAGER")
+                .requestMatchers(HttpMethod.DELETE, "/api/formations/**").hasRole("ADMIN")
+                
+                // Endpoints étudiants avec des règles plus spécifiques
+                .requestMatchers(HttpMethod.POST, "/api/students").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/students/**").hasAnyRole("ADMIN", "STUDENT")
+                .requestMatchers(HttpMethod.DELETE, "/api/students/**").hasRole("ADMIN")
+                
+                // Autres endpoints administratifs
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/formation/**").hasRole("ADMIN")
                 .requestMatchers("/api/users/**").permitAll()
                 .requestMatchers("/api/roles/**").permitAll()
                 .requestMatchers("/api/formation-manager/**").hasRole("ADMIN")
@@ -66,18 +84,20 @@ public class SecurityConfig {
                 // Endpoints enseignants
                 .requestMatchers("/api/teacher/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER")
                 
-                // Endpoints étudiants
+                // Endpoints étudiants généraux
                 .requestMatchers("/api/student/**").hasAnyRole("ADMIN", "STUDENT")
                 
                 // Toutes les autres requêtes nécessitent une authentification
                 .anyRequest().authenticated()
             )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+            )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-    
+            );
+        
         return http.build();
     }
 

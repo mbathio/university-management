@@ -1,6 +1,7 @@
 // src/app/modules/communication/report-form/report-form.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
 import {
   FormBuilder,
   FormGroup,
@@ -20,12 +21,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 
+// Import Document types
+import { Document, DocumentType, VisibilityLevel } from '../../../core/models/document.model';
 import { DocumentService } from '../../../core/services/document.service';
-import {
-  Document,
-  DocumentType,
-  VisibilityLevel,
-} from '../../../core/models/document.model';
 import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
@@ -154,7 +152,6 @@ export class ReportFormComponent implements OnInit {
     }
   }
 
-  // Dans la méthode onSubmit() de report-form.component.ts
   onSubmit(): void {
     if (this.reportForm.invalid) {
       return;
@@ -175,81 +172,88 @@ export class ReportFormComponent implements OnInit {
     // Create enriched content with meeting details
     const enrichedContent = `
     <h3>Compte rendu</h3>
-    <p><strong>Date:</strong> ${this.reportForm.value.meetingDate.toLocaleDateString()}</p>
+    <p><strong>Titre:</strong> ${this.reportForm.value.title}</p>
+    <p><strong>Date:</strong> ${this.reportForm.value.meetingDate}</p>
     <p><strong>Lieu:</strong> ${this.reportForm.value.location}</p>
     <p><strong>Participants:</strong> ${this.reportForm.value.participants}</p>
     <div class="report-content">
       ${this.reportForm.value.content}
     </div>
-  `;
+    `;
 
-    const documentData: Partial<Document> = {
+    // Create document data object
+    const documentData: Document = {
       title: this.reportForm.value.title,
       content: enrichedContent,
-      type: this.reportForm.value.type,
+      type: this.mapToDocumentType(this.reportForm.value.type),
       visibilityLevel: this.reportForm.value.visibilityLevel,
       tags: tags,
+      reference: `REPORT-${new Date().getTime()}`,
+      id: -1, // Temporary ID, will be replaced by backend
+      createdBy: this.authService.currentUserValue 
+        ? {
+            id: this.authService.currentUserValue.id,
+            username: this.authService.currentUserValue.username,
+            fullName: this.authService.currentUserValue.fullName || this.authService.currentUserValue.username
+          }
+        : {
+            id: -1, // Use a default ID to indicate no user
+            username: 'anonymous',
+            fullName: 'Anonymous User'
+          },
+      createdAt: new Date(),
+      updatedAt: undefined,
     };
 
-    // Convertir l'objet document en JSON et l'ajouter au FormData
-    formData.append(
-      'document',
-      new Blob([JSON.stringify(documentData)], {
-        type: 'application/json',
-      }),
-    );
+    // Append document as JSON
+    formData.append('document', new Blob([JSON.stringify(documentData)], {
+      type: 'application/json'
+    }), 'document.json');
 
-    const currentUser = this.authService.currentUserValue;
-    const userId = currentUser?.id;
-
-    formData.append('userId', userId?.toString() || '');
-
+    // Append file if selected
     if (this.selectedFile) {
       formData.append('file', this.selectedFile);
     }
 
-    if (this.isEditMode && this.documentId) {
-      this.documentService.updateDocument(this.documentId, formData).subscribe({
-        next: () => {
-          this.snackBar.open('Rapport mis à jour avec succès', 'Fermer', {
+    this.documentService.createDocument(formData).subscribe({
+      next: () => {
+        this.snackBar.open('Rapport créé avec succès', 'Fermer', {
+          duration: 3000,
+        });
+        this.router.navigate(['/communication/reports']);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Erreur lors de la création', error);
+        this.snackBar.open(
+          'Erreur lors de la création du rapport',
+          'Fermer',
+          {
             duration: 3000,
-          });
-          this.router.navigate(['/communication/reports']); // Corriger le chemin de redirection
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Erreur lors de la mise à jour', error);
-          this.snackBar.open(
-            'Erreur lors de la mise à jour du rapport',
-            'Fermer',
-            {
-              duration: 3000,
-            },
-          );
-          this.loading = false;
-        },
-      });
-    } else {
-      this.documentService.createDocument(formData).subscribe({
-        next: () => {
-          this.snackBar.open('Rapport créé avec succès', 'Fermer', {
-            duration: 3000,
-          });
-          this.router.navigate(['/communication/reports']); // Corriger le chemin de redirection
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Erreur lors de la création', error);
-          this.snackBar.open(
-            'Erreur lors de la création du rapport',
-            'Fermer',
-            {
-              duration: 3000,
-            },
-          );
-          this.loading = false;
-        },
-      });
+          }
+        );
+        this.loading = false;
+      },
+    });
+  }
+
+  private mapToDocumentType(formType: string | DocumentType): DocumentType {
+    // If already a DocumentType, return it directly
+    if (Object.values(DocumentType).includes(formType as DocumentType)) {
+      return formType as DocumentType;
     }
+
+    const typeMapping: { [key: string]: DocumentType } = {
+      'meeting': DocumentType.MEETING_REPORT,
+      'seminar': DocumentType.SEMINAR_REPORT,
+      'webinar': DocumentType.WEBINAR_REPORT,
+      'university_council': DocumentType.UNIVERSITY_COUNCIL,
+      'service_note': DocumentType.NOTE_SERVICE,
+      'circular': DocumentType.CIRCULAR,
+      'administrative_note': DocumentType.ADMINISTRATIVE_NOTE,
+      'other': DocumentType.OTHER
+    };
+    
+    return typeMapping[formType as string] || DocumentType.OTHER;
   }
 }
