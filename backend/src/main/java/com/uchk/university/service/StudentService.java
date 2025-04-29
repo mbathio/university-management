@@ -8,7 +8,10 @@ import com.uchk.university.entity.User;
 import com.uchk.university.exception.ResourceNotFoundException;
 import com.uchk.university.repository.FormationRepository;
 import com.uchk.university.repository.StudentRepository;
+import com.uchk.university.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,22 +24,43 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final UserService userService;
     private final FormationRepository formationRepository;
+    private static final Logger logger = LoggerFactory.getLogger(StudentService.class);
+
+    /**
+     * Check if the currently authenticated user is the student with the given ID
+     */
+    public boolean isCurrentUserStudent(Long studentId) {
+        try {
+            String username = SecurityUtils.getCurrentUsername();
+            Student student = getStudentById(studentId);
+            return student.getUser().getUsername().equals(username);
+        } catch (Exception e) {
+            logger.warn("Error checking current user against student: {}", e.getMessage());
+            return false;
+        }
+    }
 
     @Transactional
     public Student createStudent(StudentDto studentDto) {
+        logger.info("Creating student with studentId: {}", studentDto.getStudentId());
+        
         // Create user account first
         User user = userService.createUser(new com.uchk.university.dto.UserDto(
                 studentDto.getUsername(),
                 studentDto.getPassword(),
                 studentDto.getEmail(),
-                Role.STUDENT
+                Role.STUDENT,
+                true // Set active to true by default
         ));
+        
+        logger.info("User created with ID: {}", user.getId());
 
         // Get formation if provided
         Formation formation = null;
         if (studentDto.getFormationId() != null) {
             formation = formationRepository.findById(studentDto.getFormationId())
                     .orElseThrow(() -> new ResourceNotFoundException("Formation not found with id: " + studentDto.getFormationId()));
+            logger.info("Found formation with ID: {}", formation.getId());
         }
 
         // Create student profile
@@ -60,7 +84,9 @@ public class StudentService {
         student.setStartYear(studentDto.getStartYear());
         student.setEndYear(studentDto.getEndYear());
 
-        return studentRepository.save(student);
+        Student savedStudent = studentRepository.save(student);
+        logger.info("Student saved with ID: {}", savedStudent.getId());
+        return savedStudent;
     }
 
     public Student getStudentById(Long id) {
@@ -106,6 +132,13 @@ public class StudentService {
         student.setPromo(studentDto.getPromo());
         student.setStartYear(studentDto.getStartYear());
         student.setEndYear(studentDto.getEndYear());
+
+        // Update Formation if provided
+        if (studentDto.getFormationId() != null) {
+            Formation formation = formationRepository.findById(studentDto.getFormationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Formation not found with id: " + studentDto.getFormationId()));
+            student.setCurrentFormation(formation);
+        }
 
         return studentRepository.save(student);
     }

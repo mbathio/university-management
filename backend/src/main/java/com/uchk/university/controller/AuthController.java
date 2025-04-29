@@ -9,9 +9,12 @@ import com.uchk.university.service.AuthService;
 import com.uchk.university.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -23,6 +26,7 @@ import java.util.Map;
 public class AuthController {
     private final AuthService authService;
     private final UserService userService;
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
@@ -35,15 +39,32 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<Map<String, Object>> validateToken(@CurrentUser User currentUser) {
+    public ResponseEntity<Map<String, Object>> validateToken() {
         Map<String, Object> response = new HashMap<>();
         
-        if (currentUser != null) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                logger.warn("No valid authentication found");
+                response.put("valid", false);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+            
+            // Try to find the user
+            String username = authentication.getName();
+            User user = userService.getUserByUsername(username);
+            
+            // Populate response with user details
             response.put("valid", true);
-            response.put("username", currentUser.getUsername());
-            response.put("role", currentUser.getRole());
+            response.put("username", user.getUsername());
+            response.put("role", user.getRole());
+            
+            logger.info("Token validated successfully for user: {}", username);
             return ResponseEntity.ok(response);
-        } else {
+        } catch (Exception e) {
+            logger.error("Token validation error: {}", e.getMessage());
             response.put("valid", false);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }

@@ -10,35 +10,28 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDto {
     @NotBlank(message = "Username is required")
-    public String username;
+    private String username;
 
     @NotBlank(message = "Password is required")
-    public String password;
+    private String password;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
-    public String email;
+    private String email;
 
     @NotNull(message = "Role is required")
-    public Role role;
+    private Role role;
 
     @Builder.Default
-    public boolean active = false;
+    private boolean active = true;
 
-    // Additional constructors
+    // Constructor for backwards compatibility
     public UserDto(String username, String password, String email, Role role) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-        this.role = role;
-        this.active = false;
+        this(username, password, email, role, true);
     }
-
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
 }

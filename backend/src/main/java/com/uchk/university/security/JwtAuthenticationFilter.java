@@ -1,5 +1,8 @@
 package com.uchk.university.security;
 
+import com.uchk.university.service.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,20 +14,18 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collection;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenUtil jwtTokenUtil;
     private final UserDetailsService userDetailsService;
+    private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Override
@@ -33,91 +34,108 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        // Log request details
-        logger.info("Request URL: {}", request.getRequestURL());
-        logger.info("Request Method: {}", request.getMethod());
+        // Log request details for debugging
+        logger.debug("Processing request: {} {}", request.getMethod(), request.getRequestURL());
 
-        // Extract JWT token
-        String authHeader = request.getHeader("Authorization");
-        logger.info("Authorization Header: {}", authHeader);
-
-        String token = null;
-        String username = null;
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-            logger.info("JWT Token extracted: {}", token);
-
-            try {
-                username = jwtTokenUtil.getUsernameFromToken(token);
-                logger.info("Username extracted from token: {}", username);
-            } catch (Exception e) {
-                logger.error("Error extracting username from token: {}", e.getMessage());
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
-                return;
-            }
-        } else {
-            logger.warn("Authorization header is missing or does not start with Bearer");
+        // Skip authentication for public endpoints
+        if (shouldSkipAuthentication(request)) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        // Validate token and set authentication
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        // Extract Authorization header
+        String authHeader = request.getHeader("Authorization");
+        
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            
             try {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                logger.info("User Details retrieved for username: {}", username);
-                logger.info("User Authorities: {}", userDetails.getAuthorities());
-
-                // Validate token against user details
-                if (jwtTokenUtil.validateToken(token, userDetails)) {
-                    logger.info("Token validated successfully for user: {}", username);
-
-                    // Specific check for student creation endpoint
-                    if (request.getRequestURI().contains("/api/students") && 
-                        request.getMethod().equals("POST")) {
+                // Extract username from token
+                String username = jwtTokenUtil.getUsernameFromToken(token);
+                
+                // Check if authentication is not already set
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Load user details
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    
+                    // Validate token
+                    if (jwtTokenUtil.validateToken(token, userDetails)) {
+                        // Create authentication token
+                        UsernamePasswordAuthenticationToken authToken = 
+                            new UsernamePasswordAuthenticationToken(
+                                userDetails, 
+                                null, 
+                                userDetails.getAuthorities()
+                            );
                         
-                        boolean hasAdminRole = userDetails.getAuthorities().stream()
-                            .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+                        // Set authentication details
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         
-                        logger.info("Attempting student creation. Has ADMIN role: {}", hasAdminRole);
-
-                        if (!hasAdminRole) {
-                            logger.warn("Unauthorized access attempt to student creation by user: {}", username);
-                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Insufficient privileges");
-                            return;
-                        }
+                        // Set security context
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                        
+                        // Log successful authentication
+                        logger.info("User authenticated: {}, Authorities: {}", 
+                            username, 
+                            userDetails.getAuthorities()
+                        );
+                    } else {
+                        logger.warn("Token validation failed for user: {}", username);
                     }
-
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                    logger.info("Authentication set successfully for user: {}", username);
-                } else {
-                    logger.warn("Token validation failed for user: {}", username);
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
-                    return;
                 }
-            } catch (UsernameNotFoundException e) {
-                logger.error("User not found: {}", username);
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
-                return;
+            } catch (ExpiredJwtException e) {
+                logger.error("JWT Token expired: {}", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            } catch (JwtException e) {
+                logger.error("JWT Token error: {}", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             } catch (Exception e) {
                 logger.error("Authentication error: {}", e.getMessage());
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
-                return;
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             }
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+    private boolean shouldSkipAuthentication(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+        
+        // Public endpoints
+        String[] publicPaths = {
+            "/api/auth/login", 
+            "/api/auth/register", 
+            "/api/auth/validate",
+            "/api-docs/", 
+            "/swagger-ui/", 
+            "/actuator/"
+        };
+        
+        for (String publicPath : publicPaths) {
+            if (path.startsWith(publicPath)) {
+                logger.debug("Skipping authentication for public path: {}", path);
+                return true;
+            }
         }
-        return null;
+        
+        // Allow read-only operations
+        if ("GET".equals(method)) {
+            String[] readOnlyPaths = {
+                "/api/formations/", 
+                "/api/students/", 
+                "/api/documents/files/", 
+                "/api/documents/download/"
+            };
+            
+            for (String readOnlyPath : readOnlyPaths) {
+                if (path.startsWith(readOnlyPath)) {
+                    logger.debug("Skipping authentication for read-only path: {}", path);
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 }
