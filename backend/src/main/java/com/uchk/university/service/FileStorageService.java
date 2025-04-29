@@ -1,6 +1,9 @@
 package com.uchk.university.service;
 
 import com.uchk.university.exception.DocumentStorageException;
+import org.apache.tika.Tika;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -9,54 +12,81 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class FileStorageService {
+    private static final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
+    
     @Value("${upload.root-location:uploads}")
     private String uploadRootLocation;
     private final Path rootLocation;
-    private final List<String> allowedFileExtensions = Arrays.asList(
-            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", 
-            "txt", "zip", "jpg", "jpeg", "png", "gif"
-    );
+    
+    // Whitelist of allowed file extensions and their corresponding MIME types
+    private final Map<String, List<String>> allowedFileTypesMap = new HashMap<>();
     
     // Maximum file size in bytes (10MB)
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
     
+    // Apache Tika for MIME type detection
+    private final Tika tika = new Tika();
+    
     public FileStorageService(@Value("${upload.root-location:uploads}") String uploadRootLocation) {
         this.rootLocation = Paths.get(uploadRootLocation).toAbsolutePath().normalize();
         this.uploadRootLocation = uploadRootLocation;
+        
+        // Initialize allowed file types map with MIME types
+        allowedFileTypesMap.put("pdf", Arrays.asList("application/pdf"));
+        allowedFileTypesMap.put("doc", Arrays.asList("application/msword"));
+        allowedFileTypesMap.put("docx", Arrays.asList("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+        allowedFileTypesMap.put("xls", Arrays.asList("application/vnd.ms-excel"));
+        allowedFileTypesMap.put("xlsx", Arrays.asList("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        allowedFileTypesMap.put("ppt", Arrays.asList("application/vnd.ms-powerpoint"));
+        allowedFileTypesMap.put("pptx", Arrays.asList("application/vnd.openxmlformats-officedocument.presentationml.presentation"));
+        allowedFileTypesMap.put("txt", Arrays.asList("text/plain"));
+        allowedFileTypesMap.put("zip", Arrays.asList("application/zip", "application/x-zip-compressed"));
+        allowedFileTypesMap.put("jpg", Arrays.asList("image/jpeg"));
+        allowedFileTypesMap.put("jpeg", Arrays.asList("image/jpeg"));
+        allowedFileTypesMap.put("png", Arrays.asList("image/png"));
+        allowedFileTypesMap.put("gif", Arrays.asList("image/gif"));
     }
 
     public void init() {
         try {
             if (!Files.exists(rootLocation)) {
                 Files.createDirectories(rootLocation);
+                logger.info("Created upload directory at {}", rootLocation);
             }
             
             // Set restrictive permissions on the upload directory
             try {
                 Files.setPosixFilePermissions(rootLocation, 
                     java.nio.file.attribute.PosixFilePermissions.fromString("rwx------"));
+                logger.debug("Set POSIX permissions on upload directory");
             } catch (UnsupportedOperationException e) {
                 // If not on POSIX system, try to make directory non-readable by others
-                rootLocation.toFile().setReadable(false, false);
-                rootLocation.toFile().setReadable(true, true);
-                rootLocation.toFile().setWritable(false, false);
-                rootLocation.toFile().setWritable(true, true);
-                rootLocation.toFile().setExecutable(false, false);
-                rootLocation.toFile().setExecutable(true, true);
+                boolean success = rootLocation.toFile().setReadable(false, false) &&
+                                 rootLocation.toFile().setReadable(true, true) &&
+                                 rootLocation.toFile().setWritable(false, false) &&
+                                 rootLocation.toFile().setWritable(true, true) &&
+                                 rootLocation.toFile().setExecutable(false, false) &&
+                                 rootLocation.toFile().setExecutable(true, true);
+                
+                logger.debug("Set file permissions on upload directory: {}", success);
             }
         } catch (IOException e) {
-            throw new DocumentStorageException("Could not initialize storage", e);
+            logger.error("Could not initialize storage location", e);
+            throw new DocumentStorageException("Could not initialize storage location", e);
         }
     }
 
@@ -67,23 +97,52 @@ public class FileStorageService {
         String sanitizedFilename = sanitizeFilename(originalFilename);
         String extension = getFileExtension(sanitizedFilename);
         
-        // Generate a UUID-based filename to prevent predictable filenames
-        String filename = UUID.randomUUID().toString() + "." + extension;
+        // Generate a UUID-based filename with a folder structure to prevent too many files in one directory
+        String uuid = UUID.randomUUID().toString();
+        String folderPrefix = uuid.substring(0, 2); // Use first 2 chars as folder
+        String filename = uuid + "." + extension;
         
         try {
             if (!Files.exists(rootLocation)) {
                 init();
             }
             
-            Path destinationFile = rootLocation.resolve(filename).normalize();
+            // Create subfolder if needed
+            Path subFolder = rootLocation.resolve(folderPrefix).normalize();
+            if (!Files.exists(subFolder)) {
+                Files.createDirectories(subFolder);
+                
+                // Set directory permissions
+                try {
+                    Files.setPosixFilePermissions(subFolder, 
+                        java.nio.file.attribute.PosixFilePermissions.fromString("rwx------"));
+                } catch (UnsupportedOperationException e) {
+                    // Non-POSIX fallback
+                    subFolder.toFile().setReadable(false, false);
+                    subFolder.toFile().setReadable(true, true);
+                    subFolder.toFile().setWritable(false, false);
+                    subFolder.toFile().setWritable(true, true);
+                    subFolder.toFile().setExecutable(false, false);
+                    subFolder.toFile().setExecutable(true, true);
+                }
+            }
             
-            // Double-check that the destination file is within the root directory
-            if (!destinationFile.getParent().equals(rootLocation)) {
-                throw new DocumentStorageException("Cannot store file outside root directory");
+            Path destinationFile = subFolder.resolve(filename).normalize();
+            
+            // Double-check that the destination file is within the valid directory structure
+            if (!destinationFile.toAbsolutePath().startsWith(rootLocation.toAbsolutePath())) {
+                logger.error("Security violation: Attempted to write file outside upload directory");
+                throw new DocumentStorageException("Cannot store file outside designated upload directory");
+            }
+            
+            // Verify content type again with the actual file content
+            try (InputStream is = file.getInputStream()) {
+                verifyFileContent(is, extension);
             }
             
             // Use StandardCopyOption.REPLACE_EXISTING to handle potential file conflicts
             Files.copy(file.getInputStream(), destinationFile, StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Successfully stored file: {}", destinationFile);
             
             // Set restrictive permissions on the file
             try {
@@ -98,23 +157,54 @@ public class FileStorageService {
                 destinationFile.toFile().setExecutable(false, false);
             }
             
-            return filename;
+            // Store the relative path with the folder structure
+            return folderPrefix + "/" + filename;
         } catch (IOException e) {
+            logger.error("Failed to store file {}", filename, e);
             throw new DocumentStorageException("Failed to store file " + filename, e);
+        }
+    }
+    
+    private void verifyFileContent(InputStream inputStream, String claimedExtension) {
+        try {
+            // Detect actual MIME type
+            String detectedMimeType = tika.detect(inputStream);
+            
+            // Get expected MIME types for the claimed extension
+            List<String> expectedMimeTypes = allowedFileTypesMap.get(claimedExtension.toLowerCase());
+            
+            if (expectedMimeTypes == null || !expectedMimeTypes.contains(detectedMimeType)) {
+                logger.warn("MIME type mismatch: claimed extension '{}', detected MIME '{}'", 
+                          claimedExtension, detectedMimeType);
+                throw new DocumentStorageException("File content does not match the claimed file type");
+            }
+        } catch (IOException e) {
+            logger.error("Error verifying file content", e);
+            throw new DocumentStorageException("Could not verify file content", e);
         }
     }
 
     public Resource loadAsResource(String filename) {
         try {
             // Security: Prevent any path traversal attempts
-            if (filename == null || filename.isEmpty() || filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            if (filename == null || filename.isEmpty() || filename.contains("..")) {
+                logger.warn("Blocked access attempt with suspicious filename: {}", filename);
                 throw new DocumentStorageException("Invalid filename: " + filename);
             }
             
-            Path file = rootLocation.resolve(filename).normalize();
+            // Handle the new folder structure
+            Path file;
+            if (filename.contains("/")) {
+                // Assume the format is "prefix/uuid.ext"
+                file = rootLocation.resolve(filename).normalize();
+            } else {
+                // For backward compatibility, assume it's just a filename
+                file = rootLocation.resolve(filename).normalize();
+            }
             
             // Extra security: ensure we don't leave the root location
-            if (!file.getParent().equals(rootLocation)) {
+            if (!file.toAbsolutePath().startsWith(rootLocation.toAbsolutePath())) {
+                logger.warn("Blocked file access attempt outside storage directory");
                 throw new DocumentStorageException("File access attempt outside of storage directory");
             }
             
@@ -122,9 +212,11 @@ public class FileStorageService {
             if (resource.exists() && resource.isReadable()) {
                 return resource;
             } else {
+                logger.warn("File not found or not readable: {}", filename);
                 throw new DocumentStorageException("Could not read file: " + filename);
             }
         } catch (MalformedURLException e) {
+            logger.error("Could not read file: {}", filename, e);
             throw new DocumentStorageException("Could not read file: " + filename, e);
         }
     }
@@ -132,19 +224,31 @@ public class FileStorageService {
     public void deleteFile(String filename) {
         try {
             // Security: Prevent any path traversal attempts
-            if (filename == null || filename.isEmpty() || filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            if (filename == null || filename.isEmpty() || filename.contains("..")) {
+                logger.warn("Blocked deletion attempt with suspicious filename: {}", filename);
                 throw new DocumentStorageException("Invalid filename: " + filename);
             }
             
-            Path file = rootLocation.resolve(filename).normalize();
+            // Handle the new folder structure
+            Path file;
+            if (filename.contains("/")) {
+                // Assume the format is "prefix/uuid.ext"
+                file = rootLocation.resolve(filename).normalize();
+            } else {
+                // For backward compatibility
+                file = rootLocation.resolve(filename).normalize();
+            }
             
             // Extra security: ensure we don't leave the root location
-            if (!file.getParent().equals(rootLocation)) {
+            if (!file.toAbsolutePath().startsWith(rootLocation.toAbsolutePath())) {
+                logger.warn("Blocked file deletion attempt outside storage directory");
                 throw new DocumentStorageException("File deletion attempt outside of storage directory");
             }
             
             Files.deleteIfExists(file);
+            logger.debug("Successfully deleted file: {}", filename);
         } catch (IOException e) {
+            logger.error("Could not delete file: {}", filename, e);
             throw new DocumentStorageException("Could not delete file: " + filename, e);
         }
     }
@@ -153,17 +257,8 @@ public class FileStorageService {
         deleteFile(fileName);
     }
 
-    // This method should be removed as it's unsafe
-    public void deleteFilePath(String filePath) {
-        // Replace with safe implementation that only accepts filenames, not paths
-        if (filePath == null || filePath.isEmpty()) {
-            return;
-        }
-        // Extract just the filename and delete that
-        Path path = Paths.get(filePath);
-        String filename = path.getFileName().toString();
-        deleteFile(filename);
-    }
+    // Remove the unsafe method
+    // public void deleteFilePath(String filePath) has been removed
 
     private void validateFile(MultipartFile file) {
         if (file == null) {
@@ -176,16 +271,28 @@ public class FileStorageService {
         
         String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
         if (originalFilename.contains("..") || originalFilename.contains("/") || originalFilename.contains("\\")) {
+            logger.warn("Blocked upload with suspicious filename: {}", originalFilename);
             throw new DocumentStorageException("Invalid filename: " + originalFilename);
         }
         
         String extension = getFileExtension(originalFilename);
-        if (!allowedFileExtensions.contains(extension.toLowerCase())) {
-            throw new DocumentStorageException("File type not allowed. Allowed types: " + String.join(", ", allowedFileExtensions));
+        if (!allowedFileTypesMap.containsKey(extension.toLowerCase())) {
+            logger.warn("Blocked upload with disallowed extension: {}", extension);
+            throw new DocumentStorageException("File type not allowed. Allowed types: " + 
+                                     String.join(", ", allowedFileTypesMap.keySet()));
+        }
+        
+        // Check content type
+        String contentType = file.getContentType();
+        List<String> expectedMimeTypes = allowedFileTypesMap.get(extension.toLowerCase());
+        if (contentType == null || !expectedMimeTypes.contains(contentType)) {
+            logger.warn("Content type mismatch: claimed '{}', provided '{}'", extension, contentType);
+            throw new DocumentStorageException("File content type doesn't match extension");
         }
         
         // Check file size 
         if (file.getSize() > MAX_FILE_SIZE) {
+            logger.warn("Blocked upload exceeding size limit: {} bytes", file.getSize());
             throw new DocumentStorageException("File size exceeds maximum limit (10MB)");
         }
     }
