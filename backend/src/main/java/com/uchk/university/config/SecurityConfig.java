@@ -52,6 +52,7 @@ public class SecurityConfig {
             // but enable it for other routes
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                // Only disable CSRF for auth endpoints, not all API endpoints
                 .ignoringRequestMatchers("/api/auth/**")
             )
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -77,10 +78,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 
-                // Publicly readable resources
+                // Publicly readable resources - ensure proper access control
                 .requestMatchers(HttpMethod.GET, "/api/formations/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/documents/download/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/documents/files/**").permitAll()
+                // Restrict document downloads to authenticated users with proper permissions
+                .requestMatchers(HttpMethod.GET, "/api/documents/download/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/documents/files/**").authenticated()
                 
                 // Admin-only endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -101,14 +103,14 @@ public class SecurityConfig {
                 // Teacher endpoints
                 .requestMatchers("/api/teacher/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER")
                 
-                // Document management
+                // Document management - restrict access 
                 .requestMatchers("/api/documents").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
+                .requestMatchers(HttpMethod.POST, "/api/documents/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
+                .requestMatchers(HttpMethod.PUT, "/api/documents/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
+                .requestMatchers(HttpMethod.DELETE, "/api/documents/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER")
                 
                 // User management - restrict to admin only
-                .requestMatchers(HttpMethod.GET, "/api/users/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/users/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
+                .requestMatchers("/api/users/**").hasRole("ADMIN")
                 
                 // Role management - restrict to admin only
                 .requestMatchers("/api/roles/**").hasRole("ADMIN")
@@ -116,6 +118,7 @@ public class SecurityConfig {
                 // Notification endpoints
                 .requestMatchers("/api/notifications/unread/count").authenticated()
                 .requestMatchers("/api/notifications/mark-all-read").authenticated()
+                .requestMatchers("/api/notifications/**").authenticated()
                 
                 // Token validation endpoint
                 .requestMatchers("/api/auth/validate").authenticated()
@@ -145,6 +148,7 @@ public class SecurityConfig {
             "X-Requested-With", 
             "X-CSRF-TOKEN"
         ));
+        // Limit exposed headers to only what's necessary
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(corsMaxAge);

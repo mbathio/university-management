@@ -11,6 +11,8 @@ import java.util.List;
 
 /**
  * Controller to provide basic API documentation
+ * Only shares information about public endpoints and basic functionality
+ * Sensitive endpoints should be documented elsewhere for authorized personnel
  */
 @RestController
 @RequestMapping("/api/public/docs")
@@ -25,54 +27,24 @@ public class ApiDocController {
         paths.add(new ApiPath("POST", "/api/auth/register", "Register a new user", "Public"));
         paths.add(new ApiPath("GET", "/api/auth/validate", "Validate JWT token", "Authenticated"));
         
-        // User endpoints
-        paths.add(new ApiPath("GET", "/api/users/{id}", "Get user by ID", "ADMIN or Self"));
-        paths.add(new ApiPath("GET", "/api/users/username/{username}", "Get user by username", "ADMIN or Self"));
-        paths.add(new ApiPath("GET", "/api/users", "Get all users", "ADMIN"));
-        paths.add(new ApiPath("GET", "/api/users/role/{role}", "Get users by role", "ADMIN"));
-        paths.add(new ApiPath("POST", "/api/users", "Create a new user", "ADMIN"));
-        paths.add(new ApiPath("PUT", "/api/users/{id}", "Update user", "ADMIN or Self"));
-        paths.add(new ApiPath("DELETE", "/api/users/{id}", "Delete user", "ADMIN"));
+        // Formation endpoints - only public ones
+        paths.add(new ApiPath("GET", "/api/formations/{id}", "Get formation by ID", "Public"));
+        paths.add(new ApiPath("GET", "/api/formations", "Get all formations", "Public"));
+        paths.add(new ApiPath("GET", "/api/formations/type/{type}", "Get formations by type", "Public"));
+        paths.add(new ApiPath("GET", "/api/formations/level/{level}", "Get formations by level", "Public"));
         
-        // Student endpoints
-        paths.add(new ApiPath("GET", "/api/students/{id}", "Get student by ID", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/students/studentId/{studentId}", "Get student by student ID", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/students", "Get all students", "ADMIN, TEACHER, FORMATION_MANAGER"));
+        // Document endpoints - only document discovery, not downloads
+        paths.add(new ApiPath("GET", "/api/documents/{id}", "Get document metadata by ID", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/documents", "Get all document metadata", "Authenticated"));
+        paths.add(new ApiPath("GET", "/api/documents/type/{type}", "Get document metadata by type", "Authenticated"));
+        
+        // Student endpoints - minimal info for public API docs
         paths.add(new ApiPath("GET", "/api/students/formation/{formationId}", "Get students by formation", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/students/promo/{promo}", "Get students by promotion", "Authenticated"));
-        paths.add(new ApiPath("POST", "/api/students", "Create a new student", "ADMIN"));
-        paths.add(new ApiPath("PUT", "/api/students/{id}", "Update student", "ADMIN"));
-        paths.add(new ApiPath("DELETE", "/api/students/{id}", "Delete student", "ADMIN"));
         
-        // Formation endpoints
-        paths.add(new ApiPath("GET", "/api/formations/{id}", "Get formation by ID", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/formations", "Get all formations", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/formations/type/{type}", "Get formations by type", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/formations/level/{level}", "Get formations by level", "Authenticated"));
-        paths.add(new ApiPath("POST", "/api/formations", "Create a new formation", "ADMIN, FORMATION_MANAGER"));
-        paths.add(new ApiPath("PUT", "/api/formations/{id}", "Update formation", "ADMIN, FORMATION_MANAGER"));
-        paths.add(new ApiPath("DELETE", "/api/formations/{id}", "Delete formation", "ADMIN"));
-        
-        // Document endpoints
-        paths.add(new ApiPath("GET", "/api/documents/{id}", "Get document by ID", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/documents", "Get all documents", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/documents/type/{type}", "Get documents by type", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/documents/creator/{userId}", "Get documents by creator", "Authenticated"));
-        paths.add(new ApiPath("GET", "/api/documents/visibility/{level}", "Get documents by visibility level", "Authenticated"));
-        paths.add(new ApiPath("POST", "/api/documents", "Create a new document", "Authenticated"));
-        paths.add(new ApiPath("PUT", "/api/documents/{id}", "Update document", "ADMIN or Creator"));
-        paths.add(new ApiPath("DELETE", "/api/documents/{id}", "Delete document", "ADMIN or Creator"));
-        paths.add(new ApiPath("GET", "/api/documents/files/{filename}", "Get document file", "Authenticated"));
-        
-        // Staff endpoints
-        paths.add(new ApiPath("GET", "/api/staff/{id}", "Get staff by ID", "ADMIN or Self"));
-        paths.add(new ApiPath("GET", "/api/staff/staffId/{staffId}", "Get staff by staff ID", "ADMIN"));
-        paths.add(new ApiPath("GET", "/api/staff", "Get all staff", "ADMIN"));
-        paths.add(new ApiPath("GET", "/api/staff/department/{department}", "Get staff by department", "ADMIN, FORMATION_MANAGER"));
-        paths.add(new ApiPath("GET", "/api/staff/position/{position}", "Get staff by position", "ADMIN, FORMATION_MANAGER"));
-        paths.add(new ApiPath("POST", "/api/staff", "Create a new staff member", "ADMIN"));
-        paths.add(new ApiPath("PUT", "/api/staff/{id}", "Update staff", "ADMIN or Self"));
-        paths.add(new ApiPath("DELETE", "/api/staff/{id}", "Delete staff", "ADMIN"));
+        // Public API resources
+        paths.add(new ApiPath("GET", "/api/public/news", "Get public news and announcements", "Public"));
+        paths.add(new ApiPath("GET", "/api/public/events", "Get public events", "Public"));
+        paths.add(new ApiPath("GET", "/api/public/contacts", "Get public contact information", "Public"));
         
         return ResponseEntity.ok(paths);
     }

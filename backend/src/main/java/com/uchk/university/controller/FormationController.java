@@ -1,9 +1,11 @@
 package com.uchk.university.controller;
 
 import com.uchk.university.entity.Formation;
-import com.uchk.university.entity.Staff; // Ajouté pour les formateurs
+import com.uchk.university.entity.Staff;
+import com.uchk.university.entity.Student;
 import com.uchk.university.service.FormationService;
-import com.uchk.university.service.StaffService; // Service nécessaire pour récupérer les formateurs
+import com.uchk.university.service.StaffService;
+import com.uchk.university.service.StudentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +23,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FormationController {
     private final FormationService formationService;
-    private final StaffService staffService; // Ajouté pour récupérer les formateurs
+    private final StaffService staffService;
+    private final StudentService studentService; // Added to properly implement my-formation endpoint
 
     @GetMapping("/{id}")
     public ResponseEntity<Formation> getFormationById(@PathVariable Long id) {
@@ -43,54 +46,64 @@ public class FormationController {
         return ResponseEntity.ok(formationService.getFormationsByLevel(level));
     }
 
-    // Nouvel endpoint pour récupérer la formation de l'utilisateur connecté
+    // Implement my-formation endpoint for students
     @GetMapping("/my-formation")
-    @PreAuthorize("hasAnyRole('STUDENT')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<Formation> getMyFormation() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
-        // Ici, vous devriez implémenter une logique pour récupérer la formation
-        // associée à l'étudiant connecté, par exemple:
-        // return ResponseEntity.ok(formationService.getFormationByStudentUsername(username));
         
-        // Pour le moment, renvoyer une erreur 501 Not Implemented
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        // Get student's formation by username
+        Student student = studentService.getStudentByUsername(username);
+        if (student != null && student.getFormationId() != null) {
+            Formation formation = formationService.getFormationById(student.getFormationId());
+            return ResponseEntity.ok(formation);
+        }
+        
+        return ResponseEntity.notFound().build();
     }
 
-    // Nouvel endpoint pour récupérer l'emploi du temps d'une formation
+    // Implement schedule endpoint with proper authorization
     @GetMapping("/{id}/schedule")
     public ResponseEntity<List<Object>> getFormationSchedule(@PathVariable Long id) {
-        // Vérifier que la formation existe
-        formationService.getFormationById(id); // Lancera une exception si elle n'existe pas
+        // Verify formation exists
+        Formation formation = formationService.getFormationById(id);
         
-        // Ici, vous devriez implémenter une logique pour récupérer l'emploi du temps
-        // Pour le moment, renvoyer une liste vide
+        // Call service to get schedule (implementation needed)
+        // For now, return empty list
         return ResponseEntity.ok(Collections.emptyList());
     }
 
-    // Nouvel endpoint pour récupérer les formateurs d'une formation
+    // Implement trainers endpoint with proper authorization
     @GetMapping("/{id}/trainers")
     public ResponseEntity<List<Staff>> getFormationTrainers(@PathVariable Long id) {
-        // Vérifier que la formation existe
-        formationService.getFormationById(id); // Lancera une exception si elle n'existe pas
+        // Verify formation exists
+        Formation formation = formationService.getFormationById(id);
         
-        // Ici, vous devriez implémenter une logique pour récupérer les formateurs
-        // Par exemple, en utilisant le staffService
-        // return ResponseEntity.ok(staffService.getStaffByFormationId(id));
-        
-        // Pour le moment, renvoyer une liste vide
-        return ResponseEntity.ok(Collections.emptyList());
+        // Get trainers for this formation
+        List<Staff> trainers = staffService.getTrainersByFormationId(id);
+        return ResponseEntity.ok(trainers);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'FORMATION_MANAGER')")
     public ResponseEntity<Formation> createFormation(@Valid @RequestBody Formation formation) {
+        // Input validation beyond @Valid annotations
+        if (formation.getName() == null || formation.getName().trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
         return ResponseEntity.status(HttpStatus.CREATED).body(formationService.createFormation(formation));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'FORMATION_MANAGER')")
     public ResponseEntity<Formation> updateFormation(@PathVariable Long id, @Valid @RequestBody Formation formation) {
+        // Prevent ID mismatch attacks
+        if (!id.equals(formation.getId()) && formation.getId() != null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
         return ResponseEntity.ok(formationService.updateFormation(id, formation));
     }
 

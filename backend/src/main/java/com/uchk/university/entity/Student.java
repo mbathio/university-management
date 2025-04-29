@@ -42,4 +42,8 @@ public User getUser() {
     private String promo;
     private Integer startYear;
     private Integer endYear;
+
+    public Long getFormationId() {
+        return currentFormation != null ? currentFormation.getId() : null;
+    }
 }

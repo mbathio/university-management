@@ -149,4 +149,11 @@ public class StudentService {
         studentRepository.delete(student);
         userService.deleteUser(student.getUser().getId());
     }
+
+    @Transactional(readOnly = true)
+    public Student getStudentByUsername(String username) {
+        User user = userService.getUserByUsername(username);
+        return studentRepository.findByUser(user)
+            .orElseThrow(() -> new ResourceNotFoundException("Student not found for username: " + username));
+    }
 }

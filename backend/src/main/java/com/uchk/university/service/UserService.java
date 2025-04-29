@@ -90,4 +90,12 @@ public class UserService {
         User user = getUserById(id);
         userRepository.delete(user);
     }
+
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
 }

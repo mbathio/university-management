@@ -2,13 +2,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { map, catchError, tap, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User, Role } from '../models/user.model';
 import { Router } from '@angular/router';
 
 interface AuthResponse {
   token: string;
+  username: string;
+  email: string;
+  role: Role;
   user: User;
 }
 
@@ -59,6 +62,11 @@ export class AuthService {
   login(credentials: { username: string, password: string }): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, credentials).pipe(
       tap(response => {
+        // Store token in localStorage with the correct key
+        localStorage.setItem('access_token', response.token);
+        // Store user details
+        localStorage.setItem('username', response.username);
+        localStorage.setItem('role', response.role);
         console.log('Login Response:', JSON.stringify(response, null, 2));
         if (response.token) {
           localStorage.setItem(this.tokenKey, response.token);
@@ -148,6 +156,45 @@ export class AuthService {
           return of(false);
         })
       );
+  }
+
+  // Add authenticated headers with token
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.getToken();
+    if (!token) {
+      console.warn('No authentication token found');
+      return new HttpHeaders({
+        'Content-Type': 'application/json'
+      });
+    }
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+  }
+
+  // Validate token before making requests
+  private ensureValidToken(): Observable<boolean> {
+    return this.validateToken().pipe(
+      tap(isValid => {
+        if (!isValid) {
+          console.error('Token is invalid. Logging out.');
+          this.logout();
+        }
+      })
+    );
+  }
+
+  // Wrapper method for authenticated requests
+  authenticatedRequest<T>(request: Observable<T>): Observable<T> {
+    return this.ensureValidToken().pipe(
+      switchMap(isValid => {
+        if (!isValid) {
+          return throwError(() => new Error('Invalid authentication token'));
+        }
+        return request;
+      })
+    );
   }
 }
 
