@@ -28,8 +28,11 @@ public class FileStorageService {
             "txt", "zip", "jpg", "jpeg", "png", "gif"
     );
     
+    // Maximum file size in bytes (10MB)
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+    
     public FileStorageService(@Value("${upload.root-location:uploads}") String uploadRootLocation) {
-        this.rootLocation = Paths.get(uploadRootLocation);
+        this.rootLocation = Paths.get(uploadRootLocation).toAbsolutePath().normalize();
         this.uploadRootLocation = uploadRootLocation;
     }
 
@@ -37,6 +40,20 @@ public class FileStorageService {
         try {
             if (!Files.exists(rootLocation)) {
                 Files.createDirectories(rootLocation);
+            }
+            
+            // Set restrictive permissions on the upload directory
+            try {
+                Files.setPosixFilePermissions(rootLocation, 
+                    java.nio.file.attribute.PosixFilePermissions.fromString("rwx------"));
+            } catch (UnsupportedOperationException e) {
+                // If not on POSIX system, try to make directory non-readable by others
+                rootLocation.toFile().setReadable(false, false);
+                rootLocation.toFile().setReadable(true, true);
+                rootLocation.toFile().setWritable(false, false);
+                rootLocation.toFile().setWritable(true, true);
+                rootLocation.toFile().setExecutable(false, false);
+                rootLocation.toFile().setExecutable(true, true);
             }
         } catch (IOException e) {
             throw new DocumentStorageException("Could not initialize storage", e);
@@ -47,7 +64,10 @@ public class FileStorageService {
         validateFile(file);
         
         String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
-        String extension = getFileExtension(originalFilename);
+        String sanitizedFilename = sanitizeFilename(originalFilename);
+        String extension = getFileExtension(sanitizedFilename);
+        
+        // Generate a UUID-based filename to prevent predictable filenames
         String filename = UUID.randomUUID().toString() + "." + extension;
         
         try {
@@ -55,8 +75,29 @@ public class FileStorageService {
                 init();
             }
             
+            Path destinationFile = rootLocation.resolve(filename).normalize();
+            
+            // Double-check that the destination file is within the root directory
+            if (!destinationFile.getParent().equals(rootLocation)) {
+                throw new DocumentStorageException("Cannot store file outside root directory");
+            }
+            
             // Use StandardCopyOption.REPLACE_EXISTING to handle potential file conflicts
-            Files.copy(file.getInputStream(), rootLocation.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), destinationFile, StandardCopyOption.REPLACE_EXISTING);
+            
+            // Set restrictive permissions on the file
+            try {
+                Files.setPosixFilePermissions(destinationFile, 
+                    java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
+            } catch (UnsupportedOperationException e) {
+                // If not on POSIX system
+                destinationFile.toFile().setReadable(false, false);
+                destinationFile.toFile().setReadable(true, true);
+                destinationFile.toFile().setWritable(false, false);
+                destinationFile.toFile().setWritable(true, true);
+                destinationFile.toFile().setExecutable(false, false);
+            }
+            
             return filename;
         } catch (IOException e) {
             throw new DocumentStorageException("Failed to store file " + filename, e);
@@ -65,43 +106,41 @@ public class FileStorageService {
 
     public Resource loadAsResource(String filename) {
         try {
-            // Additional validation to prevent path traversal
-            if (filename.contains("..")) {
-                throw new DocumentStorageException("Filename contains invalid path sequence: " + filename);
+            // Security: Prevent any path traversal attempts
+            if (filename == null || filename.isEmpty() || filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+                throw new DocumentStorageException("Invalid filename: " + filename);
             }
             
             Path file = rootLocation.resolve(filename).normalize();
             
-            // Check that the resolved path is still within our root location
-            if (!file.toFile().getCanonicalPath().startsWith(rootLocation.toFile().getCanonicalPath())) {
-                throw new DocumentStorageException("File access attempt outside of storage directory: " + filename);
+            // Extra security: ensure we don't leave the root location
+            if (!file.getParent().equals(rootLocation)) {
+                throw new DocumentStorageException("File access attempt outside of storage directory");
             }
             
             Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
+            if (resource.exists() && resource.isReadable()) {
                 return resource;
             } else {
                 throw new DocumentStorageException("Could not read file: " + filename);
             }
         } catch (MalformedURLException e) {
             throw new DocumentStorageException("Could not read file: " + filename, e);
-        } catch (IOException e) {
-            throw new DocumentStorageException("I/O error accessing file: " + filename, e);
         }
     }
 
     public void deleteFile(String filename) {
         try {
-            // Additional validation to prevent path traversal
-            if (filename.contains("..")) {
-                throw new DocumentStorageException("Filename contains invalid path sequence: " + filename);
+            // Security: Prevent any path traversal attempts
+            if (filename == null || filename.isEmpty() || filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+                throw new DocumentStorageException("Invalid filename: " + filename);
             }
             
             Path file = rootLocation.resolve(filename).normalize();
             
-            // Check that the resolved path is still within our root location
-            if (!file.toFile().getCanonicalPath().startsWith(rootLocation.toFile().getCanonicalPath())) {
-                throw new DocumentStorageException("File deletion attempt outside of storage directory: " + filename);
+            // Extra security: ensure we don't leave the root location
+            if (!file.getParent().equals(rootLocation)) {
+                throw new DocumentStorageException("File deletion attempt outside of storage directory");
             }
             
             Files.deleteIfExists(file);
@@ -110,28 +149,20 @@ public class FileStorageService {
         }
     }
 
-    public void deleteFilePath(String filePath) {
-        try {
-            if (filePath == null || filePath.isEmpty()) {
-                return;
-            }
-            Path path = Paths.get(filePath).normalize();
-            Files.deleteIfExists(path);
-        } catch (IOException ex) {
-            throw new DocumentStorageException("Could not delete file path " + filePath, ex);
-        }
+    public void delete(String fileName) {
+        deleteFile(fileName);
     }
 
-    public void delete(String fileName) {
-        try {
-            if (fileName == null || fileName.isEmpty()) {
-                return;
-            }
-            Path filePath = this.rootLocation.resolve(fileName).normalize();
-            Files.deleteIfExists(filePath);
-        } catch (IOException ex) {
-            throw new DocumentStorageException("Could not delete file " + fileName, ex);
+    // This method should be removed as it's unsafe
+    public void deleteFilePath(String filePath) {
+        // Replace with safe implementation that only accepts filenames, not paths
+        if (filePath == null || filePath.isEmpty()) {
+            return;
         }
+        // Extract just the filename and delete that
+        Path path = Paths.get(filePath);
+        String filename = path.getFileName().toString();
+        deleteFile(filename);
     }
 
     private void validateFile(MultipartFile file) {
@@ -144,8 +175,8 @@ public class FileStorageService {
         }
         
         String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
-        if (originalFilename.contains("..")) {
-            throw new DocumentStorageException("Cannot store file with relative path outside current directory: " + originalFilename);
+        if (originalFilename.contains("..") || originalFilename.contains("/") || originalFilename.contains("\\")) {
+            throw new DocumentStorageException("Invalid filename: " + originalFilename);
         }
         
         String extension = getFileExtension(originalFilename);
@@ -153,8 +184,8 @@ public class FileStorageService {
             throw new DocumentStorageException("File type not allowed. Allowed types: " + String.join(", ", allowedFileExtensions));
         }
         
-        // Check file size (additional check beyond Spring's multipart configuration)
-        if (file.getSize() > 10 * 1024 * 1024) { // 10MB
+        // Check file size 
+        if (file.getSize() > MAX_FILE_SIZE) {
             throw new DocumentStorageException("File size exceeds maximum limit (10MB)");
         }
     }
@@ -164,6 +195,12 @@ public class FileStorageService {
         if (dotIndex < 0) {
             return "";
         }
-        return filename.substring(dotIndex + 1);
+        return filename.substring(dotIndex + 1).toLowerCase();
+    }
+    
+    private String sanitizeFilename(String filename) {
+        // Remove control characters and typical filesystem special characters
+        return filename.replaceAll("[\\\\/:*?\"<>|]", "_")
+                      .replaceAll("\\s+", "_");
     }
 }

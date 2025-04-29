@@ -1,4 +1,3 @@
-
 package com.uchk.university.security;
 
 import io.jsonwebtoken.*;
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,13 +18,16 @@ public class JwtTokenUtil {
 
     private final SecretKey key;
     private final long jwtExpiration;
+    private final long jwtRefreshExpiration;
 
     public JwtTokenUtil(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration:86400000}") long jwtExpiration) {
-        // Generate a proper key from the secret
+            @Value("${jwt.expiration:86400000}") long jwtExpiration,
+            @Value("${jwt.refresh-expiration:604800000}") long jwtRefreshExpiration) {
+        // Generate a strong key from the secret using HMAC-SHA-256
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.jwtExpiration = jwtExpiration;
+        this.jwtRefreshExpiration = jwtRefreshExpiration;
     }
 
     public String getUsernameFromToken(String token) {
@@ -51,24 +52,36 @@ public class JwtTokenUtil {
     }
 
     private Boolean isTokenExpired(String token) {
-        final Date expiration = getExpirationDateFromToken(token);
-        return expiration.before(new Date());
+        try {
+            final Date expiration = getExpirationDateFromToken(token);
+            return expiration.before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true;
+        }
     }
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         // Add user roles to the claims
         claims.put("authorities", userDetails.getAuthorities());
-        return doGenerateToken(claims, userDetails.getUsername());
+        return doGenerateToken(claims, userDetails.getUsername(), jwtExpiration);
+    }
+    
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("refresh", true);
+        return doGenerateToken(claims, userDetails.getUsername(), jwtRefreshExpiration);
     }
 
-    private String doGenerateToken(Map<String, Object> claims, String subject) {
+    private String doGenerateToken(Map<String, Object> claims, String subject, long expiration) {
+        long currentTimeMillis = System.currentTimeMillis();
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(key)
+                .setIssuedAt(new Date(currentTimeMillis))
+                .setExpiration(new Date(currentTimeMillis + expiration))
+                .setId(java.util.UUID.randomUUID().toString()) // Add jti claim for token revocation support
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
