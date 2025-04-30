@@ -1,65 +1,79 @@
-// src/app/modules/formations/formation-form/formation-form.component.scss
-.formation-form-container {
+:host {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.formation-form {
+  width: 100%;
   max-width: 800px;
-  margin: 24px auto;
+}
 
-  mat-card {
-    padding: 24px;
-    position: relative;
+mat-card {
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 8px;
   }
+}
 
-  mat-card-header {
-    margin-bottom: 24px;
+.form-field {
+  flex: 1;
+}
 
-    mat-card-title {
-      font-size: 24px;
-      margin-bottom: 8px;
-    }
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+
+  button {
+    min-width: 120px;
   }
+}
 
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 200px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+  text-align: center;
+
+  h1 {
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+// Error and validation styles
+mat-error {
+  color: #f44336;
+  font-size: 12px;
+}
+
+mat-form-field.ng-invalid.ng-touched {
+  .mat-form-field-underline {
+    background-color: #f44336;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
   .form-row {
-    margin-bottom: 16px;
-
-    .form-field {
-      width: 100%;
-    }
-  }
-
-  .date-fields,
-  .funding-fields {
-    display: flex;
-    gap: 16px;
-
-    .form-field {
-      flex: 1;
-    }
-  }
-
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 16px;
-    margin-top: 24px;
-  }
-
-  .loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-  }
-
-  @media screen and (max-width: 600px) {
-    .date-fields,
-    .funding-fields {
-      flex-direction: column;
-      gap: 0;
-    }
+    flex-direction: column;
   }
 }

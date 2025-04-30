@@ -1,95 +1,89 @@
-
-<!-- src/app/modules/formations/formation-list/formation-list.component.html -->
-<div class="container-fluid">
-  <div class="page-header">
-    <h1>Formations</h1>
-    <button *ngIf="canCreate()" mat-raised-button color="primary" routerLink="/formations/add">
-      <mat-icon>add</mat-icon> Nouvelle Formation
-    </button>
-  </div>
-
-  <mat-card>
+<div class="formation-list-container-new">
+  <mat-card *ngIf="!isAuthorized" class="unauthorized-card-new">
     <mat-card-content>
-      <div class="search-container">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Rechercher</mat-label>
-          <input matInput (keyup)="applyFilter($event)" placeholder="Nom, type, niveau...">
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-      </div>
-
-      <div class="mat-elevation-z8">
-        <div *ngIf="isLoading" class="loading-shade">
-          <mat-spinner></mat-spinner>
-        </div>
-
-        <div *ngIf="error" class="error-message">
-          {{ error }}
-        </div>
-
-        <table mat-table [dataSource]="dataSource" matSort>
-          <!-- Name Column -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Nom </th>
-            <td mat-cell *matCellDef="let formation"> {{ formation.name }} </td>
-          </ng-container>
-
-          <!-- Type Column -->
-          <ng-container matColumnDef="type">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Type </th>
-            <td mat-cell *matCellDef="let formation"> {{ formation.type }} </td>
-          </ng-container>
-
-          <!-- Level Column -->
-          <ng-container matColumnDef="level">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Niveau </th>
-            <td mat-cell *matCellDef="let formation"> {{ formation.level }} </td>
-          </ng-container>
-
-          <!-- Start Date Column -->
-          <ng-container matColumnDef="startDate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Date début </th>
-            <td mat-cell *matCellDef="let formation">
-              {{ formation.startDate | date:'dd/MM/yyyy' }}
-            </td>
-          </ng-container>
-
-          <!-- End Date Column -->
-          <ng-container matColumnDef="endDate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Date fin </th>
-            <td mat-cell *matCellDef="let formation">
-              {{ formation.endDate | date:'dd/MM/yyyy' }}
-            </td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef> Actions </th>
-            <td mat-cell *matCellDef="let formation">
-              <button mat-icon-button color="primary" [routerLink]="['/formations', formation.id]" matTooltip="Détails">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              <button mat-icon-button color="accent" *ngIf="canEdit(formation)" [routerLink]="['/formations/edit', formation.id]" matTooltip="Modifier">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" *ngIf="canDelete(formation)" (click)="deleteFormation(formation.id)" matTooltip="Supprimer">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
-              (click)="navigateToDetails(row.id)" class="formation-row"></tr>
-
-          <!-- Row shown when there is no matching data. -->
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" colspan="6">Aucune formation correspondant à la recherche</td>
-          </tr>
-        </table>
-
-        <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons></mat-paginator>
-      </div>
+      <h2>Accès non autorisé</h2>
+      <p>Vous n'avez pas les permissions nécessaires pour voir cette page.</p>
     </mat-card-content>
   </mat-card>
+
+  <ng-container *ngIf="isAuthorized">
+    <div class="list-header-new">
+      <h1>Liste des Formations</h1>
+      <button mat-raised-button color="primary" 
+              (click)="createFormation()" 
+              *ngIf="hasRole([Role.ADMIN, Role.FORMATION_MANAGER])">
+        <mat-icon>add</mat-icon> Ajouter une formation
+      </button>
+    </div>
+
+    <div class="filter-container-new">
+      <mat-form-field>
+        <mat-label>Filtrer</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Marketing" #input>
+      </mat-form-field>
+    </div>
+
+    <div class="loading-container-new" *ngIf="isLoading">
+      <mat-spinner></mat-spinner>
+    </div>
+
+    <div class="error-container-new" *ngIf="error">
+      <mat-error>{{ error }}</mat-error>
+    </div>
+
+    <mat-table [dataSource]="dataSource" matSort *ngIf="!isLoading && !error">
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Nom</mat-header-cell>
+        <mat-cell *matCellDef="let formation">{{ formation.name }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="type">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Type</mat-header-cell>
+        <mat-cell *matCellDef="let formation">{{ formation.type }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="level">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Niveau</mat-header-cell>
+        <mat-cell *matCellDef="let formation">{{ formation.level }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="startDate">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Date de Début</mat-header-cell>
+        <mat-cell *matCellDef="let formation">{{ formation.startDate | date:'dd/MM/yyyy' }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="endDate">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Date de Fin</mat-header-cell>
+        <mat-cell *matCellDef="let formation">{{ formation.endDate | date:'dd/MM/yyyy' }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let formation">
+          <button mat-icon-button color="primary" 
+                  (click)="viewFormationDetails(formation.id)" 
+                  matTooltip="Voir détails">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button color="accent" 
+                  *ngIf="hasRole([Role.ADMIN, Role.FORMATION_MANAGER])" 
+                  (click)="editFormation(formation.id)" 
+                  matTooltip="Modifier">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" 
+                  *ngIf="hasRole([Role.ADMIN])" 
+                  (click)="deleteFormation(formation.id)" 
+                  matTooltip="Supprimer">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+
+    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons></mat-paginator>
+  </ng-container>
 </div>

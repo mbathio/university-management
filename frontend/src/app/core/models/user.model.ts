@@ -25,7 +25,7 @@ export interface LoginResponse {
 }
 
 export interface Formation {
-  id: number;
+  id?: number;
   name: string;
   type: string;
   level: string;
@@ -34,6 +34,7 @@ export interface Formation {
   description?: string;
   fundingAmount?: number;
   fundingType?: string;
+  code?: string;
 }
 
 export interface Student {

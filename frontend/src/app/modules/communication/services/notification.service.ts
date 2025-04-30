@@ -1,6 +1,6 @@
 // src/app/modules/communication/services/notification.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -13,8 +13,27 @@ export class NotificationService {
   private apiUrl = `${environment.apiUrl}/api/notifications`;
   constructor(private http: HttpClient) {}
 
-  getNotifications(): Observable<Notification[]> {
-    return this.http.get<Notification[]>(this.apiUrl)
+  getNotifications(
+    page = 0, 
+    size = 10, 
+    status: 'READ' | 'UNREAD' | 'ARCHIVED' | 'ALL' = 'ALL',
+    priority?: 'LOW' | 'MEDIUM' | 'HIGH'
+  ): Observable<{ 
+    content: Notification[], 
+    totalElements: number, 
+    totalPages: number 
+  }> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('status', status)
+      .set('priority', priority || '');
+
+    return this.http.get<{ 
+      content: Notification[], 
+      totalElements: number, 
+      totalPages: number 
+    }>(this.apiUrl, { params })
       .pipe(
         catchError(this.handleError)
       );
@@ -29,6 +48,13 @@ export class NotificationService {
 
   getUnreadCount(): Observable<number> {
     return this.http.get<number>(`${this.apiUrl}/unread/count`)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  getNotificationById(id: number): Observable<Notification> {
+    return this.http.get<Notification>(`${this.apiUrl}/${id}`)
       .pipe(
         catchError(this.handleError)
       );
@@ -62,6 +88,16 @@ export class NotificationService {
       );
   }
 
+  updateNotificationStatus(
+    id: number, 
+    status: 'READ' | 'UNREAD' | 'ARCHIVED'
+  ): Observable<Notification> {
+    return this.http.patch<Notification>(`${this.apiUrl}/${id}/status`, { status })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
   // Helper method to get appropriate icon for notification type
   getNotificationIcon(type: NotificationType): string {
     switch (type) {
@@ -78,33 +114,15 @@ export class NotificationService {
     }
   }
 
-  // Improved error handling
   private handleError(error: HttpErrorResponse) {
-    let errorMessage = 'Something went wrong; please try again later.';
-    
+    let errorMessage = 'Une erreur est survenue';
     if (error.error instanceof ErrorEvent) {
-      // Client-side error
-      console.error('Client side error:', error.error.message);
+      // Erreur côté client
+      errorMessage = `Erreur: ${error.error.message}`;
     } else {
-      // Server-side error
-      console.error(
-        `Backend returned code ${error.status}, ` +
-        `body was: ${JSON.stringify(error.error)}`
-      );
-      
-      if (error.status === 0) {
-        errorMessage = 'Server is unreachable. Please check your connection.';
-      } else if (error.status === 404) {
-        errorMessage = 'The requested resource was not found.';
-      } else if (error.status === 403) {
-        errorMessage = 'You do not have permission to access this resource.';
-      } else if (error.status === 401) {
-        errorMessage = 'You need to log in to access this resource.';
-      } else if (error.error && error.error.message) {
-        errorMessage = error.error.message;
-      }
+      // Erreur côté serveur
+      errorMessage = `Code d'erreur: ${error.status}\nMessage: ${error.message}`;
     }
-    
     console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
   }

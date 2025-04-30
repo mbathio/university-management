@@ -102,7 +102,13 @@ export class StatisticsComponent implements OnInit {
         }),
       )
       .subscribe((formations) => {
-        this.formations = formations;
+        // Map formations to the expected type, filtering out any with undefined id
+        this.formations = formations
+          .filter(formation => formation.id !== undefined)
+          .map(formation => ({
+            id: formation.id!, // Non-null assertion after filtering
+            name: formation.name
+          }));
       });
   }
 

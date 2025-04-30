@@ -2,11 +2,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { Student, StudentDto, Formation } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/role.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root',
@@ -17,7 +18,8 @@ export class StudentService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackBar: MatSnackBar
   ) {}
 
   private getHeaders(): HttpHeaders {
@@ -52,8 +54,38 @@ export class StudentService {
   }
 
   getAllStudents(): Observable<Student[]> {
-    return this.http.get<Student[]>(this.apiUrl, { headers: this.getHeaders() })
-      .pipe(catchError(this.handleError));
+    return this.http.get<Student[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
+      tap(students => {
+        if (students.length === 0) {
+          this.snackBar.open('Aucun étudiant trouvé', 'Fermer', {
+            duration: 3000,
+            panelClass: ['warning-snackbar']
+          });
+        }
+      }),
+      catchError(error => {
+        console.error('Students retrieval error:', error);
+        
+        let errorMessage = 'Erreur lors de la récupération des étudiants';
+        if (error instanceof HttpErrorResponse) {
+          switch (error.status) {
+            case 403:
+              errorMessage = 'Accès non autorisé aux étudiants';
+              break;
+            case 500:
+              errorMessage = 'Erreur interne du serveur';
+              break;
+          }
+        }
+
+        this.snackBar.open(errorMessage, 'Fermer', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   getStudentById(id: number): Observable<Student> {
@@ -125,13 +157,95 @@ export class StudentService {
   }
 
   getStudentsByFormation(formationId: number): Observable<Student[]> {
-    return this.http.get<Student[]>(`${this.apiUrl}/formation/${formationId}`, { headers: this.getHeaders() })
-      .pipe(catchError(this.handleError));
+    // Validate input to prevent NaN or invalid ID
+    if (!formationId || isNaN(formationId) || formationId <= 0) {
+      console.error('Invalid formation ID:', formationId);
+      return throwError(() => new Error(`ID de formation invalide: ${formationId}`));
+    }
+
+    return this.http.get<Student[]>(`${this.apiUrl}/formation/${formationId}`, { 
+      headers: this.getHeaders() 
+    }).pipe(
+      tap(students => {
+        if (students.length === 0) {
+          this.snackBar.open(`Aucun étudiant trouvé pour la formation (ID: ${formationId})`, 'Fermer', {
+            duration: 3000,
+            panelClass: ['warning-snackbar']
+          });
+        }
+      }),
+      catchError(error => {
+        console.error('Students by formation retrieval error:', error);
+        
+        let errorMessage = 'Erreur lors de la récupération des étudiants par formation';
+        if (error instanceof HttpErrorResponse) {
+          switch (error.status) {
+            case 404:
+              errorMessage = `Aucun étudiant trouvé pour la formation (ID: ${formationId})`;
+              break;
+            case 403:
+              errorMessage = 'Accès non autorisé aux étudiants';
+              break;
+            case 500:
+              errorMessage = 'Erreur interne du serveur';
+              break;
+          }
+        }
+
+        this.snackBar.open(errorMessage, 'Fermer', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   getStudentsByPromo(promo: string): Observable<Student[]> {
-    return this.http.get<Student[]>(`${this.apiUrl}/promo/${promo}`, { headers: this.getHeaders() })
-      .pipe(catchError(this.handleError));
+    // Validate input to prevent empty or invalid promo
+    if (!promo || promo.trim() === '') {
+      console.error('Invalid promo:', promo);
+      return throwError(() => new Error('Promotion invalide'));
+    }
+
+    return this.http.get<Student[]>(`${this.apiUrl}/promo/${promo}`, { 
+      headers: this.getHeaders() 
+    }).pipe(
+      tap(students => {
+        if (students.length === 0) {
+          this.snackBar.open(`Aucun étudiant trouvé pour la promotion ${promo}`, 'Fermer', {
+            duration: 3000,
+            panelClass: ['warning-snackbar']
+          });
+        }
+      }),
+      catchError(error => {
+        console.error('Students by promo retrieval error:', error);
+        
+        let errorMessage = 'Erreur lors de la récupération des étudiants par promotion';
+        if (error instanceof HttpErrorResponse) {
+          switch (error.status) {
+            case 404:
+              errorMessage = `Aucun étudiant trouvé pour la promotion ${promo}`;
+              break;
+            case 403:
+              errorMessage = 'Accès non autorisé aux étudiants';
+              break;
+            case 500:
+              errorMessage = 'Erreur interne du serveur';
+              break;
+          }
+        }
+
+        this.snackBar.open(errorMessage, 'Fermer', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   private handleError(error: HttpErrorResponse) {
@@ -152,77 +266,55 @@ export class StudentService {
   private validateStudentDto(studentDto: StudentDto): string[] {
     const errors: string[] = [];
 
-    // Username validation
-    if (!studentDto.username || studentDto.username.length < 3 || studentDto.username.length > 50) {
-      errors.push('Username must be between 3 and 50 characters');
+    if (!studentDto.username || studentDto.username.length < 3) {
+      errors.push('Le nom d\'utilisateur doit contenir au moins 3 caractères');
     }
 
-    // Password validation
-    if (!studentDto.password || studentDto.password.length < 6) {
-      errors.push('Password must be at least 6 characters');
+    if (!studentDto.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentDto.email)) {
+      errors.push('Adresse email invalide');
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!studentDto.email || !emailRegex.test(studentDto.email)) {
-      errors.push('Invalid email format');
+    if (!studentDto.firstName) {
+      errors.push('Le prénom est requis');
     }
 
-    // Student ID validation
-    const studentIdRegex = /^[a-zA-Z0-9]+$/;
-    if (!studentDto.studentId || !studentIdRegex.test(studentDto.studentId)) {
-      errors.push('Student ID must be alphanumeric');
-    }
-
-    // First name validation
-    if (!studentDto.firstName || studentDto.firstName.length < 2 || studentDto.firstName.length > 50) {
-      errors.push('First name must be between 2 and 50 characters');
-    }
-
-    // Last name validation
-    if (!studentDto.lastName || studentDto.lastName.length < 2 || studentDto.lastName.length > 50) {
-      errors.push('Last name must be between 2 and 50 characters');
-    }
-
-    // Birth date validation (optional)
-    if (studentDto.birthDate && new Date(studentDto.birthDate) > new Date()) {
-      errors.push('Birth date must be in the past');
-    }
-
-    // Formation ID validation
-    if (studentDto.formationId && studentDto.formationId <= 0) {
-      errors.push('Formation ID must be a positive number');
-    }
-
-    // Promo validation
-    if (studentDto.promo && studentDto.promo.length > 10) {
-      errors.push('Promo must be less than 10 characters');
-    }
-
-    // Start year validation
-    if (studentDto.startYear && (studentDto.startYear < 1900 || studentDto.startYear > 2100)) {
-      errors.push('Start year must be between 1900 and 2100');
-    }
-
-    // End year validation
-    if (studentDto.endYear && (studentDto.endYear < 1900 || studentDto.endYear > 2100)) {
-      errors.push('End year must be between 1900 and 2100');
+    if (!studentDto.lastName) {
+      errors.push('Le nom est requis');
     }
 
     return errors;
   }
 
-  private handleStudentCreationError(error: HttpErrorResponse) {
-    console.error('Student creation error:', error);
+  private handleStudentCreationError = (error: HttpErrorResponse): Observable<never> => {
+    let errorMessage = 'Erreur lors de la création de l\'étudiant';
     
-    let errorMessage = 'An unknown error occurred';
-    
-    if (error.status === 409) {
-      errorMessage = 'A student with this username already exists';
-    } else if (error.status === 400) {
-      errorMessage = error.error?.message || 'Invalid student data';
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Erreur client: ${error.error.message}`;
+    } else {
+      // Server-side error
+      switch (error.status) {
+        case 400:
+          errorMessage = 'Données invalides. Vérifiez les informations saisies.';
+          break;
+        case 401:
+          errorMessage = 'Non autorisé. Veuillez vous reconnecter.';
+          break;
+        case 403:
+          errorMessage = 'Accès refusé. Vous n\'avez pas les permissions nécessaires.';
+          break;
+        case 409:
+          errorMessage = 'Un étudiant avec ces informations existe déjà.';
+          break;
+        case 500:
+          errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
+          break;
+        default:
+          errorMessage = `Erreur ${error.status}: ${error.message}`;
+      }
     }
-    
+
+    console.error('Student creation error:', error);
     return throwError(() => new Error(errorMessage));
   }
 }

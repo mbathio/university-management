@@ -1,89 +1,195 @@
-.formations-container {
+// Global Page Layout Mixins
+
+@mixin page-container {
+  display: block;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
+  background-color: #f4f6f9;
 }
 
-.formations-header {
+@mixin page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 
   h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
     margin: 0;
-    font-size: 1.5rem;
-    color: #333;
   }
 
   .header-actions {
     display: flex;
-    gap: 10px;
+    gap: 12px;
   }
 }
 
-.formations-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+@mixin card-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 24px;
 }
 
-.formation-card {
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
-
-  .formation-details {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    .formation-type {
-      font-size: 0.9rem;
-      color: #666;
-    }
-
-    .formation-dates {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      color: #888;
-    }
-  }
-}
-
-.no-formations {
-  text-align: center;
-  color: #888;
-  padding: 50px 0;
-}
-
-.loading-container {
+@mixin loading-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  height: 200px;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+
+  mat-spinner {
+    margin-bottom: 16px;
+  }
 }
 
-// Responsive adjustments
-@media (max-width: 768px) {
-  .formations-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
+@mixin error-container {
+  @include loading-container;
+  color: #d32f2f;
+}
 
-  .formations-header {
+@mixin table-styles {
+  width: 100%;
+
+  .mat-mdc-row {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+  }
+}
+
+@mixin responsive-layout {
+  @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: 16px;
 
     .header-actions {
       width: 100%;
-      justify-content: flex-end;
+      flex-direction: column;
+    }
+  }
+}
+
+// Variables
+$primary-color: #3f51b5;
+$accent-color: #ff4081;
+$background-color: #f5f5f5;
+$text-color: #333;
+$border-radius: 8px;
+
+.formation-list-container {
+  padding: 20px;
+  background-color: $background-color;
+  min-height: 100%;
+
+  .unauthorized-card {
+    background-color: #ffebee;
+    color: #d32f2f;
+    margin-bottom: 20px;
+    border-radius: $border-radius;
+
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+
+      h2 {
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h1 {
+      color: $primary-color;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    button {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+      }
+    }
+  }
+
+  .filter-container {
+    margin-bottom: 20px;
+
+    mat-form-field {
+      width: 100%;
+      max-width: 400px;
+    }
+  }
+
+  .loading-container, .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  mat-table {
+    width: 100%;
+    background-color: white;
+    border-radius: $border-radius;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    .mat-header-row {
+      background-color: $primary-color;
+      color: white;
+    }
+
+    .mat-row {
+      transition: background-color 0.3s ease;
+
+      &:hover {
+        background-color: rgba(63, 81, 181, 0.05);
+      }
+    }
+
+    .mat-cell {
+      padding: 12px;
+    }
+  }
+
+  mat-paginator {
+    background-color: white;
+    border-radius: 0 0 $border-radius $border-radius;
+  }
+
+  // Responsive design
+  @media (max-width: 600px) {
+    .list-header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      h1 {
+        margin-bottom: 10px;
+      }
+    }
+
+    .filter-container mat-form-field {
+      width: 100%;
     }
   }
 }

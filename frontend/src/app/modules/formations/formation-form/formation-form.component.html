@@ -1,103 +1,109 @@
-```html
 <!-- src/app/modules/formations/formation-form/formation-form.component.html -->
 <div class="container-fluid">
   <div class="page-header">
-    <h1>{{ isEditMode ? 'Modifier' : 'Ajouter' }} une formation</h1>
+    <h1>{{ isEditing ? 'Modifier une Formation' : 'Ajouter une Formation' }}</h1>
   </div>
 
   <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ isEditing ? 'Modifier une Formation' : 'Ajouter une Formation' }}</mat-card-title>
+    </mat-card-header>
+    
     <mat-card-content>
-      <div *ngIf="loading" class="loading-container">
-        <mat-spinner></mat-spinner>
-      </div>
-
-      <form [formGroup]="formationForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+      <form [formGroup]="formationForm" (ngSubmit)="onSubmit()" class="formation-form">
         <div class="form-row">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Nom de la formation</mat-label>
-            <input matInput formControlName="name" placeholder="Ex: Master Ingénierie Logicielle">
-            <mat-error *ngIf="nameControl?.errors?.['required']">
-              Le nom est obligatoire
-            </mat-error>
-            <mat-error *ngIf="nameControl?.errors?.['minlength']">
-              Le nom doit contenir au moins 3 caractères
-            </mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row two-columns">
-          <mat-form-field appearance="outline">
-            <mat-label>Type de formation</mat-label>
-            <mat-select formControlName="type">
-              <mat-option *ngFor="let type of formationTypes" [value]="type">
-                {{ type }}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="typeControl?.errors?.['required']">
-              Le type est obligatoire
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Nom de la Formation</mat-label>
+            <input matInput formControlName="name" required>
+            <mat-error *ngIf="formationForm.get('name')?.invalid && formationForm.get('name')?.touched">
+              {{ getErrorMessage('name') }}
             </mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Niveau</mat-label>
-            <mat-select formControlName="level">
-              <mat-option *ngFor="let level of formationLevels" [value]="level">
-                {{ level }}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="levelControl?.errors?.['required']">
-              Le niveau est obligatoire
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Code de la Formation</mat-label>
+            <input matInput formControlName="code" required>
+            <mat-error *ngIf="formationForm.get('code')?.invalid && formationForm.get('code')?.touched">
+              {{ getErrorMessage('code') }}
             </mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row two-columns">
-          <mat-form-field appearance="outline">
-            <mat-label>Date de début</mat-label>
-            <input matInput [matDatepicker]="startPicker" formControlName="startDate">
-            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-            <mat-datepicker #startPicker></mat-datepicker>
-            <mat-error *ngIf="startDateControl?.errors?.['required']">
-              La date de début est obligatoire
-            </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Date de fin</mat-label>
-            <input matInput [matDatepicker]="endPicker" formControlName="endDate">
-            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-            <mat-datepicker #endPicker></mat-datepicker>
           </mat-form-field>
         </div>
 
         <div class="form-row">
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Type de Formation</mat-label>
+            <mat-select formControlName="type" required>
+              <mat-option *ngFor="let type of formationTypes" [value]="type.value">
+                {{ type.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="formationForm.get('type')?.invalid && formationForm.get('type')?.touched">
+              {{ getErrorMessage('type') }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Durée (en mois)</mat-label>
+            <input matInput type="number" formControlName="duration" required>
+            <mat-error *ngIf="formationForm.get('duration')?.invalid && formationForm.get('duration')?.touched">
+              {{ getErrorMessage('duration') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Date de Début</mat-label>
+            <input matInput [matDatepicker]="startDatePicker" formControlName="startDate" required>
+            <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #startDatePicker></mat-datepicker>
+            <mat-error *ngIf="formationForm.get('startDate')?.invalid && formationForm.get('startDate')?.touched">
+              {{ getErrorMessage('startDate') }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Date de Fin</mat-label>
+            <input matInput [matDatepicker]="endDatePicker" formControlName="endDate" required>
+            <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #endDatePicker></mat-datepicker>
+            <mat-error *ngIf="formationForm.get('endDate')?.invalid && formationForm.get('endDate')?.touched">
+              {{ getErrorMessage('endDate') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Nombre Maximum d'Étudiants</mat-label>
+            <input matInput type="number" formControlName="maxStudents" required>
+            <mat-error *ngIf="formationForm.get('maxStudents')?.invalid && formationForm.get('maxStudents')?.touched">
+              {{ getErrorMessage('maxStudents') }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
             <mat-label>Description</mat-label>
-            <textarea matInput formControlName="description" rows="4" placeholder="Description de la formation"></textarea>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row two-columns">
-          <mat-form-field appearance="outline">
-            <mat-label>Montant du financement</mat-label>
-            <input matInput type="number" formControlName="fundingAmount">
-            <span matSuffix>XOF</span>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Type de financement</mat-label>
-            <mat-select formControlName="fundingType">
-              <mat-option *ngFor="let type of fundingTypes" [value]="type">
-                {{ type }}
-              </mat-option>
-            </mat-select>
+            <textarea matInput formControlName="description" rows="4"></textarea>
+            <mat-error *ngIf="formationForm.get('description')?.invalid && formationForm.get('description')?.touched">
+              {{ getErrorMessage('description') }}
+            </mat-error>
           </mat-form-field>
         </div>
 
         <div class="form-actions">
-          <button type="button" mat-button [routerLink]="['/formations']">Annuler</button>
-          <button type="submit" mat-raised-button color="primary" [disabled]="formationForm.invalid || loading">
-            {{ isEditMode ? 'Mettre à jour' : 'Créer' }}
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="submit" 
+            [disabled]="formationForm.invalid">
+            {{ isEditing ? 'Modifier' : 'Ajouter' }}
+          </button>
+          <button 
+            mat-stroked-button 
+            type="button" 
+            (click)="router.navigate(['/formations'])">
+            Annuler
           </button>
         </div>
       </form>

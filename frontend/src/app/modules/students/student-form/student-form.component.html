@@ -1,24 +1,13 @@
-```html
 <!-- frontend/src/app/modules/students/student-form/student-form.component.html -->
-<div class="container">
-  <div class="header">
-    <h1>{{ isEditMode ? "Modifier l'étudiant" : "Ajouter un étudiant" }}</h1>
-  </div>
-
-  <div *ngIf="loading" class="loading-container">
-    <mat-spinner diameter="40"></mat-spinner>
-  </div>
-
-  <div *ngIf="error" class="error-container">
-    <mat-icon color="warn">error</mat-icon>
-    <p>{{ error }}</p>
-  </div>
-
-  <form [formGroup]="studentForm" (ngSubmit)="onSubmit()" class="student-form">
-    <div class="form-section">
-      <h2>Informations du compte</h2>
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>{{ isEditMode ? "Modifier l'étudiant" : "Ajouter un étudiant" }}</mat-card-title>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <form [formGroup]="studentForm" (ngSubmit)="onSubmit()" class="student-form">
       <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Nom d'utilisateur</mat-label>
           <input matInput formControlName="username" placeholder="Nom d'utilisateur">
           <mat-error *ngIf="studentForm.get('username')?.hasError('required')">
@@ -28,10 +17,8 @@
             Le nom d'utilisateur doit contenir au moins 3 caractères
           </mat-error>
         </mat-form-field>
-      </div>
 
-      <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Mot de passe</mat-label>
           <input matInput type="password" formControlName="password" placeholder="Mot de passe">
           <mat-hint *ngIf="isEditMode">Laissez vide pour conserver le mot de passe actuel</mat-hint>
@@ -45,7 +32,7 @@
       </div>
 
       <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Email</mat-label>
           <input matInput type="email" formControlName="email" placeholder="Email">
           <mat-error *ngIf="studentForm.get('email')?.hasError('required')">
@@ -55,13 +42,8 @@
             Veuillez entrer une adresse email valide
           </mat-error>
         </mat-form-field>
-      </div>
-    </div>
 
-    <div class="form-section">
-      <h2>Informations personnelles</h2>
-      <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Numéro d'étudiant</mat-label>
           <input matInput formControlName="studentId" placeholder="Numéro d'étudiant">
           <mat-error *ngIf="studentForm.get('studentId')?.hasError('required')">
@@ -71,17 +53,15 @@
       </div>
 
       <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Prénom</mat-label>
           <input matInput formControlName="firstName" placeholder="Prénom">
           <mat-error *ngIf="studentForm.get('firstName')?.hasError('required')">
             Le prénom est requis
           </mat-error>
         </mat-form-field>
-      </div>
 
-      <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Nom</mat-label>
           <input matInput formControlName="lastName" placeholder="Nom">
           <mat-error *ngIf="studentForm.get('lastName')?.hasError('required')">
@@ -91,19 +71,16 @@
       </div>
 
       <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Date de naissance</mat-label>
           <input matInput [matDatepicker]="birthDatePicker" formControlName="birthDate">
           <mat-datepicker-toggle matSuffix [for]="birthDatePicker"></mat-datepicker-toggle>
           <mat-datepicker #birthDatePicker></mat-datepicker>
         </mat-form-field>
       </div>
-    </div>
 
-    <div class="form-section">
-      <h2>Informations académiques</h2>
       <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Formation</mat-label>
           <mat-select formControlName="formationId">
             <mat-option [value]="null">Aucune formation</mat-option>
@@ -112,27 +89,23 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-      </div>
 
-      <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Promotion</mat-label>
           <input matInput formControlName="promo" placeholder="Promotion">
         </mat-form-field>
       </div>
 
       <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Année de début</mat-label>
           <input matInput type="number" formControlName="startYear" placeholder="Année de début">
           <mat-error *ngIf="studentForm.get('startYear')?.hasError('required')">
             L'année de début est requise
           </mat-error>
         </mat-form-field>
-      </div>
 
-      <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Année de fin</mat-label>
           <input matInput type="number" formControlName="endYear" placeholder="Année de fin">
           <mat-error *ngIf="studentForm.get('endYear')?.hasError('required')">
@@ -140,15 +113,22 @@
           </mat-error>
         </mat-form-field>
       </div>
-    </div>
 
-    <div class="form-actions">
-      <button mat-button type="button" (click)="cancel()">Annuler</button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="loading">
-        <mat-icon>save</mat-icon>
-        {{ isEditMode ? "Mettre à jour" : "Créer" }}
-      </button>
-    </div>
-  </form>
-</div>
-```
+      <div class="form-actions">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit" 
+          [disabled]="loading">
+          {{ isEditMode ? "Mettre à jour" : "Créer" }}
+        </button>
+        <button 
+          mat-stroked-button 
+          type="button" 
+          (click)="cancel()">
+          Annuler
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

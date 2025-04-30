@@ -19,6 +19,7 @@ import { FormationService } from '../services/formation.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-formation-list',
@@ -53,6 +54,7 @@ export class FormationListComponent implements OnInit, AfterViewInit {
   dataSource = new MatTableDataSource<Formation>();
   isLoading = true;
   error = '';
+  isAuthorized = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -65,7 +67,19 @@ export class FormationListComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadFormations();
+    // Check user authorization
+    this.isAuthorized = this.authService.hasRole([Role.ADMIN, Role.FORMATION_MANAGER, Role.ADMINISTRATION]);
+    
+    if (this.isAuthorized) {
+      this.loadFormations();
+    } else {
+      this.error = 'Vous n\'êtes pas autorisé à voir la liste des formations';
+      this.snackBar.open(this.error, 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      this.router.navigate(['/dashboard']);
+    }
   }
 
   ngAfterViewInit(): void {
@@ -82,18 +96,62 @@ export class FormationListComponent implements OnInit, AfterViewInit {
       .getAllFormations()
       .pipe(
         catchError((err) => {
-          this.error = 'Impossible de charger les formations';
+          // More detailed error logging
+          console.error('Formation loading error:', err);
+          
+          // Specific error messages based on error type
+          if (err instanceof HttpErrorResponse) {
+            switch (err.status) {
+              case 401:
+                this.error = 'Vous n\'êtes pas authentifié';
+                break;
+              case 403:
+                this.error = 'Vous n\'avez pas les permissions nécessaires';
+                break;
+              case 404:
+                this.error = 'Aucune formation trouvée';
+                break;
+              case 500:
+                this.error = 'Erreur serveur. Veuillez réessayer plus tard.';
+                break;
+              default:
+                this.error = 'Impossible de charger les formations';
+            }
+          } else {
+            this.error = 'Une erreur inattendue s\'est produite';
+          }
+
+          // Log error to console for debugging
+          console.error(this.error, err);
+
+          // Show snackbar notification
           this.snackBar.open(this.error, 'Fermer', {
-            duration: 3000,
+            duration: 5000,
+            panelClass: ['error-snackbar']
           });
+
+          // Return an empty array to prevent the observable from erroring out
           return of([]);
         }),
         finalize(() => {
           this.isLoading = false;
-        }),
+        })
       )
-      .subscribe((formations) => {
-        this.dataSource.data = formations;
+      .subscribe({
+        next: (formations) => {
+          // Additional validation
+          if (!formations || formations.length === 0) {
+            this.error = 'Aucune formation disponible';
+            this.snackBar.open(this.error, 'Fermer', {
+              duration: 3000,
+              panelClass: ['warning-snackbar']
+            });
+          }
+          this.dataSource.data = formations;
+        },
+        error: (err) => {
+          console.error('Unexpected error in formations subscription:', err);
+        }
       });
   }
 
@@ -106,10 +164,22 @@ export class FormationListComponent implements OnInit, AfterViewInit {
     }
   }
 
-  deleteFormation(id: number): void {
+  deleteFormation(id: number | string): void {
+    // Validate formation ID
+    const validId = this.validateId(id);
+    
+    if (!validId) {
+      console.error('Invalid formation ID:', id);
+      this.snackBar.open('ID de formation invalide', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
     if (confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
       this.formationService
-        .deleteFormation(id)
+        .deleteFormation(validId)
         .pipe(
           catchError((error) => {
             this.snackBar.open(
@@ -131,8 +201,61 @@ export class FormationListComponent implements OnInit, AfterViewInit {
     }
   }
 
-  navigateToDetails(id: number): void {
-    this.router.navigate(['/formations', id]);
+  viewFormationDetails(formationId: number | string): void {
+    // Validate formation ID
+    const validId = this.validateId(formationId);
+    
+    if (!validId) {
+      console.error('Invalid formation ID:', formationId);
+      this.snackBar.open('ID de formation invalide', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    if (this.isAuthorized) {
+      this.router.navigate(['/formations', validId]);
+    } else {
+      this.snackBar.open('Accès non autorisé', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+    }
+  }
+
+  editFormation(formationId: number | string): void {
+    // Validate formation ID
+    const validId = this.validateId(formationId);
+    
+    if (!validId) {
+      console.error('Invalid formation ID:', formationId);
+      this.snackBar.open('ID de formation invalide', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    if (this.authService.hasRole([Role.ADMIN, Role.FORMATION_MANAGER])) {
+      this.router.navigate(['/formations', validId, 'edit']);
+    } else {
+      this.snackBar.open('Vous n\'avez pas les droits pour modifier cette formation', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+    }
+  }
+
+  createFormation(): void {
+    if (this.authService.hasRole([Role.ADMIN, Role.FORMATION_MANAGER])) {
+      this.router.navigate(['/formations/new']);
+    } else {
+      this.snackBar.open('Vous n\'avez pas les droits pour créer une formation', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+    }
   }
 
   canCreate(): boolean {
@@ -145,5 +268,27 @@ export class FormationListComponent implements OnInit, AfterViewInit {
 
   canDelete(formation?: Formation): boolean {
     return this.authService.hasRole([Role.ADMIN]);
+  }
+
+  // Expose Role enum to template
+  public readonly Role = Role;
+
+  // Make authService accessible in template
+  public get authServicePublic(): AuthService {
+    return this.authService;
+  }
+
+  // Public method to check role
+  public hasRole(roles: Role[]): boolean {
+    return this.authService.hasRole(roles);
+  }
+
+  // Utility method to validate and convert ID
+  private validateId(id: number | string): number | null {
+    // Convert to number if string
+    const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+    
+    // Check if valid number and positive
+    return (numId !== null && !isNaN(numId) && numId > 0) ? numId : null;
   }
 }

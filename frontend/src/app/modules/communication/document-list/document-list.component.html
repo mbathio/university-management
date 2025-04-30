@@ -6,6 +6,8 @@
       mat-raised-button
       color="primary"
       [routerLink]="['/communication/reports/add']"
+      aria-label="Ajouter un nouveau document"
+      matTooltip="Créer un nouveau document"
     >
       <mat-icon>add</mat-icon>
       Nouveau document
@@ -13,13 +15,14 @@
   </div>
 
   <mat-form-field appearance="outline" class="filter-field">
-    <mat-label>Filtrer</mat-label>
+    <mat-label>Filtrer les documents</mat-label>
     <input
       matInput
       (keyup)="applyFilter($event)"
-      placeholder="Rechercher un document..."
+      placeholder="Rechercher par titre, type ou description..."
+      aria-label="Champ de recherche de documents"
     />
-    <mat-icon matSuffix>search</mat-icon>
+    <mat-icon matSuffix aria-label="Icône de recherche">search</mat-icon>
   </mat-form-field>
 
   <div class="loading-container" *ngIf="loading">
@@ -95,7 +98,8 @@
               mat-icon-button
               color="primary"
               [routerLink]="['/communication/detail', document.id]"
-              matTooltip="Voir les détails"
+              matTooltip="Voir les détails du document"
+              aria-label="Voir les détails du document"
             >
               <mat-icon>visibility</mat-icon>
             </button>
@@ -104,7 +108,8 @@
               color="accent"
               (click)="downloadDocument(document.id)"
               *ngIf="document.filePath"
-              matTooltip="Télécharger"
+              matTooltip="Télécharger le document"
+              aria-label="Télécharger le document"
             >
               <mat-icon>download</mat-icon>
             </button>
@@ -113,7 +118,8 @@
               color="primary"
               [routerLink]="['/communication/reports/edit', document.id]"
               *ngIf="canEdit(document)"
-              matTooltip="Modifier"
+              matTooltip="Modifier le document"
+              aria-label="Modifier le document"
             >
               <mat-icon>edit</mat-icon>
             </button>
@@ -122,7 +128,8 @@
               color="warn"
               (click)="deleteDocument(document.id)"
               *ngIf="canDelete(document)"
-              matTooltip="Supprimer"
+              matTooltip="Supprimer le document"
+              aria-label="Supprimer le document"
             >
               <mat-icon>delete</mat-icon>
             </button>

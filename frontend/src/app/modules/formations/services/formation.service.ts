@@ -1,10 +1,13 @@
 // frontend/src/app/modules/formations/services/formation.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, tap } from 'rxjs';
 import { Formation } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
 import { catchError, map } from 'rxjs/operators';
+import { AuthService } from '../../../core/auth/auth.service';
+import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root',
@@ -12,92 +15,165 @@ import { catchError, map } from 'rxjs/operators';
 export class FormationService {
   private apiUrl = `${environment.apiUrl}/api/formations`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) {}
 
   /**
    * Get all formations with secure error handling
    */
   getAllFormations(): Observable<Formation[]> {
-    return this.http.get<Formation[]>(this.apiUrl)
-      .pipe(
-        catchError(this.handleError),
-        map(formations => this.sanitizeFormationData(formations))
-      );
+    return this.http.get<Formation[]>(this.apiUrl).pipe(
+      tap(formations => {
+        if (formations.length === 0) {
+          this.snackBar.open('Aucune formation trouvée', 'Fermer', {
+            duration: 3000,
+            panelClass: ['warning-snackbar']
+          });
+        }
+      }),
+      catchError(error => {
+        console.error('Formations retrieval error:', error);
+        
+        let errorMessage = 'Erreur lors de la récupération des formations';
+        if (error instanceof HttpErrorResponse) {
+          switch (error.status) {
+            case 403:
+              errorMessage = 'Accès non autorisé aux formations';
+              break;
+            case 500:
+              errorMessage = 'Erreur interne du serveur';
+              break;
+          }
+        }
+
+        this.snackBar.open(errorMessage, 'Fermer', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   /**
    * Get formation by ID with secure error handling
    */
   getFormationById(id: number): Observable<Formation> {
-    return this.http.get<Formation>(`${this.apiUrl}/${id}`)
-      .pipe(
-        catchError(this.handleError),
-        map(formation => this.sanitizeFormationData(formation))
-      );
-  }
+    // Validate input to prevent NaN or invalid ID
+    if (!id || isNaN(id) || id <= 0) {
+      console.error('Invalid formation ID:', id);
+      return throwError(() => new Error(`ID de formation invalide: ${id}`));
+    }
 
-  /**
-   * Create a new formation with secure error handling and proper headers
-   */
-  createFormation(formation: Partial<Formation>): Observable<Formation> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-    
-    return this.http.post<Formation>(this.apiUrl, formation, { headers })
-      .pipe(
-        catchError(this.handleError),
-        map(formation => this.sanitizeFormationData(formation))
-      );
-  }
+    return this.http.get<Formation>(`${this.apiUrl}/${id}`).pipe(
+      tap(formation => {
+        if (!formation) {
+          console.warn(`Aucune formation trouvée pour l'ID: ${id}`);
+        }
+      }),
+      catchError(error => {
+        console.error('Formation retrieval error:', error);
+        
+        let errorMessage = 'Erreur lors de la récupération de la formation';
+        if (error instanceof HttpErrorResponse) {
+          switch (error.status) {
+            case 404:
+              errorMessage = `Formation non trouvée (ID: ${id})`;
+              break;
+            case 403:
+              errorMessage = 'Accès non autorisé à la formation';
+              break;
+            case 500:
+              errorMessage = 'Erreur interne du serveur';
+              break;
+          }
+        }
 
-  /**
-   * Update an existing formation with secure error handling and proper headers
-   */
-  updateFormation(id: number, formation: Partial<Formation>): Observable<Formation> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-    
-    return this.http.put<Formation>(`${this.apiUrl}/${id}`, formation, { headers })
-      .pipe(
-        catchError(this.handleError),
-        map(formation => this.sanitizeFormationData(formation))
-      );
-  }
+        this.snackBar.open(errorMessage, 'Fermer', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
 
-  /**
-   * Delete a formation with secure error handling
-   */
-  deleteFormation(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`)
-      .pipe(catchError(this.handleError));
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   /**
    * Get formations by type with secure error handling
    */
   getFormationsByType(type: string): Observable<Formation[]> {
-    // Encode type parameter to prevent URL injection
     const encodedType = encodeURIComponent(type);
-    return this.http.get<Formation[]>(`${this.apiUrl}/type/${encodedType}`)
-      .pipe(
-        catchError(this.handleError),
-        map(formations => this.sanitizeFormationData(formations))
-      );
+    return this.authenticatedRequest(() => 
+      this.http.get<Formation[]>(`${this.apiUrl}/type/${encodedType}`)
+    ).pipe(
+      map(formations => this.sanitizeFormationData(formations)),
+      catchError(this.handleError)
+    );
   }
 
   /**
    * Get formations by level with secure error handling
    */
   getFormationsByLevel(level: string): Observable<Formation[]> {
-    // Encode level parameter to prevent URL injection
     const encodedLevel = encodeURIComponent(level);
-    return this.http.get<Formation[]>(`${this.apiUrl}/level/${encodedLevel}`)
-      .pipe(
-        catchError(this.handleError),
-        map(formations => this.sanitizeFormationData(formations) as Formation[])
-      );
+    return this.authenticatedRequest(() => 
+      this.http.get<Formation[]>(`${this.apiUrl}/level/${encodedLevel}`)
+    ).pipe(
+      map(formations => this.sanitizeFormationData(formations)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get formation trainers with secure error handling
+   */
+  getFormationTrainers(id: number): Observable<any[]> {
+    return this.authenticatedRequest(() => 
+      this.http.get<any[]>(`${this.apiUrl}/${id}/trainers`)
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Create a new formation
+   */
+  createFormation(formation: Formation): Observable<Formation> {
+    return this.authenticatedRequest(() => 
+      this.http.post<Formation>(this.apiUrl, formation)
+    ).pipe(
+      map(newFormation => this.sanitizeFormationData(newFormation)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Update an existing formation
+   */
+  updateFormation(formation: Formation): Observable<Formation> {
+    return this.authenticatedRequest(() => 
+      this.http.put<Formation>(`${this.apiUrl}/${formation.id}`, formation)
+    ).pipe(
+      map(updatedFormation => this.sanitizeFormationData(updatedFormation)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Delete a formation
+   */
+  deleteFormation(id: number): Observable<void> {
+    return this.authenticatedRequest(() => 
+      this.http.delete<void>(`${this.apiUrl}/${id}`)
+    ).pipe(
+      catchError(this.handleError)
+    );
   }
 
   /**
@@ -105,14 +181,6 @@ export class FormationService {
    */
   getFormationSchedule(id: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${id}/schedule`)
-      .pipe(catchError(this.handleError));
-  }
-
-  /**
-   * Get formation trainers with secure error handling
-   */
-  getFormationTrainers(id: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${id}/trainers`)
       .pipe(catchError(this.handleError));
   }
 
@@ -128,18 +196,41 @@ export class FormationService {
   }
 
   /**
-   * Handles HTTP errors and returns a meaningful error message
+   * Authenticated request wrapper
    */
-  private handleError(error: HttpErrorResponse) {
+  private authenticatedRequest<T>(requestFn: () => Observable<T>): Observable<T> {
+    if (!this.authService.isLoggedIn()) {
+      this.snackBar.open('Vous devez vous connecter', 'Fermer', { duration: 3000 });
+      this.router.navigate(['/login']);
+      return throwError(() => new Error('Not authenticated'));
+    }
+
+    return requestFn().pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401 || error.status === 403) {
+          this.authService.logout();
+          this.router.navigate(['/login']);
+        }
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Handle HTTP errors with detailed error messages
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Une erreur est survenue';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = `Erreur: ${error.error.message}`;
     } else {
       // Server-side error
-      // Don't expose detailed server-side errors to the client
       switch (error.status) {
+        case 400:
+          errorMessage = 'Requête invalide. Vérifiez vos données.';
+          break;
         case 401:
           errorMessage = 'Non autorisé. Veuillez vous connecter.';
           break;
@@ -157,50 +248,38 @@ export class FormationService {
           break;
       }
     }
-    
+
     console.error('Formation service error:', errorMessage);
     return throwError(() => new Error(errorMessage));
   }
-  
+
   /**
    * Sanitizes formation data to prevent XSS
    * Can be applied to a single formation or an array
    */
   private sanitizeFormationData<T extends Formation | Formation[]>(data: T): T {
+    const sanitize = (formation: Formation): Formation => ({
+      ...formation,
+      name: this.sanitizeString(formation.name),
+      description: this.sanitizeString(formation.description)
+    });
+
     if (Array.isArray(data)) {
-      return data.map(formation => this.sanitizeFormation(formation)) as T;
+      return data.map(sanitize) as T;
     } else {
-      return this.sanitizeFormation(data) as T;
+      return sanitize(data as Formation) as T;
     }
   }
-  
+
   /**
-   * Sanitizes a single formation object to prevent XSS
+   * Basic string sanitization to prevent XSS
    */
-  private sanitizeFormation(formation: Formation): Formation {
-    if (!formation) return formation;
-    
-    // Create a new object to avoid modifying the original
-    const sanitized = { ...formation };
-    
-    // Sanitize string fields that might contain user-generated content
-    if (sanitized.name) sanitized.name = this.sanitizeString(sanitized.name);
-    if (sanitized.description) sanitized.description = this.sanitizeString(sanitized.description);
-    if (sanitized.type) sanitized.type = this.sanitizeString(sanitized.type);
-    if (sanitized.level) sanitized.level = this.sanitizeString(sanitized.level);
-    if (sanitized.fundingType) sanitized.fundingType = this.sanitizeString(sanitized.fundingType);
-    
-    return sanitized;
-  }
-  
-  /**
-   * Basic string sanitization helper
-   */
-  private sanitizeString(value: string): string {
-    return value
+  private sanitizeString(input: string | undefined): string {
+    if (!input) return '';
+    return input
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+      .replace(/'/g, '&#39;');
   }
 }

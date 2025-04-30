@@ -1,257 +1,156 @@
-// frontend/src/app/modules/students/student-form/student-form.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-
-// Material Imports
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-// Service and Model Imports
 import { StudentService } from '../services/student.service';
 import { FormationService } from '../../formations/services/formation.service';
-import {
-  Student,
-  Formation,
-  StudentDto,
-} from '../../../core/models/user.model';
-
-// RxJS Imports
-import { catchError, finalize, switchMap } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
+import { Student, StudentDto, Formation } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-student-form',
-  templateUrl: './student-form.component.html',
-  styleUrls: ['./student-form.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule,
     ReactiveFormsModule,
-    MatSnackBarModule,
     MatInputModule,
-    MatFormFieldModule,
-    MatButtonModule,
-    MatIconModule,
     MatSelectModule,
+    MatButtonModule,
+    MatCardModule,
     MatDatepickerModule,
-    MatNativeDateModule,
-    MatProgressSpinnerModule
+    MatNativeDateModule
   ],
+  templateUrl: './student-form.component.html',
+  styleUrls: ['./student-form.component.scss']
 })
 export class StudentFormComponent implements OnInit {
-  studentForm!: FormGroup;
-  isEditMode = false;
-  studentId?: number;
-  loading = false;
-  error = '';
+  studentForm: FormGroup;
   formations: Formation[] = [];
+  isEditing = false;
+  loading = false;
+  isEditMode = this.isEditing;  // Alias for template
 
   constructor(
     private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
     private studentService: StudentService,
     private formationService: FormationService,
     private snackBar: MatSnackBar,
-  ) {}
+    public router: Router
+  ) {
+    this.studentForm = this.fb.group({
+      firstName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      phoneNumber: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+      formationId: ['', Validators.required],
+      promo: ['', [Validators.required, Validators.minLength(4)]],
+      password: ['', Validators.required],
+      role: ['', Validators.required]
+    });
+  }
 
   ngOnInit(): void {
     this.loadFormations();
-    this.initForm();
-
-    // Check if we are in edit mode
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.isEditMode = true;
-      this.studentId = +id;
-      this.loadStudent(this.studentId);
-    }
-  }
-
-  initForm(): void {
-    this.studentForm = this.fb.group({
-      username: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(3),
-          Validators.maxLength(50),
-        ],
-      ],
-      password: [
-        '',
-        this.isEditMode ? [] : [Validators.required, Validators.minLength(6)],
-      ],
-      email: ['', [Validators.required, Validators.email]],
-      studentId: ['', [Validators.required]],
-      firstName: ['', [Validators.required]],
-      lastName: ['', [Validators.required]],
-      birthDate: [null],
-      formationId: [null],
-      promo: [''],
-      startYear: [new Date().getFullYear(), [Validators.required]],
-      endYear: [new Date().getFullYear() + 1, [Validators.required]],
-    });
-
-    // Disable username field in edit mode
-    if (this.isEditMode) {
-      this.studentForm.get('username')?.disable();
-      this.studentForm.get('studentId')?.disable();
-    }
   }
 
   loadFormations(): void {
-    this.formationService
-      .getAllFormations()
-      .pipe(
-        catchError((error) => {
-          this.snackBar.open(
-            'Erreur lors du chargement des formations',
-            'Fermer',
-            {
-              duration: 3000,
-            },
-          );
-          return of([]);
-        }),
-      )
-      .subscribe((formations) => {
+    this.formationService.getAllFormations().subscribe({
+      next: (formations) => {
         this.formations = formations;
-      });
-  }
-
-  loadStudent(id: number): void {
-    this.loading = true;
-
-    this.studentService
-      .getStudentById(id)
-      .pipe(
-        catchError((error) => {
-          this.error =
-            "Erreur lors du chargement des informations de l'étudiant";
-          this.snackBar.open(this.error, 'Fermer', {
-            duration: 3000,
-          });
-          return of(null);
-        }),
-        finalize(() => {
-          this.loading = false;
-        }),
-      )
-      .subscribe((student) => {
-        if (student) {
-          // Populate the form with student data
-          this.studentForm.patchValue({
-            username: student.user.username,
-            email: student.user.email,
-            studentId: student.studentId,
-            firstName: student.firstName,
-            lastName: student.lastName,
-            birthDate: student.birthDate,
-            formationId: student.currentFormation?.id,
-            promo: student.promo,
-            startYear: student.startYear,
-            endYear: student.endYear,
-          });
-
-          // Always set password to empty in edit mode
-          this.studentForm.get('password')?.setValue('');
-        }
-      });
+      },
+      error: (err) => {
+        this.snackBar.open('Impossible de charger les formations', 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
   }
 
   onSubmit(): void {
     if (this.studentForm.invalid) {
-      // Mark all fields as touched to show validation errors
-      Object.keys(this.studentForm.controls).forEach((key) => {
-        const control = this.studentForm.get(key);
-        control?.markAsTouched();
-      });
-
-      this.snackBar.open(
-        'Formulaire invalide, veuillez vérifier les champs',
-        'Fermer',
-        {
-          duration: 3000,
-        },
-      );
+      this.markFormGroupTouched(this.studentForm);
       return;
     }
 
-    this.loading = true;
+    const formationId = this.studentForm.get('formationId')?.value;
+    if (!formationId || isNaN(Number(formationId))) {
+      this.snackBar.open('Veuillez sélectionner une formation valide', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
 
-    // Create the student DTO
-    const studentDto: StudentDto = {
-      username: this.isEditMode
-        ? this.studentForm.get('username')?.value
-        : this.studentForm.get('username')?.value,
-      password: this.studentForm.get('password')?.value,
-      email: this.studentForm.get('email')?.value,
-      studentId: this.isEditMode
-        ? this.studentForm.get('studentId')?.value
-        : this.studentForm.get('studentId')?.value,
-      firstName: this.studentForm.get('firstName')?.value,
-      lastName: this.studentForm.get('lastName')?.value,
-      birthDate: this.studentForm.get('birthDate')?.value,
-      formationId: this.studentForm.get('formationId')?.value,
-      promo: this.studentForm.get('promo')?.value,
-      startYear: this.studentForm.get('startYear')?.value,
-      endYear: this.studentForm.get('endYear')?.value,
+    const studentData: StudentDto = {
+      ...this.studentForm.value,
+      formationId: Number(formationId),  // Ensure it's a number
+      password: this.studentForm.get('password')?.value || '',
+      email: this.studentForm.get('email')?.value || '',
+      role: this.studentForm.get('role')?.value || null
     };
 
-    let request: Observable<Student>;
-
-    if (this.isEditMode && this.studentId) {
-      request = this.studentService.updateStudent(this.studentId, studentDto);
-    } else {
-      request = this.studentService.createStudent(studentDto);
-    }
-
-    request
-      .pipe(
-        catchError((error) => {
-          this.error = "Erreur lors de l'enregistrement de l'étudiant";
-          if (error.error && error.error.message) {
-            this.error += ': ' + error.error.message;
-          }
-          this.snackBar.open(this.error, 'Fermer', {
-            duration: 3000,
-          });
-          return of(null);
-        }),
-        finalize(() => {
-          this.loading = false;
-        }),
-      )
-      .subscribe((student) => {
-        if (student) {
-          this.snackBar.open(
-            this.isEditMode
-              ? 'Étudiant mis à jour avec succès'
-              : 'Étudiant créé avec succès',
-            'Fermer',
-            { duration: 3000 },
-          );
-          this.router.navigate(['/students']);
-        }
-      });
+    this.loading = true;
+    this.studentService.createStudent(studentData).subscribe({
+      next: (createdStudent) => {
+        this.snackBar.open('Étudiant ajouté avec succès', 'Fermer', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
+        this.router.navigate(['/students']);
+      },
+      error: (err) => {
+        this.snackBar.open('Erreur lors de l\'ajout de l\'étudiant', 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        console.error('Error creating student:', err);
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
   }
 
-  cancel(): void {
-    if (this.isEditMode && this.studentId) {
-      this.router.navigate(['/students', this.studentId]);
-    } else {
-      this.router.navigate(['/students']);
+  // Helper method to mark all controls as touched
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
+  }
+
+  // Form validation error messages
+  getErrorMessage(controlName: string): string {
+    const control = this.studentForm.get(controlName);
+    if (!control || !control.errors) return '';
+
+    if (control.errors['required']) {
+      return 'Ce champ est obligatoire';
     }
+    if (control.errors['email']) {
+      return 'Adresse email invalide';
+    }
+    if (control.errors['minlength']) {
+      return `Minimum ${control.errors['minlength'].requiredLength} caractères`;
+    }
+    if (control.errors['pattern']) {
+      return 'Format invalide';
+    }
+    return '';
+  }
+
+  cancel() {
+    this.router.navigate(['/students']);
   }
 }

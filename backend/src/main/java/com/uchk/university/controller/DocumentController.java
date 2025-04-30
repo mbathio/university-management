@@ -1,5 +1,7 @@
 package com.uchk.university.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uchk.university.entity.Document;
 import com.uchk.university.entity.DocumentType;
 import com.uchk.university.service.DocumentService;
@@ -12,11 +14,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -46,30 +50,33 @@ public class DocumentController {
         }
     }
 
-    @PostMapping
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'FORMATION_MANAGER', 'ADMINISTRATION')")
     public ResponseEntity<?> createDocument(
-            @RequestPart("document") Document document,
+            @RequestPart("document") String documentJson,
             @RequestPart(value = "file", required = false) MultipartFile file,
             @CurrentUser User currentUser) {
-        if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
         try {
-            if (document == null) {
-                return ResponseEntity.badRequest().body("Document cannot be null");
-            }
-
+            // Parse JSON manually for more control
+            ObjectMapper mapper = new ObjectMapper();
+            Document document = mapper.readValue(documentJson, Document.class);
+    
+            // Validate document
+            validateDocument(document);
+    
             document.setType(parseDocumentType(document.getType()));
             Document createdDocument = documentService.createDocument(document, currentUser.getId(), file);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdDocument);
+        } catch (JsonProcessingException e) {
+            log.error("Invalid document JSON: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid document format");
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid document data: " + e.getMessage());
+            log.error("Document validation error: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            log.error("Error creating document: {}", e.getMessage());
+            log.error("Unexpected error creating document", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An error occurred while creating the document");
+                .body("An unexpected error occurred: " + e.getMessage());
         }
     }
 
@@ -212,5 +219,14 @@ public class DocumentController {
         }
         
         return DocumentType.AUTRE;
+    }
+
+    private void validateDocument(Document document) {
+        if (document.getTitle() == null || document.getTitle().isEmpty()) {
+            throw new IllegalArgumentException("Document title is required");
+        }
+        if (document.getType() == null) {
+            throw new IllegalArgumentException("Document type is required");
+        }
     }
 }

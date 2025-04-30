@@ -8,8 +8,10 @@
         class="university-logo"
       />
     </div>
-    <h3 class="sidenav-title">UCHK</h3>
-  </div>
+    <h3 class="sidenav-title">UNIVERSITE CHEIKH HAMIDOU KANE</h3>
+    <div class="user-info">
+      <p *ngIf="currentUser">Bienvenue, {{ currentUser.username }}!</p>
+      <p *ngIf="currentUser" class="role-tag">{{ currentUser.role }}</p>
 
   <mat-divider></mat-divider>
 

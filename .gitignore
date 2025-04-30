@@ -39,7 +39,6 @@
 # Environment files
 **/.env
 **/.env.local
-**/src/environments/environment*.ts
 
 # Fichiers spécifiques à Maven
 HELP.md

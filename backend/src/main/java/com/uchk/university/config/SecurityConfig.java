@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -26,6 +25,7 @@ import org.springframework.security.web.header.writers.XXssProtectionHeaderWrite
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -62,13 +62,14 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(csrfTokenRequestHandler)
-                // Exempt public endpoints from CSRF protection
                 .ignoringRequestMatchers(
                     "/api/auth/login", 
                     "/api/auth/register", 
                     "/api/public/**", 
                     "/api/students",
-                    "/api/students/**"
+                    "/api/students/**",
+                    "/api/documents",  
+                    "/api/documents/**"  
                 )
             )
             
@@ -156,7 +157,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(ex -> ex
+            .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             );
         
@@ -167,15 +168,31 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
-        configuration.setAllowedMethods(Arrays.asList(allowedMethods));
+        configuration.setAllowedMethods(Arrays.asList(
+            HttpMethod.GET.name(), 
+            HttpMethod.POST.name(), 
+            HttpMethod.PUT.name(), 
+            HttpMethod.DELETE.name(), 
+            HttpMethod.OPTIONS.name()
+        ));
         configuration.setAllowedHeaders(Arrays.asList(
             "Authorization", 
             "Content-Type", 
             "X-Requested-With", 
+            "Accept", 
+            "Origin", 
+            "Access-Control-Request-Method", 
+            "Access-Control-Request-Headers",
+            "X-XSRF-TOKEN", 
+            "XSRF-TOKEN",
             "X-CSRF-TOKEN"
         ));
-        // Only expose necessary headers
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Disposition", 
+            "X-XSRF-TOKEN",
+            "XSRF-TOKEN"
+        ));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(corsMaxAge);
 

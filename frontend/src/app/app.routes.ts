@@ -2,15 +2,15 @@
 import { Routes } from '@angular/router';
 import { PageNotFoundComponent } from './core/components/page-not-found/page-not-found.component';
 import { authGuard } from './core/guards/auth.guard';
-import { Role } from './core/models/user.model';
 import { LoginComponent } from './modules/auth/login/login.component';
 import { RegisterComponent } from './modules/auth/register/register.component';
+import { Role } from './core/models/user.model';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full',
+    redirectTo: '/dashboard',
+    pathMatch: 'full'
   },
   {
     path: 'login',
@@ -27,6 +27,9 @@ export const routes: Routes = [
         (m) => m.DashboardModule,
       ),
     canActivate: [authGuard],
+    data: { 
+      roles: [Role.ADMIN, Role.FORMATION_MANAGER, Role.STUDENT] 
+    }
   },
   {
     path: 'administration',
@@ -48,9 +51,7 @@ export const routes: Routes = [
   {
     path: 'formations',
     loadChildren: () =>
-      import('./modules/formations/formations.module').then(
-        (m) => m.FormationsModule,
-      ),
+      import('./modules/formations/formations.routes').then((mod) => mod.FORMATION_ROUTES),
     canActivate: [authGuard],
   },
   {

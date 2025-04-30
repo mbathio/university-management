@@ -1,226 +1,177 @@
 // frontend/src/app/modules/formations/formation-form/formation-form.component.ts
 import { Component, OnInit } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-} from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-
-// Material Imports
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-// Services
 import { FormationService } from '../services/formation.service';
 import { Formation } from '../../../core/models/user.model';
-import { catchError, finalize } from 'rxjs/operators';
-import { of } from 'rxjs';
 
 @Component({
   selector: 'app-formation-form',
-  templateUrl: './formation-form.component.html',
-  styleUrls: ['./formation-form.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterModule,
-    MatCardModule,
-    MatFormFieldModule,
     MatInputModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
     MatSelectModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
+    MatButtonModule,
+    MatCardModule,
+    MatDatepickerModule,
+    MatNativeDateModule
   ],
+  templateUrl: './formation-form.component.html',
+  styleUrls: ['./formation-form.component.scss']
 })
 export class FormationFormComponent implements OnInit {
-  formationForm!: FormGroup;
-  isEditMode = false;
-  formationId?: number;
-  loading = false;
+  formationForm: FormGroup;
+  isEditing = false;
+
+  // Predefined list of formation types
   formationTypes = [
-    'Licence',
-    'Master',
-    'Doctorat',
-    'DUT',
-    'BTS',
-    'Formation continue',
+    { value: 'INITIAL', label: 'Formation Initiale' },
+    { value: 'CONTINUE', label: 'Formation Continue' },
+    { value: 'ALTERNANCE', label: 'Formation en Alternance' },
+    { value: 'PROFESSIONNELLE', label: 'Formation Professionnelle' }
   ];
-  formationLevels = ['Bac+1', 'Bac+2', 'Bac+3', 'Bac+4', 'Bac+5', 'Bac+8'];
-  fundingTypes = ['Public', 'Privé', 'Mixte', 'Autofinancement'];
+
+  private dateRangeValidator(group: FormGroup) {
+    const startDate = group.get('startDate')?.value;
+    const endDate = group.get('endDate')?.value;
+
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      return { dateRange: true };
+    }
+    return null;
+  }
 
   constructor(
     private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
     private formationService: FormationService,
     private snackBar: MatSnackBar,
-  ) {}
+    public router: Router
+  ) {
+    this.formationForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(20)]],
+      description: ['', [Validators.maxLength(500)]],
+      type: ['', Validators.required],
+      duration: ['', [Validators.required, Validators.min(1), Validators.max(120)]],
+      startDate: [null, Validators.required],
+      endDate: [null, Validators.required],
+      maxStudents: ['', [Validators.required, Validators.min(1), Validators.max(500)]]
+    }, { validators: this.dateRangeValidator });
+  }
 
   ngOnInit(): void {
-    this.initForm();
+    // Check if we're in edit mode by checking route params
+    const formationId = this.router.getCurrentNavigation()?.extras?.state?.['formationId'];
+    if (formationId) {
+      this.isEditing = true;
+      this.loadFormation(formationId);
+    }
+  }
 
-    // Check if we're in edit mode
-    this.route.paramMap.subscribe((params) => {
-      const id = params.get('id');
-      if (id) {
-        this.isEditMode = true;
-        this.formationId = +id;
-        this.loadFormation(this.formationId);
+  loadFormation(id: number): void {
+    this.formationService.getFormationById(id).subscribe({
+      next: (formation) => {
+        this.formationForm.patchValue({
+          name: formation.name,
+          code: formation.code,
+          description: formation.description,
+          type: formation.type,
+          startDate: formation.startDate,
+          endDate: formation.endDate,
+        });
+      },
+      error: (err) => {
+        this.snackBar.open('Impossible de charger la formation', 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        this.router.navigate(['/formations']);
+      }
+    });
+  }
+  
+  onSubmit(): void {
+    if (this.formationForm.valid) {
+      const formationData = this.formationForm.value;
+      
+      const serviceMethod = this.isEditing 
+        ? this.formationService.updateFormation(formationData)
+        : this.formationService.createFormation(formationData);
+  
+      serviceMethod.subscribe({
+        next: (result) => {
+          const successMessage = this.isEditing 
+            ? 'Formation mise à jour avec succès'
+            : 'Formation créée avec succès';
+          
+          this.snackBar.open(successMessage, 'Fermer', { duration: 3000 });
+          this.router.navigate(['/formations']);
+        },
+        error: (err) => {
+          const errorMessage = this.isEditing
+            ? 'Erreur lors de la mise à jour de la formation'
+            : 'Erreur lors de la création de la formation';
+          
+          this.snackBar.open(errorMessage, 'Fermer', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      });
+    } else {
+      this.markFormGroupTouched(this.formationForm);
+    }
+  }
+
+  cancel() {
+    this.router.navigate(['/formations']);
+  }
+
+  // Helper method to mark all controls as touched
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
       }
     });
   }
 
-  private initForm(): void {
-    this.formationForm = this.fb.group({
-      name: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(3),
-          Validators.maxLength(100),
-        ],
-      ],
-      type: ['', [Validators.required]],
-      level: ['', [Validators.required]],
-      startDate: [null, [Validators.required]],
-      endDate: [null],
-      description: ['', [Validators.maxLength(500)]],
-      fundingAmount: [0, [Validators.min(0)]],
-      fundingType: [''],
-    });
-  }
+  // Form validation error messages
+  getErrorMessage(controlName: string): string {
+    const control = this.formationForm.get(controlName);
+    if (!control || !control.errors) return '';
 
-  private loadFormation(id: number): void {
-    this.loading = true;
-    this.formationService
-      .getFormationById(id)
-      .pipe(
-        catchError((error) => {
-          this.snackBar.open(
-            'Erreur lors du chargement de la formation',
-            'Fermer',
-            {
-              duration: 3000,
-            },
-          );
-          this.router.navigate(['/formations']);
-          return of(null);
-        }),
-        finalize(() => {
-          this.loading = false;
-        }),
-      )
-      .subscribe((formation) => {
-        if (formation) {
-          this.formationForm.patchValue({
-            name: formation.name,
-            type: formation.type,
-            level: formation.level,
-            startDate: formation.startDate
-              ? new Date(formation.startDate)
-              : null,
-            endDate: formation.endDate ? new Date(formation.endDate) : null,
-            description: formation.description,
-            fundingAmount: formation.fundingAmount,
-            fundingType: formation.fundingType,
-          });
-        }
-      });
-  }
-
-  onSubmit(): void {
-    if (this.formationForm.invalid) {
-      // Mark all fields as touched to trigger validation visualization
-      Object.keys(this.formationForm.controls).forEach((key) => {
-        const control = this.formationForm.get(key);
-        control?.markAsTouched();
-      });
-      return;
+    if (control.errors['required']) {
+      return 'Ce champ est obligatoire';
     }
-
-    this.loading = true;
-    const formationData = this.formationForm.value;
-
-    if (this.isEditMode && this.formationId) {
-      this.formationService
-        .updateFormation(this.formationId, formationData)
-        .pipe(
-          catchError((error) => {
-            this.snackBar.open(
-              'Erreur lors de la mise à jour de la formation',
-              'Fermer',
-              {
-                duration: 3000,
-              },
-            );
-            return of(null);
-          }),
-          finalize(() => {
-            this.loading = false;
-          }),
-        )
-        .subscribe((response) => {
-          if (response) {
-            this.snackBar.open('Formation mise à jour avec succès', 'Fermer', {
-              duration: 3000,
-            });
-            this.router.navigate(['/formations']);
-          }
-        });
-    } else {
-      this.formationService
-        .createFormation(formationData)
-        .pipe(
-          catchError((error) => {
-            this.snackBar.open(
-              'Erreur lors de la création de la formation',
-              'Fermer',
-              {
-                duration: 3000,
-              },
-            );
-            return of(null);
-          }),
-          finalize(() => {
-            this.loading = false;
-          }),
-        )
-        .subscribe((response) => {
-          if (response) {
-            this.snackBar.open('Formation créée avec succès', 'Fermer', {
-              duration: 3000,
-            });
-            this.router.navigate(['/formations']);
-          }
-        });
+    if (control.errors['minlength']) {
+      return `Minimum ${control.errors['minlength'].requiredLength} caractères`;
     }
-  }
-
-  // Getters for form controls to easily access in the template
-  get nameControl() {
-    return this.formationForm.get('name');
-  }
-  get typeControl() {
-    return this.formationForm.get('type');
-  }
-  get levelControl() {
-    return this.formationForm.get('level');
-  }
-  get startDateControl() {
-    return this.formationForm.get('startDate');
+    if (control.errors['maxlength']) {
+      return `Maximum ${control.errors['maxlength'].requiredLength} caractères`;
+    }
+    if (control.errors['min']) {
+      return `La valeur minimale est ${control.errors['min'].min}`;
+    }
+    if (control.errors['max']) {
+      return `La valeur maximale est ${control.errors['max'].max}`;
+    }
+    if (control.errors['dateRange']) {
+      return 'La date de fin doit être après la date de début';
+    }
+    return '';
   }
 }

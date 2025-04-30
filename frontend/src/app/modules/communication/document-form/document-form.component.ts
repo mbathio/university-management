@@ -24,6 +24,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { HttpErrorResponse } from '@angular/common/http';
+
+interface ValidationResult {
+  valid: boolean;
+  errors?: string[];
+}
 
 @Component({
   selector: 'app-document-form',
@@ -55,6 +61,7 @@ export class DocumentFormComponent implements OnInit {
   document: Document | null = null;
   documentTypes = Object.values(DocumentType);
   visibilityLevels = Object.values(VisibilityLevel);
+  validationErrors: string[] = [];
 
   clearExistingFile(): void {
     this.documentFilePath = null;
@@ -68,7 +75,7 @@ export class DocumentFormComponent implements OnInit {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private documentService: DocumentService,
+    private documentService: { validateDocument: (formValues: any) => any; updateDocument: (id: number, formData: FormData) => any; uploadDocument: (formData: FormData, metadata: any) => any; deleteDocument: (id: number) => any; getDocumentById: (id: number) => any },
     private authService: AuthService,
     private snackBar: MatSnackBar,
   ) {}
@@ -97,7 +104,7 @@ export class DocumentFormComponent implements OnInit {
   loadDocument(id: number): void {
     this.loading = true;
     this.documentService.getDocumentById(id).subscribe({
-      next: (document) => {
+      next: (document: Document) => {
         this.document = document;
         this.documentFilePath = document.filePath || null;
 
@@ -109,7 +116,7 @@ export class DocumentFormComponent implements OnInit {
         });
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Erreur lors du chargement du document', error);
         this.snackBar.open('Erreur lors du chargement du document', 'Fermer', {
           duration: 3000,
@@ -122,84 +129,132 @@ export class DocumentFormComponent implements OnInit {
   }
 
   onFileSelected(event: Event): void {
-    const fileInput = event.target as HTMLInputElement;
-    if (fileInput.files && fileInput.files[0]) {
-      this.selectedFile = fileInput.files[0];
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+
+      // File type validation
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword'];
+      if (!allowedTypes.includes(file.type)) {
+        this.snackBar.open('Type de fichier non autorisé', 'Fermer', { duration: 3000 });
+        return;
+      }
+
+      // File size validation (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        this.snackBar.open('La taille du fichier ne doit pas dépasser 10 Mo', 'Fermer', { duration: 3000 });
+        return;
+      }
+
+      this.selectedFile = file;
+      this.documentForm.patchValue({ file: file.name });
     }
   }
 
-  onSubmit(): void {
+  submitDocument(): void {
     if (this.documentForm.invalid) {
-      Object.keys(this.documentForm.controls).forEach((key) => {
-        this.documentForm.get(key)?.markAsTouched();
-      });
+      this.documentForm.markAllAsTouched();
       return;
     }
 
     this.loading = true;
+    this.validationErrors = [];
+
+    // Prepare form data
     const formData = new FormData();
+    const formValues = this.documentForm.value;
 
-    const documentData: Partial<Document> = {
-      title: this.documentForm.value.title,
-      content: this.documentForm.value.content,
-      type: this.documentForm.value.type,
-      visibilityLevel: this.documentForm.value.visibilityLevel,
-    };
+    // Validate document first
+    this.documentService.validateDocument(formValues).subscribe({
+      next: (validationResult: ValidationResult) => {
+        if (!validationResult.valid) {
+          this.validationErrors = validationResult.errors || [];
+          this.loading = false;
+          return;
+        }
 
-    formData.append(
-      'document',
-      new Blob([JSON.stringify(documentData)], { type: 'application/json' }),
-    );
+        // Add form fields to FormData
+        Object.keys(formValues).forEach(key => {
+          if (formValues[key] !== null && formValues[key] !== undefined) {
+            formData.append(key, formValues[key]);
+          }
+        });
 
-    if (this.selectedFile) {
-      formData.append('file', this.selectedFile);
-    }
+        // Add file if selected
+        if (this.selectedFile) {
+          formData.append('documentFile', this.selectedFile, this.selectedFile.name);
+        }
 
-    if (this.isEditMode && this.documentId) {
-      this.documentService.updateDocument(this.documentId, formData).subscribe({
-        next: () => {
-          this.snackBar.open('Document mis à jour avec succès', 'Fermer', {
-            duration: 3000,
-          });
-          // Fixed navigation path for communication module
-          this.router.navigate(['/communication']);
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Erreur lors de la mise à jour', error);
-          this.snackBar.open(
-            'Erreur lors de la mise à jour du document',
-            'Fermer',
-            { duration: 3000 },
-          );
-          this.loading = false;
-        },
-      });
-    } else {
-      this.documentService.createDocument(formData).subscribe({
-        next: () => {
-          this.snackBar.open('Document créé avec succès', 'Fermer', {
-            duration: 3000,
-          });
-          // Fixed navigation path for communication module
-          this.router.navigate(['/communication']);
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Erreur lors de la création', error);
-          this.snackBar.open(
-            'Erreur lors de la création du document',
-            'Fermer',
-            { duration: 3000 },
-          );
-          this.loading = false;
-        },
-      });
-    }
+        // Additional metadata
+        const metadata = {
+          uploadedBy: this.authService.currentUserValue?.username,
+          uploadedAt: new Date().toISOString()
+        };
+
+        // Submit document
+        const submitMethod = this.isEditMode 
+          ? this.documentService.updateDocument(this.documentId!, formData)
+          : this.documentService.uploadDocument(formData, metadata);
+
+        submitMethod.subscribe({
+          next: (document: Document) => {
+            this.snackBar.open(
+              this.isEditMode 
+                ? 'Document mis à jour avec succès' 
+                : 'Document ajouté avec succès', 
+              'Fermer', 
+              { duration: 3000 }
+            );
+            this.router.navigate(['/communication/documents']);
+          },
+          error: (error: HttpErrorResponse) => {
+            this.loading = false;
+            this.snackBar.open(
+              'Erreur lors de la soumission du document', 
+              'Fermer', 
+              { duration: 3000 }
+            );
+            console.error('Document submission error:', error);
+          }
+        });
+      },
+      error: (error: unknown) => {
+        console.error('Validation error', error);
+        this.loading = false;
+      }
+    });
   }
 
   cancel(): void {
     // Fixed navigation path for communication module
     this.router.navigate(['/communication']);
+  }
+
+  deleteDocument(): void {
+    if (!this.documentId) return;
+
+    const confirmDelete = confirm('Êtes-vous sûr de vouloir supprimer ce document ?');
+    if (confirmDelete) {
+      this.loading = true;
+      this.documentService.deleteDocument(this.documentId).subscribe({
+        next: () => {
+          this.snackBar.open(
+            'Document supprimé avec succès', 
+            'Fermer', 
+            { duration: 3000 }
+          );
+          this.router.navigate(['/communication/documents']);
+        },
+        error: (error: Error | any) => {
+          this.loading = false;
+          this.snackBar.open(
+            'Erreur lors de la suppression du document', 
+            'Fermer', 
+            { duration: 3000 }
+          );
+          console.error('Document deletion error:', error);
+        }
+      });
+    }
   }
 }

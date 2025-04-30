@@ -25,6 +25,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { Document, DocumentType, VisibilityLevel } from '../../../core/models/document.model';
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { catchError, throwError } from 'rxjs';
 
 @Component({
   selector: 'app-report-form',
@@ -94,6 +95,7 @@ export class ReportFormComponent implements OnInit {
       participants: [''],
       location: [''],
       tags: [''],
+      attachment: ['']
     });
   }
 
@@ -154,86 +156,74 @@ export class ReportFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.reportForm.invalid) {
+      this.snackBar.open('Please fill in all required fields', 'Close', {
+        duration: 3000,
+        panelClass: 'error-snackbar'
+      });
       return;
     }
 
-    this.loading = true;
-    const formData = new FormData();
-
-    // Extract tags from the comma-separated string
-    const tagsString = this.reportForm.value.tags;
-    const tags = tagsString
-      ? tagsString
-          .split(',')
-          .map((tag: string) => tag.trim())
-          .filter((tag: string) => tag)
-      : [];
-
-    // Create enriched content with meeting details
-    const enrichedContent = `
-    <h3>Compte rendu</h3>
-    <p><strong>Titre:</strong> ${this.reportForm.value.title}</p>
-    <p><strong>Date:</strong> ${this.reportForm.value.meetingDate}</p>
-    <p><strong>Lieu:</strong> ${this.reportForm.value.location}</p>
-    <p><strong>Participants:</strong> ${this.reportForm.value.participants}</p>
-    <div class="report-content">
-      ${this.reportForm.value.content}
-    </div>
-    `;
-
-    // Create document data object
-    const documentData: Document = {
-      title: this.reportForm.value.title,
-      content: enrichedContent,
-      type: this.mapToDocumentType(this.reportForm.value.type),
-      visibilityLevel: this.reportForm.value.visibilityLevel,
-      tags: tags,
-      reference: `REPORT-${new Date().getTime()}`,
-      id: -1, // Temporary ID, will be replaced by backend
-      createdBy: this.authService.currentUserValue 
-        ? {
-            id: this.authService.currentUserValue.id,
-            username: this.authService.currentUserValue.username,
-            fullName: this.authService.currentUserValue.fullName || this.authService.currentUserValue.username
-          }
-        : {
-            id: -1, // Use a default ID to indicate no user
-            username: 'anonymous',
-            fullName: 'Anonymous User'
-          },
-      createdAt: new Date(),
-      updatedAt: undefined,
+    // Prepare document data
+    const documentData = {
+      title: this.reportForm.get('title')?.value?.trim(),
+      description: this.reportForm.get('content')?.value?.trim(),
+      type: this.mapToDocumentType(this.reportForm.get('type')?.value),
+      visibilityLevel: this.reportForm.get('visibilityLevel')?.value
     };
 
-    // Append document as JSON
-    formData.append('document', new Blob([JSON.stringify(documentData)], {
-      type: 'application/json'
-    }), 'document.json');
-
-    // Append file if selected
-    if (this.selectedFile) {
-      formData.append('file', this.selectedFile);
+    // Validate document data
+    if (!documentData.title || !documentData.description) {
+      this.snackBar.open('Title and description are required', 'Close', {
+        duration: 3000,
+        panelClass: 'error-snackbar'
+      });
+      return;
     }
 
-    this.documentService.createDocument(formData).subscribe({
-      next: () => {
-        this.snackBar.open('Rapport créé avec succès', 'Fermer', {
-          duration: 3000,
+    // Create FormData for multipart upload
+    const formData = new FormData();
+    
+    // Append document as JSON string
+    formData.append('document', JSON.stringify(documentData));
+
+    // Append file if exists
+    const fileInput = this.reportForm.get('attachment');
+    if (fileInput && fileInput.value) {
+      const fileList = fileInput.value;
+      if (fileList.length > 0) {
+        formData.append('file', fileList[0], fileList[0].name);
+      }
+    }
+
+    this.loading = true;
+    this.documentService.createDocument(formData).pipe(
+      catchError((error) => {
+        this.loading = false;
+        
+        // More detailed error handling
+        const errorMessage = error.error?.message || 
+                              error.message || 
+                              'Failed to create document';
+        
+        this.snackBar.open(`Error: ${errorMessage}`, 'Close', {
+          duration: 5000,
+          panelClass: 'error-snackbar'
         });
+        
+        return throwError(error);
+      })
+    ).subscribe({
+      next: (response) => {
+        this.snackBar.open('Document created successfully', 'Close', {
+          duration: 3000
+        });
+        this.reportForm.reset();
         this.router.navigate(['/communication/reports']);
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Erreur lors de la création', error);
-        this.snackBar.open(
-          'Erreur lors de la création du rapport',
-          'Fermer',
-          {
-            duration: 3000,
-          }
-        );
+      error: () => {
         this.loading = false;
-      },
+      }
     });
   }
 

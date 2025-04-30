@@ -46,6 +46,7 @@ export class FormationDetailComponent implements OnInit {
   students: Student[] = [];
   loading = true;
   isMyFormationView = false;
+  isNewFormation = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -59,16 +60,40 @@ export class FormationDetailComponent implements OnInit {
   ngOnInit(): void {
     this.route.data.subscribe((data) => {
       this.isMyFormationView = data['myFormation'] || false;
+      this.isNewFormation = data['newFormation'] || false;
     });
 
     if (this.isMyFormationView) {
       this.loadMyFormation();
+    } else if (this.isNewFormation) {
+      // Handle new formation creation view
+      this.formation = {
+        id: null!,  // Non-null assertion operator tells TypeScript we know what we're doing
+        name: '',
+        description: '',
+        startDate: new Date(),
+        endDate: new Date(),
+        type: '',
+        level: ''
+      };
+      // Do NOT load students for a new formation
+      this.loading = false;
     } else {
       this.route.paramMap.subscribe((params) => {
-        const id = params.get('id');
-        if (id) {
-          this.loadFormation(+id);
+        const idParam = params.get('id');
+        const parsedId = idParam ? parseInt(idParam, 10) : NaN;
+
+        if (!isNaN(parsedId) && parsedId > 0) {
+          this.loadFormation(parsedId);
         } else {
+          this.snackBar.open(
+            'ID de formation invalide',
+            'Fermer',
+            {
+              duration: 3000,
+              panelClass: ['error-snackbar']
+            }
+          );
           this.router.navigate(['/formations']);
         }
       });
@@ -86,6 +111,7 @@ export class FormationDetailComponent implements OnInit {
             'Fermer',
             {
               duration: 3000,
+              panelClass: ['error-snackbar']
             },
           );
           this.router.navigate(['/formations']);
@@ -178,26 +204,36 @@ export class FormationDetailComponent implements OnInit {
 
   onDelete(): void {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
-      this.formationService
-        .deleteFormation(this.formation.id)
-        .pipe(
-          catchError((error) => {
-            this.snackBar.open(
-              'Erreur lors de la suppression de la formation',
-              'Fermer',
-              {
-                duration: 3000,
-              },
-            );
-            return of(null);
-          }),
-        )
-        .subscribe(() => {
-          this.snackBar.open('Formation supprimée avec succès', 'Fermer', {
-            duration: 3000,
+      if (this.formation?.id) {
+        this.formationService
+          .deleteFormation(this.formation.id)
+          .pipe(
+            catchError((error) => {
+              this.snackBar.open(
+                'Erreur lors de la suppression de la formation',
+                'Fermer',
+                {
+                  duration: 3000,
+                },
+              );
+              return of(null);
+            }),
+          )
+          .subscribe(() => {
+            this.snackBar.open('Formation supprimée avec succès', 'Fermer', {
+              duration: 3000,
+            });
+            this.router.navigate(['/formations']);
           });
-          this.router.navigate(['/formations']);
-        });
+      } else {
+        this.snackBar.open(
+          'Impossible de supprimer la formation: ID non défini',
+          'Fermer',
+          {
+            duration: 3000,
+          }
+        );
+      }
     }
   }
 }

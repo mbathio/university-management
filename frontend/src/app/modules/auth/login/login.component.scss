@@ -1,102 +1,143 @@
 /* src/app/features/auth/login/login.component.scss */
+@use "sass:color";
+@use "sass:meta";
+
+/* Sass color variable matching CSS variable */
+$primary-color: #3498db;
+$secondary-color: #2ecc71;
+$background-color: #f4f6f7;
+$text-color: #2c3e50;
+$card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --background-color: #f4f6f7;
+  --text-color: #2c3e50;
+  --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #f8f9fa;
+  min-height: 100vh;
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  padding: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .login-card {
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: $card-shadow;
+  padding: 2.5rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  }
 }
 
-h2 {
+.login-header {
   text-align: center;
-  margin-bottom: 1.5rem;
-  color: #343a40;
+  margin-bottom: 2rem;
+
+  h2 {
+    color: $text-color;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
 }
 
 .form-group {
-  margin-bottom: 1rem;
-}
+  margin-bottom: 1.25rem;
+  position: relative;
 
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: $text-color;
+    transition: color 0.2s ease;
+  }
 }
 
 .form-control {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  transition: border-color 0.15s ease-in-out;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e0e4e8;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  color: $text-color;
+  transition: all 0.3s ease;
 
   &:focus {
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: $primary-color;
+    background-color: white;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
   }
 
   &.is-invalid {
-    border-color: #dc3545;
+    border-color: #e74c3c;
+    background-color: #fff5f5;
   }
 }
 
-.invalid-feedback {
-  display: block;
+.login-button {
   width: 100%;
-  margin-top: 0.25rem;
-  font-size: 80%;
-  color: #dc3545;
-}
-
-.btn {
-  display: block;
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #007bff;
+  padding: 0.875rem;
+  background-color: $primary-color;
   color: white;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.15s ease-in-out;
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
 
   &:hover {
-    background-color: #0069d9;
+    background-color: #{color.scale($primary-color, $lightness: -10%)};
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
   }
 
   &:disabled {
-    background-color: #6c757d;
+    background-color: #a9a9a9;
     cursor: not-allowed;
   }
 }
 
-.error-message {
-  color: #dc3545;
-  margin-bottom: 1rem;
+.forgot-password {
   text-align: center;
-}
-
-.register-link {
   margin-top: 1rem;
-  text-align: center;
-  font-size: 0.9rem;
 
   a {
-    color: #007bff;
+    color: $primary-color;
     text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
 
     &:hover {
+      color: #{color.scale($primary-color, $lightness: -15%)};
       text-decoration: underline;
     }
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 1.5rem;
+    margin: 0 1rem;
   }
 }
