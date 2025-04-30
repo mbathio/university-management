@@ -12,24 +12,20 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.config.http.SessionCreationPolicy;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,27 +45,26 @@ public class SecurityConfig {
     
     @Value("${cors.max-age:3600}")
     private Long corsMaxAge;
+    
+    @Value("${security.require-https:true}")
+    private boolean requireHttps;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // Create a custom CSRF token request handler
         XorCsrfTokenRequestAttributeHandler csrfTokenRequestHandler = new XorCsrfTokenRequestAttributeHandler();
-        // Explicitly disable the CSRF protection for /error endpoint to avoid nested exception handling
-        csrfTokenRequestHandler.setCsrfRequestAttributeName(null);
-
+        csrfTokenRequestHandler.setCsrfRequestAttributeName("_csrf");
+        
+        // Configure security
         http
-            // Enable CSRF protection with cookie-based tokens
+            // Enable CSRF protection with enhanced cookie-based tokens
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(csrfTokenRequestHandler)
+                // Exempt only authentication endpoints from CSRF protection
                 .ignoringRequestMatchers(
                     "/api/auth/login", 
-                    "/api/auth/register", 
-                    "/api/public/**", 
-                    "/api/students",
-                    "/api/students/**",
-                    "/api/documents",  
-                    "/api/documents/**"  
+                    "/api/auth/register"
                 )
             )
             
@@ -81,7 +76,7 @@ public class SecurityConfig {
             // CORS configuration
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
-            // Security headers
+            // Enhanced security headers
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp
                     .policyDirectives("default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; " +
@@ -89,7 +84,7 @@ public class SecurityConfig {
                                      "img-src 'self' data:; " +
                                      "font-src 'self' https://cdnjs.cloudflare.com; " +
                                      "frame-ancestors 'none'; form-action 'self'; " +
-                                     "object-src 'none';")
+                                     "object-src 'none'; base-uri 'self';")
                 )
                 .frameOptions(frame -> frame.deny())
                 .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
@@ -97,7 +92,17 @@ public class SecurityConfig {
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                 .permissionsPolicy(permissions -> permissions
                     .policy("camera=(), microphone=(), geolocation=(), payment=()"))
+                // Adding Cache Control headers
+                .cacheControl(cache -> {})
             )
+            
+            // Force HTTPS in production
+            .requiresChannel(channel -> {
+                if (requireHttps) {
+                    channel.anyRequest().requiresSecure();
+                }
+            })
+            
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - accessible without authentication
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
@@ -157,7 +162,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(exception -> exception
+            .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             );
         
@@ -168,31 +173,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
-        configuration.setAllowedMethods(Arrays.asList(
-            HttpMethod.GET.name(), 
-            HttpMethod.POST.name(), 
-            HttpMethod.PUT.name(), 
-            HttpMethod.DELETE.name(), 
-            HttpMethod.OPTIONS.name()
-        ));
+        configuration.setAllowedMethods(Arrays.asList(allowedMethods));
         configuration.setAllowedHeaders(Arrays.asList(
             "Authorization", 
             "Content-Type", 
             "X-Requested-With", 
-            "Accept", 
-            "Origin", 
-            "Access-Control-Request-Method", 
-            "Access-Control-Request-Headers",
-            "X-XSRF-TOKEN", 
-            "XSRF-TOKEN",
             "X-CSRF-TOKEN"
         ));
-        configuration.setExposedHeaders(Arrays.asList(
-            "Authorization", 
-            "Content-Disposition", 
-            "X-XSRF-TOKEN",
-            "XSRF-TOKEN"
-        ));
+        // Only expose necessary headers
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(corsMaxAge);
 

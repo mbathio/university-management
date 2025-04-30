@@ -108,7 +108,7 @@ export class CommunicationDashboardComponent implements OnInit {
         const currentUser = this.authService.currentUserValue;
         if (currentUser) {
           this.myDocuments = sortedDocs
-            .filter(doc => doc.createdBy.id === currentUser.id)
+            .filter(doc => doc.createdBy?.id === currentUser.id)
             .slice(0, 5);
         }
         

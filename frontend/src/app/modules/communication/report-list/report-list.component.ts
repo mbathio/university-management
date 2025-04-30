@@ -170,7 +170,7 @@ downloadDocument(id: number): void {
     return (
       currentUser !== null &&
       (currentUser.role.includes('ADMIN') ||
-        document.createdBy.id === currentUser.id)
+        document.createdBy?.id === currentUser.id)
     );
   }
 

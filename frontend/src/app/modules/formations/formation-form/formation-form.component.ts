@@ -12,7 +12,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import { FormationService } from '../services/formation.service';
-import { Formation } from '../../../core/models/user.model';
+import { Formation } from '../formation.model';
 
 @Component({
   selector: 'app-formation-form',

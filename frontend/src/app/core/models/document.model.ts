@@ -1,5 +1,10 @@
 // src/app/core/models/document.model.ts
+import { User } from './user.model';
+
 export enum DocumentType {
+  REPORT = 'REPORT',
+  CERTIFICATE = 'CERTIFICATE',
+  SYLLABUS = 'SYLLABUS',
   MEETING_REPORT = 'COMPTE_RENDU_REUNION',
   SEMINAR_REPORT = 'COMPTE_RENDU_SEMINAIRE',
   WEBINAR_REPORT = 'COMPTE_RENDU_WEBINAIRE',
@@ -19,19 +24,30 @@ export enum VisibilityLevel {
 }
 
 export interface Document {
-  reference: string;
-  id: number;
+  id: number | undefined; 
   title: string;
-  content: string;
+  description: string;
   type: DocumentType;
   visibilityLevel: VisibilityLevel;
-  filePath?: string;
+  fileName: string;
+  filePath: string;
   createdAt: Date;
   updatedAt?: Date;
-  createdBy: {
-    id: number;
-    username: string;
-    fullName: string;
-  };
+  
+  content?: string;
+  reference?: string;
   tags?: string[];
+  createdBy?: {
+    id?: number;
+    username?: string;
+    fullName?: string;
+  };
+  
+  creator?: User; 
+}
+
+// Utility function for checking document creator
+export function isDocumentCreatedBy(document: Document, user?: User): boolean {
+  if (!document.createdBy?.id || !user) return false;
+  return document.createdBy.id === user.id;
 }

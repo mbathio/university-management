@@ -5,6 +5,8 @@ import {
   FormGroup,
   Validators,
   ReactiveFormsModule,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -25,6 +27,11 @@ export class RegisterComponent implements OnInit {
   };
   errorMessage = '';
   isLoading = false;
+  passwordVisible = false;
+
+  // Password strength indicators
+  passwordStrength = 0;
+  passwordFeedback = '';
 
   constructor(
     private formBuilder: FormBuilder,
@@ -33,13 +40,27 @@ export class RegisterComponent implements OnInit {
   ) {
     this.registerForm = this.formBuilder.group(
       {
-        username: ['', [Validators.required, Validators.minLength(4)]],
+        username: [
+          '', 
+          [
+            Validators.required, 
+            Validators.minLength(4),
+            Validators.pattern(/^[a-zA-Z0-9_.-]*$/) // Alphanumeric with only certain special chars
+          ]
+        ],
         email: ['', [Validators.required, Validators.email]],
-        password: ['', [Validators.required, Validators.minLength(6)]],
+        password: [
+          '', 
+          [
+            Validators.required, 
+            Validators.minLength(10),
+            this.createPasswordStrengthValidator()
+          ]
+        ],
         confirmPassword: ['', [Validators.required]],
         role: [Role.STUDENT, [Validators.required]],
       },
-      { validators: this.passwordMatchValidator },
+      { validators: this.passwordMatchValidator }
     );
   }
 
@@ -48,11 +69,16 @@ export class RegisterComponent implements OnInit {
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/dashboard']);
     }
-    // Désactiver le champ de sélection du rôle
+    // Disable role selection field - only STUDENT role for registration
     this.registerForm.get('role')?.disable();
+    
+    // Update password strength whenever password changes
+    this.registerForm.get('password')?.valueChanges.subscribe(password => {
+      this.updatePasswordStrength(password);
+    });
   }
 
-  passwordMatchValidator(formGroup: FormGroup) {
+  passwordMatchValidator(formGroup: FormGroup): ValidationErrors | null {
     const password = formGroup.get('password')?.value;
     const confirmPassword = formGroup.get('confirmPassword')?.value;
 
@@ -64,32 +90,111 @@ export class RegisterComponent implements OnInit {
     }
   }
 
+  createPasswordStrengthValidator() {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      
+      if (!value) {
+        return null;
+      }
+      
+      const hasUpperCase = /[A-Z]+/.test(value);
+      const hasLowerCase = /[a-z]+/.test(value);
+      const hasNumeric = /[0-9]+/.test(value);
+      const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(value);
+      
+      const passwordValid = hasUpperCase && hasLowerCase && hasNumeric && hasSpecialChar;
+      
+      return !passwordValid ? { passwordStrength: true } : null;
+    }
+  }
+
+  updatePasswordStrength(password: string): void {
+    if (!password) {
+      this.passwordStrength = 0;
+      this.passwordFeedback = '';
+      return;
+    }
+    
+    let strength = 0;
+    let feedback = [];
+    
+    // Length check
+    if (password.length >= 10) {
+      strength += 25;
+    } else {
+      feedback.push('Add more characters (at least 10)');
+    }
+    
+    // Character variety checks
+    if (/[A-Z]/.test(password)) {
+      strength += 25;
+    } else {
+      feedback.push('Add uppercase letters');
+    }
+    
+    if (/[a-z]/.test(password)) {
+      strength += 25;
+    } else {
+      feedback.push('Add lowercase letters');
+    }
+    
+    if (/[0-9]/.test(password)) {
+      strength += 15;
+    } else {
+      feedback.push('Add numbers');
+    }
+    
+    if (/[^A-Za-z0-9]/.test(password)) {
+      strength += 10;
+    } else {
+      feedback.push('Add special characters (!@#$%^&*)');
+    }
+    
+    this.passwordStrength = Math.min(100, strength);
+    this.passwordFeedback = feedback.join(', ');
+  }
+
+  togglePasswordVisibility(): void {
+    this.passwordVisible = !this.passwordVisible;
+  }
+
   onSubmit(): void {
     if (this.registerForm.invalid) {
+      // Mark all fields as touched to trigger validation visuals
+      Object.keys(this.registerForm.controls).forEach(key => {
+        const control = this.registerForm.get(key);
+        control?.markAsTouched();
+      });
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    const { username, email, password, role } = this.registerForm.value;
+    const { username, email, password } = this.registerForm.value;
+    const role = Role.STUDENT; // Force STUDENT role for security
     const userData = { username, email, password, role };
 
     this.authService.register(userData).subscribe({
       next: () => {
-        // L'utilisateur est maintenant connecté, on le redirige vers le dashboard
-        this.router.navigate(['/dashboard']);
+        // Successful registration, redirect to login page
+        this.router.navigate(['/login'], { 
+          queryParams: { registered: 'true' }
+        });
       },
       error: (error) => {
         this.isLoading = false;
-        if (error.status === 400) {
-          if (error.error.message?.includes('Username already exists')) {
+        if (error.status === 409) {
+          if (error.error?.error === 'username_exists') {
             this.errorMessage = 'Username already exists';
-          } else if (error.error.message?.includes('Email already exists')) {
+          } else if (error.error?.error === 'email_exists') {
             this.errorMessage = 'Email already exists';
           } else {
-            this.errorMessage = error.error.message || 'Registration failed';
+            this.errorMessage = error.error?.message || 'Registration failed';
           }
+        } else if (error.status === 400) {
+          this.errorMessage = 'Invalid input. Please check your details.';
         } else {
           this.errorMessage = 'An error occurred. Please try again later.';
         }

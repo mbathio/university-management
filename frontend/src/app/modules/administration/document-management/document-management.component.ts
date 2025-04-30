@@ -147,24 +147,26 @@ export class DocumentManagementComponent implements OnInit, AfterViewInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.documentService.deleteDocument(document.id).subscribe({
-          next: () => {
-            this.loadDocuments();
-            this.snackBar.open('Document supprimé avec succès', 'Fermer', {
-              duration: 3000,
-            });
-          },
-          error: (error) => {
-            console.error('Error deleting document', error);
-            this.snackBar.open(
-              'Erreur lors de la suppression du document',
-              'Fermer',
-              {
+        if (document.id !== undefined) {
+          this.documentService.deleteDocument(document.id).subscribe({
+            next: () => {
+              this.loadDocuments();
+              this.snackBar.open('Document supprimé avec succès', 'Fermer', {
                 duration: 3000,
-              },
-            );
-          },
-        });
+              });
+            },
+            error: (error) => {
+              console.error('Error deleting document', error);
+              this.snackBar.open(
+                'Erreur lors de la suppression du document',
+                'Fermer',
+                {
+                  duration: 3000,
+                },
+              );
+            },
+          });
+        }
       }
     });
   }

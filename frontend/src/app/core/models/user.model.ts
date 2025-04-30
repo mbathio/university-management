@@ -2,14 +2,34 @@
 import { VisibilityLevel, DocumentType } from './document.model';
 import { Role } from './role.model';
 
-export { Role };
-
 export interface User {
   id: number;
   username: string;
+  password?: string;
   email: string;
   role: Role;
-  fullName?: string;
+}
+
+export interface Student extends User {
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  birthDate: Date;
+  promo: string;
+  startYear: number;
+  endYear: number;
+  user?: User;
+  currentFormation?: any; // Optional current formation
+  formationId?: number; // Optional formation ID
+}
+
+export interface Staff extends User {
+  staffId: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+  department: string;
+  contactInfo: string;
 }
 
 export interface LoginRequest {
@@ -22,45 +42,6 @@ export interface LoginResponse {
   username: string;
   email: string;
   role: Role;
-}
-
-export interface Formation {
-  id?: number;
-  name: string;
-  type: string;
-  level: string;
-  startDate: Date;
-  endDate?: Date;
-  description?: string;
-  fundingAmount?: number;
-  fundingType?: string;
-  code?: string;
-}
-
-export interface Student {
-  username: string;
-  role: Role;
-  id: number;
-  studentId: string;
-  firstName: string;
-  lastName: string;
-  birthDate?: Date;
-  currentFormation?: Formation;
-  promo?: string;
-  startYear?: number;
-  endYear?: number;
-  user: User;
-}
-
-export interface Staff {
-  id: number;
-  staffId: string;
-  firstName: string;
-  lastName: string;
-  position: string;
-  department: string;
-  contactInfo?: string;
-  user: User;
 }
 
 export interface StudentDto {
@@ -89,3 +70,5 @@ export interface StaffDto {
   department: string;
   contactInfo: string;
 }
+
+export { Role } from './role.model';

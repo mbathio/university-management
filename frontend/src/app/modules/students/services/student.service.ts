@@ -3,11 +3,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { Student, StudentDto, Formation } from '../../../core/models/user.model';
+import { Student, StudentDto } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Role } from '../../../core/models/role.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Formation } from '../../formations/formation.model';
 
 @Injectable({
   providedIn: 'root',
@@ -113,6 +114,7 @@ export class StudentService {
       ...studentDto,
       id: 0, // Backend will assign the actual ID
       role: Role.STUDENT, // Default role for new students
+      birthDate: studentDto.birthDate || new Date(), // Provide a default date if undefined
       user: {
         id: 0, // Backend will assign the actual user ID
         username: studentDto.username,

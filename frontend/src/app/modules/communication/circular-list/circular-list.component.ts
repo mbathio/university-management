@@ -189,7 +189,7 @@ export class CircularListComponent implements OnInit, AfterViewInit {
     const currentUser = this.authService.currentUserValue;
     if (!currentUser) return false;
     
-    return document.createdBy.id === currentUser.id;
+    return document.createdBy?.id === currentUser.id;
   }
 
   canDelete(document: Document): boolean {

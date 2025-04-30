@@ -97,6 +97,7 @@ export class AdminNoteFormComponent implements OnInit {
         if (
           !currentUser ||
           (!currentUser.role.includes('ADMIN') &&
+            document.createdBy &&
             document.createdBy.id !== currentUser.id)
         ) {
           this.snackBar.open(

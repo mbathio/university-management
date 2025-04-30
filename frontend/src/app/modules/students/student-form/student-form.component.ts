@@ -12,7 +12,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 
 import { StudentService } from '../services/student.service';
 import { FormationService } from '../../formations/services/formation.service';
-import { Student, StudentDto, Formation } from '../../../core/models/user.model';
+import { Student, StudentDto } from '../../../core/models/user.model';
+import { Formation } from '../../formations/formation.model';
 
 @Component({
   selector: 'app-student-form',

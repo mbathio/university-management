@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, tap } from 'rxjs';
-import { Formation } from '../../../core/models/user.model';
+import { Formation } from '../formation.model';
 import { environment } from '../../../../environments/environment';
 import { catchError, map } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth/auth.service';

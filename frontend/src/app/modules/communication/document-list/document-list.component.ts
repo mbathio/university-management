@@ -245,9 +245,11 @@ export class DocumentListComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         // Temporary implementation - update each document individually
-        const updatePromises = this.selectedDocuments.map(doc => 
-          this.documentService.updateDocument(doc.id, new FormData()).toPromise()
-        );
+        const updatePromises = this.selectedDocuments
+          .filter(doc => doc.id !== undefined)
+          .map(doc => 
+            this.documentService.updateDocument(doc.id!, new FormData()).toPromise()
+          );
 
         Promise.all(updatePromises)
           .then(() => {
@@ -272,9 +274,11 @@ export class DocumentListComponent implements OnInit, AfterViewInit {
     const confirmDelete = confirm(`Êtes-vous sûr de vouloir supprimer ${this.selectedDocuments.length} document(s) ?`);
     if (confirmDelete) {
       // Temporary implementation - delete documents one by one
-      const deletePromises = this.selectedDocuments.map(doc => 
-        this.documentService.deleteDocument(doc.id).toPromise()
-      );
+      const deletePromises = this.selectedDocuments
+        .filter(doc => doc.id !== undefined)
+        .map(doc => 
+          this.documentService.deleteDocument(doc.id!).toPromise()
+        );
 
       Promise.all(deletePromises)
         .then(() => {
@@ -290,19 +294,23 @@ export class DocumentListComponent implements OnInit, AfterViewInit {
   }
 
   downloadDocument(document: Document): void {
-    this.documentService.downloadDocument(document.id).subscribe({
-      next: (blob: Blob) => {
-        const link = window.document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = document.title || 'document';
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
-      },
-      error: (error: Error) => {
-        this.snackBar.open('Erreur lors du téléchargement du document', 'Fermer', { duration: 3000 });
-      }
-    });
+    if (document.id) {
+      this.documentService.downloadDocument(document.id).subscribe({
+        next: (blob: Blob) => {
+          const link = window.document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          link.download = document.title || 'document';
+          window.document.body.appendChild(link);
+          link.click();
+          window.document.body.removeChild(link);
+        },
+        error: (error) => {
+          this.snackBar.open('Erreur lors du téléchargement du document', 'Fermer', { duration: 3000 });
+        }
+      });
+    } else {
+      this.snackBar.open('ID du document non disponible', 'Fermer', { duration: 3000 });
+    }
   }
 
   resetAdvancedSearch(): void {

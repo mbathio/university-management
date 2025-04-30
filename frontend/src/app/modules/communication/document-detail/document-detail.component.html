@@ -18,7 +18,7 @@
         <div class="document-metadata">
           <span class="document-type">{{ document.type | documentType }}</span>
           <span class="document-date">Créé le {{ document.createdAt | date:'dd/MM/yyyy' }}</span>
-          <span class="document-author">par {{ document.createdBy.fullName || document.createdBy.username }}</span>        </div>
+          <span class="document-author">par {{ document.createdBy?.fullName || document.createdBy?.username }}</span>        </div>
       </mat-card-subtitle>
     </mat-card-header>
 
