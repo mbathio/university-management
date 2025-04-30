@@ -12,7 +12,6 @@ interface AuthResponse {
   username: string;
   email: string;
   role: Role;
-  user: User;
 }
 
 interface TokenRefreshResponse {
@@ -31,71 +30,11 @@ interface LoginResponse {
 })
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  private tokenKey = 'token';
+  private tokenKey = 'access_token'; // Match key with what's used in login()
+  private refreshTokenKey = 'refresh_token';
   private userKey = 'username';
   private roleKey = 'role';
-
-  refreshToken(): Observable<string> {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) {
-      console.error('No refresh token available');
-      this.logout();
-      return throwError(() => new Error('No refresh token'));
-    }
-
-    return this.http.post<TokenRefreshResponse>(`${environment.apiUrl}/api/auth/refresh`, 
-      { refreshToken }, 
-      { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) }
-    ).pipe(
-      tap(response => {
-        if (response.token) {
-          localStorage.setItem(this.tokenKey, response.token);
-          console.log('Token refreshed successfully');
-        } else {
-          console.error('Token refresh failed');
-          this.logout();
-        }
-      }),
-      map(response => response.token),
-      catchError(error => {
-        console.error('Token refresh error:', error);
-        this.logout();
-        return throwError(() => new Error('Token refresh failed'));
-      })
-    );
-  }
-
-  private handleAuthError<T>(observable: Observable<HttpEvent<T>>): Observable<HttpEvent<T>> {
-    return observable.pipe(
-      catchError((error: HttpErrorResponse) => {
-        // Check if the error is an unauthorized error (401)
-        if (error.status === 401) {
-          return this.refreshToken().pipe(
-            switchMap(() => {
-              // Use HttpContext to retrieve the original request
-              const originalRequest = error.error.originalRequest || error.error.request;
-              
-              if (!originalRequest) {
-                // If no original request is found, logout
-                this.logout();
-                return throwError(() => error);
-              }
-              
-              // Retry the original request with the new token
-              return observable;
-            }),
-            catchError(() => {
-              this.logout();
-              return throwError(() => error);
-            })
-          );
-        }
-        
-        // For non-401 errors, simply rethrow
-        return throwError(() => error);
-      })
-    );
-  }
+  private tokenExpiryKey = 'token_expiry';
 
   constructor(
     private http: HttpClient,
@@ -113,8 +52,20 @@ export class AuthService {
   autoLogin(): void {
     const token = localStorage.getItem(this.tokenKey);
     const userJson = localStorage.getItem(this.userKey);
+    const expiry = localStorage.getItem(this.tokenExpiryKey);
 
-    if (token && userJson) {
+    // Check token expiration
+    if (token && userJson && expiry) {
+      const expiryDate = new Date(expiry);
+      const now = new Date();
+      
+      // If token is expired or will expire soon (within 5 minutes), attempt refresh
+      if (expiryDate <= now) {
+        console.log('Token has expired, clearing session');
+        this.logout();
+        return;
+      }
+      
       try {
         const user: User = {
           username: userJson,
@@ -123,8 +74,18 @@ export class AuthService {
           email: ''
         };
         this.currentUserSubject.next(user);
+        
         // Validate the token silently in background
-        this.validateToken().subscribe();
+        this.validateToken().subscribe({
+          next: (isValid) => {
+            if (!isValid) {
+              this.logout();
+            }
+          },
+          error: () => {
+            this.logout();
+          }
+        });
       } catch (error) {
         console.error('Error parsing stored user', error);
         this.logout();
@@ -132,53 +93,88 @@ export class AuthService {
     }
   }
 
-  login(credentials: { username: string, password: string }): Observable<HttpEvent<LoginResponse>> {
-    return this.handleAuthError(
-      this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, credentials, { observe: 'events' })
-    ).pipe(
-      tap((event: HttpEvent<LoginResponse>) => {
-        if (event.type === HttpEventType.Response) {
-          const response = event.body;
-          // Add null check before accessing response properties
-          if (response) {
-            // Store token in localStorage with the correct key
-            localStorage.setItem('access_token', response.token);
-            localStorage.setItem('refresh_token', response.token); // Consider using a separate refresh token if available
-            
-            // Store user details
-            localStorage.setItem('username', response.username);
-            localStorage.setItem('role', response.role);
-            
-            console.log('Login Response:', JSON.stringify(response, null, 2));
+  login(credentials: { username: string, password: string }): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, credentials)
+      .pipe(
+        tap((response: LoginResponse) => {
+          if (response && response.token) {
+            // Store token securely
+            this.storeAuthData(response);
             
             // Update current user subject
             const user: User = {
               username: response.username,
               role: response.role,
-              id: 0, // You might want to include user ID from the response
+              id: 0,
               email: response.email
             };
             this.currentUserSubject.next(user);
           } else {
-            console.error('Login response is null');
-            // Optionally handle the error case, e.g., show a notification
+            console.error('Login response missing token');
+            throw new Error('Invalid login response');
           }
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Login error:', error);
+          
+          // Detailed error handling
+          if (error.status === 401) {
+            return throwError(() => new Error('Invalid username or password'));
+          } else if (error.status === 429) {
+            return throwError(() => new Error('Too many login attempts. Please try again later.'));
+          } else if (error.status === 0) {
+            return throwError(() => new Error('Unable to connect to the server. Please check your network connection.'));
+          } else {
+            return throwError(() => new Error(`Login failed: ${error.message}`));
+          }
+        })
+      );
+  }
+
+  private storeAuthData(response: LoginResponse): void {
+    // Calculate expiry based on server-side token expiration (24 hours)
+    const expiry = new Date();
+    expiry.setHours(expiry.getHours() + 24);
+    
+    localStorage.setItem(this.tokenKey, response.token);
+    localStorage.setItem(this.refreshTokenKey, response.token); // In a real app, use a separate refresh token
+    localStorage.setItem(this.userKey, response.username);
+    localStorage.setItem(this.roleKey, response.role);
+    localStorage.setItem(this.tokenExpiryKey, expiry.toISOString());
+  }
+
+  refreshToken(): Observable<string> {
+    const refreshToken = localStorage.getItem(this.refreshTokenKey);
+    if (!refreshToken) {
+      console.error('No refresh token available');
+      this.logout();
+      return throwError(() => new Error('No refresh token'));
+    }
+
+    return this.http.post<TokenRefreshResponse>(
+      `${environment.apiUrl}/api/auth/refresh`, 
+      { refreshToken }, 
+      { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) }
+    ).pipe(
+      tap(response => {
+        if (response.token) {
+          // Update token and expiry
+          const expiry = new Date();
+          expiry.setHours(expiry.getHours() + 24);
+          
+          localStorage.setItem(this.tokenKey, response.token);
+          localStorage.setItem(this.tokenExpiryKey, expiry.toISOString());
+          console.log('Token refreshed successfully');
+        } else {
+          console.error('Token refresh failed');
+          this.logout();
         }
       }),
-      catchError((error: HttpErrorResponse) => {
-        console.error('Login error:', error);
-        
-        // Detailed error handling
-        if (error.status === 401) {
-          // Unauthorized - invalid credentials
-          return throwError(() => new Error('Invalid username or password'));
-        } else if (error.status === 0) {
-          // Network error or server unreachable
-          return throwError(() => new Error('Unable to connect to the server. Please check your network connection.'));
-        } else {
-          // Other HTTP errors
-          return throwError(() => new Error(`Login failed: ${error.message}`));
-        }
+      map(response => response.token),
+      catchError(error => {
+        console.error('Token refresh error:', error);
+        this.logout();
+        return throwError(() => new Error('Token refresh failed'));
       })
     );
   }
@@ -188,22 +184,23 @@ export class AuthService {
     email: string;
     password: string;
     role: Role;
-  }): Observable<HttpEvent<AuthResponse>> {
-    return this.handleAuthError(
-      this.http.post<AuthResponse>(`${environment.apiUrl}/api/auth/register`, userData, { observe: 'events' })
-    ).pipe(
-      catchError((error: HttpErrorResponse) => {
-        console.error('Registration error in service:', error);
-        return throwError(() => error);
-      })
-    );
+  }): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/auth/register`, userData)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error('Registration error in service:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
   logout(): void {
     // Clear localStorage
     localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.refreshTokenKey);
     localStorage.removeItem(this.userKey);
     localStorage.removeItem(this.roleKey);
+    localStorage.removeItem(this.tokenExpiryKey);
 
     // Reset current user
     this.currentUserSubject.next(null);
@@ -213,10 +210,28 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem(this.tokenKey);
+    const token = localStorage.getItem(this.tokenKey);
+    const expiry = localStorage.getItem(this.tokenExpiryKey);
+    
+    if (!token || !expiry) {
+      return false;
+    }
+    
+    // Check if token is expired
+    const expiryDate = new Date(expiry);
+    if (expiryDate <= new Date()) {
+      this.logout();
+      return false;
+    }
+    
+    return true;
   }
 
   getToken(): string | null {
+    // Check if token is expired before returning
+    if (!this.isLoggedIn()) {
+      return null;
+    }
     return localStorage.getItem(this.tokenKey);
   }
 
@@ -226,28 +241,17 @@ export class AuthService {
   }
 
   validateToken(): Observable<boolean> {
-    const token = this.getToken();
-    if (!token) {
-      return of(false);
-    }
-
-    // Use the backend endpoint to validate the token
-    return this.http.get<boolean>(`${environment.apiUrl}/auth/validate-token`).pipe(
-      map(isValid => {
-        if (!isValid) {
-          this.logout(); // Clear token if invalid
-        }
-        return isValid;
-      }),
+    return this.http.get<{ valid: boolean }>(`${environment.apiUrl}/api/auth/validate`).pipe(
+      map(response => response.valid),
       catchError(() => {
-        this.logout(); // Logout on any error
+        this.logout();
         return of(false);
       })
     );
   }
 
   // Add authenticated headers with token
-  private getAuthHeaders(): HttpHeaders {
+  getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
     if (!token) {
       console.warn('No authentication token found');
@@ -261,26 +265,22 @@ export class AuthService {
     });
   }
 
-  // Validate token before making requests
-  private ensureValidToken(): Observable<boolean> {
-    return this.validateToken().pipe(
-      tap(isValid => {
-        if (!isValid) {
-          console.error('Token is invalid. Logging out.');
+  // Safe request wrapper that checks token validity
+  authenticatedRequest<T>(requestFn: () => Observable<T>): Observable<T> {
+    if (!this.isLoggedIn()) {
+      console.error('Not logged in');
+      this.router.navigate(['/login']);
+      return throwError(() => new Error('Not authenticated'));
+    }
+    
+    return requestFn().pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          console.error('Authentication failed during request');
           this.logout();
+          this.router.navigate(['/login']);
         }
-      })
-    );
-  }
-
-  // Wrapper method for authenticated requests
-  authenticatedRequest<T>(request: Observable<T>): Observable<T> {
-    return this.ensureValidToken().pipe(
-      switchMap(isValid => {
-        if (!isValid) {
-          return throwError(() => new Error('Invalid authentication token'));
-        }
-        return request;
+        return throwError(() => error);
       })
     );
   }

@@ -14,23 +14,25 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    component: LoginComponent,
+    component: LoginComponent
   },
   {
     path: 'register',
-    component: RegisterComponent,
+    component: RegisterComponent
   },
   {
     path: 'dashboard',
     loadChildren: () =>
-      import('./modules/dashboard/dashboard.routes').then((mod) => mod.default),
+      import('./modules/dashboard/dashboard.module').then(
+        (m) => m.DashboardModule,
+      ),
     canActivate: [authGuard],
   },
   {
     path: 'administration',
     loadChildren: () =>
-      import('./modules/administration/administration.routes').then(
-        (mod) => mod.default,
+      import('./modules/administration/administration.module').then(
+        (m) => m.AdministrationModule,
       ),
     canActivate: [authGuard],
     data: { roles: [Role.ADMIN, Role.ADMINISTRATION] },
@@ -38,16 +40,16 @@ export const routes: Routes = [
   {
     path: 'communication',
     loadChildren: () =>
-      import('./modules/communication/communication.routes').then(
-        (mod) => mod.default,
+      import('./modules/communication/communication.module').then(
+        (m) => m.CommunicationModule,
       ),
     canActivate: [authGuard],
   },
   {
     path: 'formations',
     loadChildren: () =>
-      import('./modules/formations/formations.routes').then(
-        (mod) => mod.default,
+      import('./modules/formations/formations.module').then(
+        (m) => m.FormationsModule,
       ),
     canActivate: [authGuard],
   },

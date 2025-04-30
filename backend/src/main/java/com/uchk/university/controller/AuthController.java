@@ -4,7 +4,6 @@ import com.uchk.university.dto.LoginRequest;
 import com.uchk.university.dto.LoginResponse;
 import com.uchk.university.dto.UserDto;
 import com.uchk.university.entity.User;
-import com.uchk.university.security.CurrentUser;
 import com.uchk.university.service.AuthService;
 import com.uchk.university.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,33 +33,83 @@ public class AuthController {
     private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     
-    // Implement login attempt rate limiting
-    private final Map<String, LoginAttempt> loginAttempts = new HashMap<>();
+    // More robust rate limiting implementation
+    private final ConcurrentHashMap<String, LoginAttempt> loginAttempts = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     
-    // Static class to track login attempts
+    // Constants for rate limiting
+    private static final int MAX_ATTEMPTS = 5;
+    private static final int LOCKOUT_MINUTES = 15;
+    private static final int CLEANUP_INTERVAL_MINUTES = 60;
+    
+    // Enhanced LoginAttempt with more secure lockout mechanism
     private static class LoginAttempt {
         private int count;
         private LocalDateTime lastAttempt;
+        private boolean locked;
+        private LocalDateTime lockedUntil;
         
         public LoginAttempt() {
             this.count = 1;
             this.lastAttempt = LocalDateTime.now();
+            this.locked = false;
         }
         
         public void increment() {
             this.count++;
             this.lastAttempt = LocalDateTime.now();
+            
+            // If threshold exceeded, lock the account
+            if (count >= MAX_ATTEMPTS && !locked) {
+                this.locked = true;
+                this.lockedUntil = LocalDateTime.now().plusMinutes(LOCKOUT_MINUTES);
+            }
         }
         
         public boolean isLocked() {
-            // Lock after 5 failed attempts for 15 minutes
-            return count >= 5 && lastAttempt.plusMinutes(15).isAfter(LocalDateTime.now());
+            // If locked but lock period expired, unlock
+            if (locked && LocalDateTime.now().isAfter(lockedUntil)) {
+                locked = false;
+                count = 0;
+                return false;
+            }
+            return locked;
         }
         
         public void reset() {
             this.count = 0;
             this.lastAttempt = LocalDateTime.now();
+            this.locked = false;
+            this.lockedUntil = null;
         }
+        
+        public boolean shouldCleanup() {
+            // Clean up records older than twice the lockout period
+            return !locked && lastAttempt.plusMinutes(LOCKOUT_MINUTES * 2).isBefore(LocalDateTime.now());
+        }
+    }
+    
+    // Cleanup expired login attempts
+    private void cleanupExpiredAttempts() {
+        loginAttempts.entrySet().removeIf(entry -> entry.getValue().shouldCleanup());
+    }
+    
+    // Get client IP with X-Forwarded-For header support
+    private String getClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            // Get the first IP which is the client's IP
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    // Schedule periodic cleanup of old login attempts
+    {
+        scheduler.scheduleAtFixedRate(this::cleanupExpiredAttempts, 
+                                     CLEANUP_INTERVAL_MINUTES, 
+                                     CLEANUP_INTERVAL_MINUTES, 
+                                     TimeUnit.MINUTES);
     }
 
     @PostMapping("/login")
@@ -64,14 +117,23 @@ public class AuthController {
             @Valid @RequestBody LoginRequest loginRequest,
             HttpServletRequest request) {
         
-        // Get client IP for rate limiting (consider using a proxy-aware method in production)
-        String clientIp = request.getRemoteAddr();
+        // Get client IP for rate limiting with proxy support
+        String clientIp = getClientIp(request);
+        String usernameHash = String.valueOf(loginRequest.getUsername().hashCode());
+        // Use composite key of IP + username hash to prevent username enumeration while limiting by username
+        String rateLimitKey = clientIp + ":" + usernameHash;
         
         // Check for rate limiting
-        if (loginAttempts.containsKey(clientIp) && loginAttempts.get(clientIp).isLocked()) {
+        if (loginAttempts.containsKey(rateLimitKey) && loginAttempts.get(rateLimitKey).isLocked()) {
+            LoginAttempt attempt = loginAttempts.get(rateLimitKey);
+            
             Map<String, String> response = new HashMap<>();
             response.put("error", "too_many_attempts");
             response.put("message", "Too many login attempts. Please try again later.");
+            
+            // Don't log the actual username to prevent log-based username enumeration
+            logger.warn("Blocked login attempt due to rate limiting. IP: {}", clientIp);
+            
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(response);
         }
         
@@ -79,15 +141,25 @@ public class AuthController {
             LoginResponse loginResponse = authService.login(loginRequest);
             
             // On successful login, reset attempts
-            loginAttempts.remove(clientIp);
+            loginAttempts.computeIfPresent(rateLimitKey, (k, v) -> {
+                v.reset();
+                return v;
+            });
             
             return ResponseEntity.ok(loginResponse);
         } catch (Exception e) {
             // On failed login, increment attempts
-            loginAttempts.computeIfAbsent(clientIp, k -> new LoginAttempt());
-            loginAttempts.get(clientIp).increment();
+            loginAttempts.compute(rateLimitKey, (k, v) -> {
+                if (v == null) {
+                    return new LoginAttempt();
+                } else {
+                    v.increment();
+                    return v;
+                }
+            });
             
-            logger.warn("Failed login attempt for user: {}, IP: {}", loginRequest.getUsername(), clientIp);
+            // Log failure but don't reveal if username exists or not
+            logger.warn("Failed login attempt from IP: {}", clientIp);
             
             // Return 401 for authentication failure
             Map<String, String> response = new HashMap<>();
@@ -163,7 +235,7 @@ public class AuthController {
             response.put("username", user.getUsername());
             response.put("role", user.getRole());
             
-            logger.info("Token validated successfully for user: {}", username);
+            logger.debug("Token validated successfully for user: {}", username);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Token validation error: {}", e.getMessage());

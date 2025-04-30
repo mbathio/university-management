@@ -4,10 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import java.util.Date;
 
 @Data
@@ -20,7 +17,7 @@ public class StudentDto {
     private String username;
     
     @NotEmpty(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
     
     @NotEmpty(message = "Email is required")
@@ -32,19 +29,28 @@ public class StudentDto {
     private String studentId;
     
     @NotEmpty(message = "First name is required")
+    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
     private String firstName;
     
     @NotEmpty(message = "Last name is required")
+    @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
     private String lastName;
     
+    @PastOrPresent(message = "Birth date must be in the past or present")
     private Date birthDate;
     
+    @Positive(message = "Formation ID must be a positive number")
     private Long formationId;
     
+    @Size(max = 10, message = "Promo must be less than 10 characters")
     private String promo;
     
+    @Min(value = 1900, message = "Start year must be after 1900")
+    @Max(value = 2100, message = "Start year must be before 2100")
     private Integer startYear;
     
+    @Min(value = 1900, message = "End year must be after 1900")
+    @Max(value = 2100, message = "End year must be before 2100")
     private Integer endYear;
 
     // Explicitly add getter methods for service layer

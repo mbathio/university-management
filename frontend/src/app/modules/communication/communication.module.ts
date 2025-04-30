@@ -41,14 +41,20 @@ import { VisibilityLevelPipe } from './pipes/visibility-level.pipe';
 
 @NgModule({
   declarations: [
+    
+
+    // CommunicationDashboardComponent removed from here as it's standalone
+  ],
+  imports: [
     DocumentListComponent,
     DocumentDetailComponent,
     ReportFormComponent,
     ReportListComponent,
-    NotificationsComponent
-    // CommunicationDashboardComponent removed from here as it's standalone
-  ],
-  imports: [
+    NotificationsComponent,
+    DocumentTypePipe,
+    VisibilityLevelPipe,
+    CircularListComponent,
+    CircularFormComponent,
     CommonModule,
     ReactiveFormsModule,
     RouterModule.forChild(routes),

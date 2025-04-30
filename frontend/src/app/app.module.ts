@@ -1,4 +1,3 @@
-
 // src/app/app.module.ts
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -6,9 +5,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
-// Import either the routes for new standalone approach or AppRoutingModule
-import { routes } from './app.routes'; // Use this for standalone components
-// import { AppRoutingModule } from './app-routing.module'; // Use this for module-based approach
+// Import routes
+import { routes } from './app.routes';
 
 import { AppComponent } from './app.component';
 import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
@@ -20,17 +18,6 @@ import { VisibilityLevelPipe } from './modules/communication/pipes/visibility-le
 
 @NgModule({
   declarations: [
-    // other declarations
-    DocumentTypePipe,
-    VisibilityLevelPipe
-  ],
-  // other configurations
-})
-
-@NgModule({
-  declarations: [
-    // AppComponent is now standalone, so it should be removed from here if it's truly standalone
-    // AppComponent
     DocumentTypePipe,
     VisibilityLevelPipe
   ],
@@ -39,14 +26,8 @@ import { VisibilityLevelPipe } from './modules/communication/pipes/visibility-le
     BrowserAnimationsModule,
     HttpClientModule,
     SharedModule,
-    
-    // Choose ONE of these approaches based on your migration strategy:
-    RouterModule.forRoot(routes), // For standalone components
-    // AppRoutingModule, // For module-based approach
-    
-    // If AppComponent is standalone, import it here
+    RouterModule.forRoot(routes),
     AppComponent,
-    // Import other standalone components used at root level
     PageNotFoundComponent
   ],
   providers: [

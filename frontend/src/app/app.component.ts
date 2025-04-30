@@ -22,6 +22,7 @@ interface NavItem {
   standalone: true,
   imports: [CommonModule, RouterModule, MatIconModule],
 })
+
 export class AppComponent implements OnInit {
   title = 'Université Cheikh Hamidou Kane';
   isLoginPage = false;

@@ -2,6 +2,8 @@ package com.uchk.university.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,8 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtil.class);
+
     private final SecretKey key;
     private final long jwtExpiration;
     private final long jwtRefreshExpiration;
@@ -27,8 +31,9 @@ public class JwtTokenUtil {
 
     public JwtTokenUtil(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration:3600000}") long jwtExpiration, // Reduced default to 1 hour
-            @Value("${jwt.refresh-expiration:86400000}") long jwtRefreshExpiration) { // Reduced to 24 hours
+            @Value("${jwt.expiration:86400000}") long jwtExpiration, // Changed to 24 hours
+            @Value("${jwt.refresh-expiration:604800000}") long jwtRefreshExpiration, // 7 days
+            @Value("${jwt.nonce-prefix:UCHK}") String noncePrefix) {
         // Generate a strong key from the secret using HMAC-SHA-256
         // Ensure the secret key is at least 256 bits (32 bytes) for HS256
         byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
@@ -44,11 +49,7 @@ public class JwtTokenUtil {
         this.jwtExpiration = jwtExpiration;
         this.jwtRefreshExpiration = jwtRefreshExpiration;
         
-        // Generate a random nonce prefix for this instance
-        SecureRandom random = new SecureRandom();
-        byte[] nonceBytes = new byte[8];
-        random.nextBytes(nonceBytes);
-        this.noncePrefix = Base64.getUrlEncoder().withoutPadding().encodeToString(nonceBytes);
+        this.noncePrefix = noncePrefix;
     }
 
     public String getUsernameFromToken(String token) {
@@ -98,51 +99,34 @@ public class JwtTokenUtil {
         long currentTimeMillis = System.currentTimeMillis();
         // Add a few seconds to not-before time to account for clock skew
         Date nbf = new Date(currentTimeMillis - 10000); // 10 seconds ago
+        Date issuedAt = new Date(currentTimeMillis);
+        Date expirationDate = new Date(currentTimeMillis + expiration);
         String tokenId = noncePrefix + "-" + java.util.UUID.randomUUID().toString();
-        
+
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
-                .setIssuedAt(new Date(currentTimeMillis))
-                .setExpiration(new Date(currentTimeMillis + expiration))
-                .setNotBefore(nbf) // Add not-before claim
-                .setId(tokenId) // Add jti claim with instance-specific prefix
+                .setIssuedAt(issuedAt)
+                .setNotBefore(nbf)
+                .setExpiration(expirationDate)
+                .setId(tokenId)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public Boolean validateToken(String token, UserDetails userDetails) {
+    public boolean validateToken(String token, UserDetails userDetails) {
         try {
             final String username = getUsernameFromToken(token);
-            
-            // Check if basic conditions are met
-            if (!username.equals(userDetails.getUsername()) || isTokenExpired(token)) {
-                return false;
-            }
-            
-            // Verify the token has expected claims
-            Claims claims = getAllClaimsFromToken(token);
-            Date now = new Date();
-            
-            // Verify not before date
-            if (claims.getNotBefore() != null && claims.getNotBefore().after(now)) {
-                return false;
-            }
-            
-            // Verify issued at date is in the past
-            if (claims.getIssuedAt() != null && claims.getIssuedAt().after(now)) {
-                return false;
-            }
-            
-            // Verify JTI presence (token ID)
-            if (claims.getId() == null || !claims.getId().startsWith(noncePrefix)) {
-                return false;
-            }
-            
-            return true;
-        } catch (Exception e) {
+            return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        } catch (ExpiredJwtException | SignatureException | MalformedJwtException e) {
+            // Log the specific validation error
+            logger.warn("Token validation failed: {}", e.getMessage());
             return false;
         }
+    }
+
+    public long getTokenExpirationTime() {
+        return jwtExpiration;
     }
 
     public Boolean validateToken(String token) {

@@ -12,24 +12,66 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                "Requested resource not found",
-                LocalDateTime.now()
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = ex.getBindingResult()
+            .getFieldErrors()
+            .stream()
+            .collect(Collectors.toMap(
+                FieldError::getField, 
+                fieldError -> fieldError.getDefaultMessage() != null ? fieldError.getDefaultMessage() : "Invalid value")
+            );
+
+        logger.error("Validation errors: {}", errors);
+
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Validation failed",
+            LocalDateTime.now(),
+            errors
         );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
         logger.warn("Resource not found: {}", ex.getMessage());
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.NOT_FOUND.value(),
+            ex.getMessage(),
+            LocalDateTime.now(),
+            null
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResource(DuplicateResourceException ex) {
+        logger.error("Duplicate resource error: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.CONFLICT.value(),
+            ex.getMessage(),
+            LocalDateTime.now(),
+            null
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -87,25 +129,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("message", "Validation failed");
-        response.put("errors", errors);
-        
-        logger.warn("Validation failed: {}", errors);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
     @ExceptionHandler(DocumentStorageException.class)
     public ResponseEntity<ErrorResponse> handleDocumentStorageException(DocumentStorageException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -119,12 +142,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "An unexpected error occurred",
-                LocalDateTime.now()
+        logger.error("Unexpected error occurred", ex);
+
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "An unexpected error occurred",
+            LocalDateTime.now(),
+            null
         );
-        logger.error("Unexpected error: {}", ex.getMessage(), ex);
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

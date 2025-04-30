@@ -1,4 +1,6 @@
 package com.uchk.university.service;
+import com.uchk.university.repository.UserRepository; 
+import com.uchk.university.exception.DuplicateResourceException;
 
 import com.uchk.university.dto.StudentDto;
 import com.uchk.university.entity.Formation;
@@ -23,6 +25,7 @@ import java.util.List;
 public class StudentService {
     private final StudentRepository studentRepository;
     private final UserService userService;
+    private final UserRepository userRepository;
     private final FormationRepository formationRepository;
     private static final Logger logger = LoggerFactory.getLogger(StudentService.class);
 
@@ -42,8 +45,10 @@ public class StudentService {
 
     @Transactional
     public Student createStudent(StudentDto studentDto) {
-        logger.info("Creating student with studentId: {}", studentDto.getStudentId());
-        
+        // Check for existing username
+        if (userRepository.existsByUsername(studentDto.getUsername())) {
+            throw new DuplicateResourceException("Username already exists");
+        }
         // Create user account first
         User user = userService.createUser(new com.uchk.university.dto.UserDto(
                 studentDto.getUsername(),
@@ -149,6 +154,7 @@ public class StudentService {
         studentRepository.delete(student);
         userService.deleteUser(student.getUser().getId());
     }
+  
 
     @Transactional(readOnly = true)
     public Student getStudentByUsername(String username) {

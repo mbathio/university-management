@@ -12,19 +12,24 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -47,19 +52,35 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Create a custom CSRF token request handler
+        XorCsrfTokenRequestAttributeHandler csrfTokenRequestHandler = new XorCsrfTokenRequestAttributeHandler();
+        // Explicitly disable the CSRF protection for /error endpoint to avoid nested exception handling
+        csrfTokenRequestHandler.setCsrfRequestAttributeName(null);
+
         http
-            // Explicitly disable CSRF for stateless JWT authentication
-            .csrf(csrf -> csrf.disable())
+            // Enable CSRF protection with cookie-based tokens
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRequestHandler(csrfTokenRequestHandler)
+                // Exempt public endpoints from CSRF protection
+                .ignoringRequestMatchers(
+                    "/api/auth/login", 
+                    "/api/auth/register", 
+                    "/api/public/**", 
+                    "/api/students",
+                    "/api/students/**"
+                )
+            )
             
             // Configure stateless session management
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             
-            // CORS configuration remains the same
+            // CORS configuration
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
-            // Security headers and authorization rules remain unchanged
+            // Security headers
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp
                     .policyDirectives("default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; " +
@@ -82,8 +103,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 
-                // Publicly readable resources - ensure proper access control
+                // Publicly readable resources
                 .requestMatchers(HttpMethod.GET, "/api/formations/**").permitAll()
+                
                 // Restrict document downloads to authenticated users with proper permissions
                 .requestMatchers(HttpMethod.GET, "/api/documents/download/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/documents/files/**").authenticated()
@@ -91,13 +113,13 @@ public class SecurityConfig {
                 // Admin-only endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/students").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/students").hasAnyRole("ADMIN", "STUDENT")
                 .requestMatchers(HttpMethod.DELETE, "/api/students/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/formations/**").hasRole("ADMIN")
                 
                 // Student endpoints
                 .requestMatchers("/api/student/**").hasAnyRole("ADMIN", "STUDENT")
-                .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "STUDENT")
+                .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADMIN", "STUDENT", "TEACHER")
                 .requestMatchers(HttpMethod.PUT, "/api/students/**").hasAnyRole("ADMIN", "STUDENT")
                 
                 // Formation management
@@ -107,7 +129,7 @@ public class SecurityConfig {
                 // Teacher endpoints
                 .requestMatchers("/api/teacher/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER")
                 
-                // Document management - restrict access 
+                // Document management
                 .requestMatchers("/api/documents").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
                 .requestMatchers(HttpMethod.POST, "/api/documents/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
                 .requestMatchers(HttpMethod.PUT, "/api/documents/**").hasAnyRole("ADMIN", "TEACHER", "FORMATION_MANAGER", "ADMINISTRATION")
@@ -126,6 +148,9 @@ public class SecurityConfig {
                 
                 // Token validation endpoint
                 .requestMatchers("/api/auth/validate").authenticated()
+                
+                // Block debug endpoints in production
+                .requestMatchers("/api/auth/debug").denyAll()
                 
                 // All other requests require authentication
                 .anyRequest().authenticated()
@@ -149,7 +174,7 @@ public class SecurityConfig {
             "X-Requested-With", 
             "X-CSRF-TOKEN"
         ));
-        // Limit exposed headers to only what's necessary
+        // Only expose necessary headers
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(corsMaxAge);

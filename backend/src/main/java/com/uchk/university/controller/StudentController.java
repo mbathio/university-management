@@ -10,9 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/students")
@@ -53,8 +56,19 @@ public class StudentController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Student> createStudent(@Valid @RequestBody StudentDto studentDto) {
+    public ResponseEntity<Student> createStudent(@Valid @RequestBody StudentDto studentDto, BindingResult bindingResult) {
         logger.info("Creating student with data: {}", studentDto);
+        
+        // Validate input
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.toList());
+            
+            logger.error("Validation errors: {}", errors);
+            throw new IllegalArgumentException("Invalid student data: " + String.join(", ", errors));
+        }
+        
         try {
             Student created = studentService.createStudent(studentDto);
             logger.info("Student created successfully with ID: {}", created.getId());
